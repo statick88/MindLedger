@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
+use uuid::Uuid;
+use chrono::NaiveDate;
 
 /// CIE-10 Diagnostic classification for Ecuador medical practice
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -118,7 +120,7 @@ pub struct DiagnosticoDSM5 {
     pub descripcion: String,
     pub categoria: CategoriaDSM5,
     pub criterios_diagnosticos: Option<Vec<String>>,
-    pub especificaores: Option<Vec<String>>,
+    pub especificadores: Option<Vec<String>>,
 }
 
 impl DiagnosticoDSM5 {
@@ -127,14 +129,14 @@ impl DiagnosticoDSM5 {
         descripcion: String,
         categoria: CategoriaDSM5,
         criterios_diagnosticos: Option<Vec<String>>,
-        especificaores: Option<Vec<String>>,
+        especificadores: Option<Vec<String>>,
     ) -> Self {
         Self {
             codigo: codigo.to_uppercase(),
             descripcion,
             categoria,
             criterios_diagnosticos,
-            especificaores,
+            especificadores,
         }
     }
 }
@@ -404,6 +406,30 @@ impl DiagnosticoClinico {
                     ));
                 }
             }
+        }
+    }
+}
+
+/// Mapeo de diagnóstico para pacientes (relación paciente-diagnóstico)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MapeoDiagnostico {
+    pub id: Uuid,
+    pub paciente_id: Uuid,
+    pub diagnostico_id: String,
+    pub fuente: String, // "CIE-10" or "DSM-5"
+    pub notas: Option<String>,
+    pub fecha: NaiveDate,
+}
+
+impl MapeoDiagnostico {
+    pub fn new(paciente_id: Uuid, diagnostico_id: String, fuente: String, notas: Option<String>) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            paciente_id,
+            diagnostico_id,
+            fuente,
+            notas,
+            fecha: chrono::Utc::now().date_naive(),
         }
     }
 }

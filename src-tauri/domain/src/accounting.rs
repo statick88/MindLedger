@@ -1,3 +1,4 @@
+use chrono::NaiveDate;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -208,6 +209,57 @@ impl fmt::Display for LineaAsiento {
         } else {
             write!(f, "{} C: {}", self.cuenta, self.credito)
         }
+    }
+}
+
+/// Balance General (Balance Sheet) - Activos = Pasivos + Patrimonio
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BalanceGeneral {
+    pub fecha: NaiveDate,
+    pub activos: Vec<(String, Decimal)>,
+    pub pasivos: Vec<(String, Decimal)>,
+    pub patrimonio: Vec<(String, Decimal)>,
+}
+
+impl BalanceGeneral {
+    pub fn total_activos(&self) -> Decimal {
+        self.activos.iter().map(|(_, v)| *v).sum()
+    }
+
+    pub fn total_pasivos(&self) -> Decimal {
+        self.pasivos.iter().map(|(_, v)| *v).sum()
+    }
+
+    pub fn total_patrimonio(&self) -> Decimal {
+        self.patrimonio.iter().map(|(_, v)| *v).sum()
+    }
+
+    pub fn is_balanced(&self) -> bool {
+        let diff = (self.total_activos() - (self.total_pasivos() + self.total_patrimonio())).abs();
+        diff < Decimal::new(1, 2)
+    }
+}
+
+/// Estado de Resultados (Income Statement) - Ingresos - Gastos = Utilidad Neta
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct EstadoResultados {
+    pub fecha: NaiveDate,
+    pub ingresos: Vec<(String, Decimal)>,
+    pub gastos: Vec<(String, Decimal)>,
+    pub utilidad_neta: Decimal,
+}
+
+impl EstadoResultados {
+    pub fn total_ingresos(&self) -> Decimal {
+        self.ingresos.iter().map(|(_, v)| *v).sum()
+    }
+
+    pub fn total_gastos(&self) -> Decimal {
+        self.gastos.iter().map(|(_, v)| *v).sum()
+    }
+
+    pub fn calculate_utilidad_neta(&mut self) {
+        self.utilidad_neta = self.total_ingresos() - self.total_gastos();
     }
 }
 

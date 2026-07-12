@@ -19,6 +19,8 @@ keyring = { workspace = true }
 zeroize = { workspace = true }
 rand = "0.8"
 base64 = "0.22"
+rust_decimal = "1.35"
 
 [dev-dependencies]
 tempfile = { workspace = true }
+rust_decimal_macros = "1.35"

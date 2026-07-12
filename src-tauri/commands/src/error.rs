@@ -15,6 +15,10 @@ pub enum AppError {
     Unauthorized(String),
     #[error("Internal error: {0}")]
     Internal(String),
+    #[error("Accounting error: {0}")]
+    Accounting(String),
+    #[error("Diagnostics error: {0}")]
+    Diagnostics(String),
 }
 
 impl From<anyhow::Error> for AppError {
@@ -78,6 +82,12 @@ impl From<uuid::Error> for AppError {
 impl From<chrono::ParseError> for AppError {
     fn from(err: chrono::ParseError) -> Self {
         AppError::Validation(format!("Invalid date: {}", err))
+    }
+}
+
+impl From<soft_gloria_domain::ContabilidadError> for AppError {
+    fn from(err: soft_gloria_domain::ContabilidadError) -> Self {
+        AppError::Accounting(err.to_string())
     }
 }
 

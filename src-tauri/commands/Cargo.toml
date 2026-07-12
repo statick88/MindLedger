@@ -12,7 +12,12 @@ thiserror = "1.0"
 anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.8", features = ["serde", "v4"] }
+rust_decimal = "1.35"
+rust_decimal_macros = "1.35"
 
 soft-gloria-domain = { path = "../domain" }
 soft-gloria-application = { path = "../application" }
 soft-gloria-infrastructure = { path = "../infrastructure" }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt"] }
