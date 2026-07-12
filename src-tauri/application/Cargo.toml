@@ -1,0 +1,17 @@
+[package]
+name = "soft-gloria-application"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+
+[dependencies]
+soft-gloria-domain = { path = "../domain" }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+mockall = { workspace = true, optional = true }
+
+[dev-dependencies]
+mockall = { workspace = true }
+rstest = { workspace = true }
+proptest = { workspace = true }

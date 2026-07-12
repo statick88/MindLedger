@@ -1,0 +1,51 @@
+[workspace]
+resolver = "2"
+members = [
+    "domain",
+    "application",
+    "infrastructure",
+    "commands",
+    "app",
+]
+exclude = []
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.80"
+
+[workspace.dependencies]
+# Core
+tauri = { version = "2.0" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Database
+rusqlite = { version = "0.31", features = ["bundled-sqlcipher", "load_extension", "chrono", "serde_json", "uuid"] }
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid", "migrate"] }
+tokio = { version = "1.0", features = ["full"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4", "serde", "fast-rng"] }
+
+# Security
+keyring = "0.14"
+zeroize = "1.0"
+argon2 = "0.5"
+
+# Testing
+mockall = "0.12"
+rstest = "0.18"
+proptest = "1.0"
+tempfile = "3.0"
+
+[profile.dev]
+debug = true
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
