@@ -10,8 +10,11 @@ soft-gloria-domain = { path = "../domain" }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 mockall = { workspace = true, optional = true }
+anyhow = "1.0"
+docx-rs = "0.4"
 
 [dev-dependencies]
 mockall = { workspace = true }
 rstest = { workspace = true }
 proptest = { workspace = true }
+tempfile = { workspace = true }
