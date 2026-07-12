@@ -64,13 +64,13 @@ impl AsientoContable {
         // Validate each line has either debit or credit (not both, not neither)
         for linea in &lineas {
             if linea.debito > Decimal::ZERO && linea.credito > Decimal::ZERO {
-                return Err(ContabilidadError::MontoInvalido(linea.debito));
+                return Err(ContabilidadError::LineaDualDebitoCredito);
             }
             if linea.debito == Decimal::ZERO && linea.credito == Decimal::ZERO {
-                return Err(ContabilidadError::MontoInvalido(linea.debito));
+                return Err(ContabilidadError::LineaSinMonto);
             }
             if linea.cuenta.trim().is_empty() {
-                return Err(ContabilidadError::MontoInvalido(linea.debito));
+                return Err(ContabilidadError::CuentaVacia);
             }
         }
 
@@ -122,7 +122,7 @@ impl LineaAsiento {
             return Err(ContabilidadError::MontoInvalido(monto));
         }
         if cuenta.trim().is_empty() {
-            return Err(ContabilidadError::MontoInvalido(monto));
+            return Err(ContabilidadError::CuentaVacia);
         }
         Ok(Self {
             cuenta: cuenta.trim().to_string(),
@@ -136,7 +136,7 @@ impl LineaAsiento {
             return Err(ContabilidadError::MontoInvalido(monto));
         }
         if cuenta.trim().is_empty() {
-            return Err(ContabilidadError::MontoInvalido(monto));
+            return Err(ContabilidadError::CuentaVacia);
         }
         Ok(Self {
             cuenta: cuenta.trim().to_string(),
@@ -171,6 +171,12 @@ pub enum ContabilidadError {
     AsientoVacio,
     #[error("Monto inválido: {0}")]
     MontoInvalido(Decimal),
+    #[error("Línea tiene débito y crédito simultáneamente")]
+    LineaDualDebitoCredito,
+    #[error("Línea sin monto: debe tener débito o crédito")]
+    LineaSinMonto,
+    #[error("Cuenta vacía: nombre de cuenta requerido")]
+    CuentaVacia,
 }
 
 /// Validates the fundamental accounting equation: Activos = Pasivos + Patrimonio
@@ -311,7 +317,7 @@ mod tests {
             "Both".to_string(),
             lineas,
         );
-        assert!(matches!(result, Err(ContabilidadError::MontoInvalido(_))));
+        assert!(matches!(result, Err(ContabilidadError::LineaDualDebitoCredito)));
     }
 
     #[test]
@@ -329,7 +335,7 @@ mod tests {
             "Zero".to_string(),
             lineas,
         );
-        assert!(matches!(result, Err(ContabilidadError::MontoInvalido(_))));
+        assert!(matches!(result, Err(ContabilidadError::LineaSinMonto)));
     }
 
     #[test]
@@ -363,7 +369,7 @@ mod tests {
     #[test]
     fn test_linea_asiento_rejects_empty_cuenta() {
         let result = LineaAsiento::new_debito("".to_string(), dec!(100));
-        assert!(matches!(result, Err(ContabilidadError::MontoInvalido(_))));
+        assert!(matches!(result, Err(ContabilidadError::CuentaVacia)));
     }
 
     #[test]

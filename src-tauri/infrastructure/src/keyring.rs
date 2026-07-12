@@ -37,13 +37,11 @@ impl SqlCipherKeyManager {
 
     fn generate_hex_key() -> String {
         let mut rng = rand::thread_rng();
-        let key_bytes: Vec<u8> = (0..KEY_LENGTH).map(|_| rng.gen()).collect();
-        let key_hex = key_bytes
-            .iter()
-            .map(|b| format!("{:02x}", b))
-            .collect::<String>();
-        let zeroized = Zeroizing::new(key_hex);
-        zeroized.to_string()
+        let key_bytes: Zeroizing<Vec<u8>> = Zeroizing::new((0..KEY_LENGTH).map(|_| rng.gen()).collect());
+        let hex: Zeroizing<String> = Zeroizing::new(
+            key_bytes.iter().map(|b| format!("{:02x}", b)).collect(),
+        );
+        hex.to_string()
     }
 }
 

@@ -200,6 +200,33 @@ impl fmt::Display for CategoriaDSM5 {
     }
 }
 
+impl CategoriaDSM5 {
+    /// Map a CIE-10 code prefix to the corresponding DSM-5 category.
+    /// Uses the first characters of the CIE-10 code (e.g. F32 -> TrastornosDepresivos).
+    pub fn from_cie10_code(code: &str) -> Self {
+        let prefix = &code[..code.len().min(3)];
+        match prefix {
+            "F70" | "F71" | "F72" | "F73" | "F78" | "F79" => Self::TrastornosNeurodelDesarrollo,
+            "F80" | "F81" | "F82" | "F83" | "F84" | "F88" | "F89" => Self::TrastornosNeurodelDesarrollo,
+            "F90" | "F91" | "F92" | "F93" | "F94" | "F95" | "F98" => Self::TrastornosNeurodelDesarrollo,
+            "F20" | "F21" | "F22" | "F23" | "F24" | "F25" | "F28" | "F29" => Self::EspectroEsquizofreniaYTrastornosPsicoticos,
+            "F30" | "F31" => Self::TrastornosBipolaresYRelacionados,
+            "F32" | "F33" | "F34" | "F38" | "F39" => Self::TrastornosDepresivos,
+            "F40" | "F41" => Self::TrastornosDeAnsiedad,
+            "F42" => Self::TrastornosObsesivoCompulsivosYRelacionados,
+            "F43" => Self::TrastornosRelacionadosConTraumaYFactoresDeEstres,
+            "F44" | "F45" | "F48" => Self::TrastornosDisociativos,
+            "F50" => Self::TrastornosDeLaIngestaDeAlimentos,
+            "F51" | "F52" | "F53" | "F54" | "F55" | "F59" => Self::OtrosTrastornosMentales,
+            "F60" => Self::TrastornosDeLaPersonalidad,
+            "F61" | "F62" | "F63" | "F64" | "F65" | "F66" | "F68" | "F69" => Self::OtrosTrastornosMentales,
+            "F10" | "F11" | "F12" | "F13" | "F14" | "F15" | "F16" | "F18" | "F19" => Self::TrastornosRelacionadosConSustanciasYAdictivos,
+            "F00" | "F01" | "F02" | "F03" | "F04" | "F05" | "F06" | "F07" | "F09" => Self::TrastornosNeurocognitivos,
+            _ => Self::OtrosTrastornosMentales,
+        }
+    }
+}
+
 /// Mapping between CIE-10 and DSM-5 for common mental health diagnoses
 /// This is a simplified mapping - in practice would be more comprehensive
 pub struct MapeoCIE10DSM5;
@@ -367,11 +394,11 @@ impl DiagnosticoClinico {
             if self.dsm5.is_none() {
                 let dsm5_codes = MapeoCIE10DSM5::cie10_a_dsm5(&cie10.codigo);
                 if let Some(first_code) = dsm5_codes.first() {
-                    // Create a basic DSM-5 entry with just the code mapping
+                    let categoria = CategoriaDSM5::from_cie10_code(&cie10.codigo);
                     self.dsm5 = Some(DiagnosticoDSM5::new(
                         first_code.to_string(),
                         format!("Mapeado desde CIE-10: {}", cie10.descripcion),
-                        CategoriaDSM5::TrastornosDepresivos, // Default, would need better logic
+                        categoria,
                         None,
                         None,
                     ));
