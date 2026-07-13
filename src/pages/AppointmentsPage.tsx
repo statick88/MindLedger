@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Plus, ChevronLeft, ChevronRight, Today } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -44,7 +44,7 @@ export function AppointmentsPage() {
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button variant="outline" size="icon" onClick={() => setCurrentWeek(new Date())}>
-            <Today className="h-4 w-4" />
+            <CalendarDays className="h-4 w-4" />
           </Button>
           <Button variant="outline" size="icon" onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}>
             <ChevronRight className="h-4 w-4" />

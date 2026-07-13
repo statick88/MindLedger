@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { Outlet, useLocation, NavLink } from 'react-router-dom';
 import { cn } from '@/utils/cn';
 import { Button } from '@/components/ui/Button';
@@ -8,7 +8,7 @@ import {
   LayoutDashboard,
   Users,
   Calendar,
-  FileText,
+  Calculator,
   Settings,
   Menu,
   X,
@@ -17,17 +17,43 @@ import {
 } from 'lucide-react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Pacientes', href: '/patients', icon: Users },
-  { name: 'Turnos', href: '/appointments', icon: Calendar },
-  { name: 'Historia Clínica', href: '/clinical-notes', icon: FileText },
+  { name: 'Agenda y Citas', href: '/appointments', icon: Calendar },
+  { name: 'Contabilidad', href: '/accounting', icon: Calculator },
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+];
+
+const secondaryNav = [
   { name: 'Configuración', href: '/settings', icon: Settings },
 ];
 
-export function Layout({ children }: { children: ReactNode }) {
+export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+
+  const renderNavItem = (item: typeof navigation[0]) => {
+    const isActive = location.pathname === item.href ||
+      (item.href !== '/' && location.pathname.startsWith(item.href + '/'));
+    const Icon = item.icon;
+    return (
+      <NavLink
+        key={item.name}
+        to={item.href}
+        onClick={() => setSidebarOpen(false)}
+        className={cn(
+          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+          isActive
+            ? 'bg-primary text-primary-foreground'
+            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+        )}
+        title={sidebarCollapsed ? item.name : undefined}
+      >
+        <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+        {!sidebarCollapsed && <span>{item.name}</span>}
+      </NavLink>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -39,9 +65,15 @@ export function Layout({ children }: { children: ReactNode }) {
         )}
         aria-label="Navegación principal"
       >
+        {/* Brand */}
         <div className="flex h-16 items-center justify-between border-b px-4">
           {!sidebarCollapsed && (
-            <span className="text-xl font-bold text-primary">Soft Gloria</span>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">M</span>
+              </div>
+              <span className="text-xl font-bold text-primary">MindLedger</span>
+            </div>
           )}
           <Button
             variant="ghost"
@@ -63,34 +95,17 @@ export function Layout({ children }: { children: ReactNode }) {
           </Button>
         </div>
 
+        {/* Primary Navigation */}
         <nav className="flex-1 space-y-1 p-2 overflow-y-auto" aria-label="Navegación principal">
-          {navigation.map((item) => {
-            const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/');
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                )}
-                title={sidebarCollapsed ? item.name : undefined}
-              >
-                <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-                {!sidebarCollapsed && <span>{item.name}</span>}
-              </NavLink>
-            );
-          })}
+          {navigation.map(renderNavItem)}
         </nav>
 
-        <div className="p-2 border-t">
+        {/* Secondary Navigation */}
+        <div className="p-2 border-t space-y-1">
+          {secondaryNav.map(renderNavItem)}
           <Button
             variant="ghost"
-            className="w-full justify-center gap-3"
+            className="w-full justify-center gap-3 mt-2"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           >
             {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
@@ -121,7 +136,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </header>
 
         <main className="p-4 lg:p-6" id="main-content" role="main">
-          {children}
+          <Outlet />
         </main>
       </div>
 

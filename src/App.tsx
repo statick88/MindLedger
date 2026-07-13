@@ -7,6 +7,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { PatientsPage } from '@/pages/PatientsPage';
 import { AppointmentsPage } from '@/pages/AppointmentsPage';
 import { ClinicalNotesPage } from '@/pages/ClinicalNotesPage';
+import { AccountingPage } from '@/pages/AccountingPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import './index.css';
 
@@ -32,6 +33,7 @@ function App() {
               <Route path="/patients" element={<PatientsPage />} />
               <Route path="/appointments" element={<AppointmentsPage />} />
               <Route path="/clinical-notes" element={<ClinicalNotesPage />} />
+              <Route path="/accounting" element={<AccountingPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Routes>

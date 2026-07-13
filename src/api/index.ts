@@ -11,28 +11,32 @@ import type {
   Settings,
 } from '@/types';
 
+// ─── Patient API ────────────────────────────────────────────────────────────
+
 export const patientApi = {
-  create: (request: CreatePatientRequest) => 
+  create: (request: CreatePatientRequest) =>
     invoke<Patient>('create_patient', { request }),
-  
-  get: (id: string) => 
+
+  get: (id: string) =>
     invoke<Patient>('get_patient', { id }),
-  
-  list: (query: ListPatientsQuery) => 
+
+  list: (query: ListPatientsQuery) =>
     invoke<PaginatedResponse<Patient>>('list_patients', { query }),
-  
-  update: (id: string, request: Partial<CreatePatientRequest>) => 
+
+  update: (id: string, request: Partial<CreatePatientRequest>) =>
     invoke<Patient>('update_patient', { id, request }),
-  
-  delete: (id: string) => 
+
+  delete: (id: string) =>
     invoke<boolean>('delete_patient', { id }),
-  
-  search: (query: string, page: number, pageSize: number) => 
+
+  search: (query: string, page: number, pageSize: number) =>
     invoke<PaginatedResponse<Patient>>('search_patients', { query, page, pageSize }),
-  
-  count: (activeOnly?: boolean) => 
+
+  count: (activeOnly?: boolean) =>
     invoke<number>('get_patient_count', { activeOnly }),
 };
+
+// ─── Appointment API ────────────────────────────────────────────────────────
 
 export const appointmentApi = {
   create: (request: {
@@ -45,10 +49,10 @@ export const appointmentApi = {
     doctor_name: string;
     room?: string;
   }) => invoke<Appointment>('create_appointment', { request }),
-  
-  get: (id: string) => 
+
+  get: (id: string) =>
     invoke<Appointment>('get_appointment', { id }),
-  
+
   list: (query: {
     page?: number;
     page_size?: number;
@@ -59,19 +63,19 @@ export const appointmentApi = {
     date_to?: string;
     doctor_name?: string;
   }) => invoke<PaginatedResponse<Appointment>>('list_appointments', { query }),
-  
-  update: (id: string, request: Partial<Appointment>) => 
+
+  update: (id: string, request: Partial<Appointment>) =>
     invoke<Appointment>('update_appointment', { id, request }),
-  
-  delete: (id: string) => 
+
+  delete: (id: string) =>
     invoke<boolean>('delete_appointment', { id }),
-  
-  forPatient: (patientId: string, page?: number, pageSize?: number) => 
+
+  forPatient: (patientId: string, page?: number, pageSize?: number) =>
     invoke<PaginatedResponse<Appointment>>('get_appointments_for_patient', { patientId, page, pageSize }),
-  
-  byDate: (date: string, page?: number, pageSize?: number) => 
+
+  byDate: (date: string, page?: number, pageSize?: number) =>
     invoke<PaginatedResponse<Appointment>>('get_appointments_by_date', { date, page, pageSize }),
-  
+
   conflicts: (request: {
     doctor_name: string;
     date: string;
@@ -80,6 +84,8 @@ export const appointmentApi = {
     exclude_id?: string;
   }) => invoke<Appointment[]>('get_appointment_conflicts', { request }),
 };
+
+// ─── Clinical Notes API ─────────────────────────────────────────────────────
 
 export const clinicalNoteApi = {
   create: (request: {
@@ -100,10 +106,10 @@ export const clinicalNoteApi = {
     }[];
     vital_signs?: Partial<VitalSigns>;
   }) => invoke<ClinicalNote>('create_clinical_note', { request }),
-  
-  get: (id: string) => 
+
+  get: (id: string) =>
     invoke<ClinicalNote>('get_clinical_note', { id }),
-  
+
   list: (query: {
     page?: number;
     page_size?: number;
@@ -113,7 +119,7 @@ export const clinicalNoteApi = {
     date_from?: string;
     date_to?: string;
   }) => invoke<PaginatedResponse<ClinicalNote>>('list_clinical_notes', { query }),
-  
+
   update: (id: string, request: {
     chief_complaint?: string;
     history_of_present_illness?: string;
@@ -121,24 +127,155 @@ export const clinicalNoteApi = {
     assessment?: string;
     plan?: string;
   }) => invoke<ClinicalNote>('update_clinical_note', { id, request }),
-  
-  delete: (id: string) => 
+
+  delete: (id: string) =>
     invoke<boolean>('delete_clinical_note', { id }),
-  
-  forPatient: (patientId: string, page?: number, pageSize?: number) => 
+
+  forPatient: (patientId: string, page?: number, pageSize?: number) =>
     invoke<PaginatedResponse<ClinicalNote>>('get_clinical_notes_for_patient', { patientId, page, pageSize }),
-  
-  byAppointment: (appointmentId: string) => 
+
+  byAppointment: (appointmentId: string) =>
     invoke<ClinicalNote | null>('get_clinical_note_by_appointment', { appointmentId }),
-  
-  unsigned: (page?: number, pageSize?: number) => 
+
+  unsigned: (page?: number, pageSize?: number) =>
     invoke<PaginatedResponse<ClinicalNote>>('get_unsigned_notes', { page, pageSize }),
-  
-  sign: (id: string, signedBy: string) => 
+
+  sign: (id: string, signedBy: string) =>
     invoke<ClinicalNote>('sign_clinical_note', { id, signedBy }),
 };
+
+// ─── Settings API ───────────────────────────────────────────────────────────
 
 export const settingsApi = {
   get: () => invoke<Settings>('get_settings'),
   update: (request: Partial<Settings>) => invoke<Settings>('update_settings', { request }),
+};
+
+// ─── Age API ────────────────────────────────────────────────────────────────
+
+export interface AgeBreakdown {
+  years: number;
+  months: number;
+  days: number;
+  total_days: number;
+  total_months: number;
+  is_minor: boolean;
+  age_of_majority: number;
+}
+
+export const ageApi = {
+  /** Calculate age in years from date_of_birth to today */
+  calculate: (dateOfBirth: string) =>
+    invoke<number>('calculate_age', { dateOfBirth }),
+
+  /** Calculate age at a specific reference date */
+  calculateAt: (dateOfBirth: string, referenceDate: string) =>
+    invoke<number>('calculate_age_at', { dateOfBirth, referenceDate }),
+
+  /** Full breakdown: years, months, days, is_minor, etc. */
+  breakdown: (dateOfBirth: string, ageOfMajority?: number) =>
+    invoke<AgeBreakdown>('calculate_age_breakdown', { dateOfBirth, ageOfMajority }),
+};
+
+// ─── Accounting API ─────────────────────────────────────────────────────────
+
+export interface Asiento {
+  id: string;
+  fecha: string;
+  descripcion: string;
+  debe: number;
+  haber: number;
+  categoria: string;
+  created_at: string;
+}
+
+export interface CreateAsientoRequest {
+  fecha: string;
+  descripcion: string;
+  debe: number;
+  haber: number;
+  categoria: string;
+}
+
+export interface BalanceGeneral {
+  activos: { cuenta: string; monto: number }[];
+  pasivos: { cuenta: string; monto: number }[];
+  patrimonio: { cuenta: string; monto: number }[];
+  total_activos: number;
+  total_pasivos: number;
+  total_patrimonio: number;
+}
+
+export interface EstadoResultados {
+  ingresos: { cuenta: string; monto: number }[];
+  gastos: { cuenta: string; monto: number }[];
+  total_ingresos: number;
+  total_gastos: number;
+  utilidad_neta: number;
+}
+
+export const accountingApi = {
+  addAsiento: (request: CreateAsientoRequest) =>
+    invoke<Asiento>('add_asiento', { request }),
+
+  removeAsiento: (id: string) =>
+    invoke<boolean>('remove_asiento', { id }),
+
+  listAsientos: (query?: { page?: number; page_size?: number; categoria?: string; fecha_desde?: string; fecha_hasta?: string }) =>
+    invoke<PaginatedResponse<Asiento>>('list_asientos', { query }),
+
+  balanceGeneral: () =>
+    invoke<BalanceGeneral>('generate_balance_general'),
+
+  estadoResultados: () =>
+    invoke<EstadoResultados>('generate_estado_resultados'),
+};
+
+// ─── Diagnostics API (CIE-10 / DSM-5) ──────────────────────────────────────
+
+export interface Cie10Entry {
+  id: string;
+  codigo: string;
+  descripcion: string;
+  categoria: string;
+}
+
+export interface Dsm5Entry {
+  id: string;
+  codigo: string;
+  descripcion: string;
+  categoria: string;
+}
+
+export interface MapeoCieDsm {
+  id: string;
+  cie10_codigo: string;
+  dsm5_codigo: string;
+  created_at: string;
+}
+
+export const diagnosticsApi = {
+  searchCie10: (query: string, limit?: number) =>
+    invoke<Cie10Entry[]>('search_cie10', { query, limit }),
+
+  searchDsm5: (query: string, limit?: number) =>
+    invoke<Dsm5Entry[]>('search_dsm5', { query, limit }),
+
+  getCie10ByCodigo: (codigo: string) =>
+    invoke<Cie10Entry | null>('get_cie10_by_codigo', { codigo }),
+
+  getDsm5ByCodigo: (codigo: string) =>
+    invoke<Dsm5Entry | null>('get_dsm5_by_codigo', { codigo }),
+
+  createMapeo: (cie10Codigo: string, dsm5Codigo: string) =>
+    invoke<MapeoCieDsm>('create_mapeo', { cie10Codigo, dsm5Codigo }),
+
+  listMapeos: () =>
+    invoke<MapeoCieDsm[]>('list_mapeos'),
+
+  updateMapeo: (id: string, cie10Codigo: string, dsm5Codigo: string) =>
+    invoke<MapeoCieDsm>('update_mapeo', { id, cie10Codigo, dsm5Codigo }),
+
+  deleteMapeo: (id: string) =>
+    invoke<boolean>('delete_mapeo', { id }),
 };
