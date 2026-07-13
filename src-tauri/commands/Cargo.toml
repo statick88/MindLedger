@@ -24,3 +24,5 @@ soft-gloria-infrastructure = { path = "../infrastructure" }
 tokio = { version = "1", features = ["macros", "rt"] }
 docx-rs = "0.4"
 tempfile = "3"
+regex = "1"
+serde_json = "1.0"
