@@ -4,6 +4,9 @@ use rand::Rng;
 use std::path::Path;
 use zeroize::Zeroizing;
 
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
+
 const KEY_LENGTH: usize = 32;
 const FALLBACK_KEY_FILE: &str = "mind-ledger.key";
 
@@ -58,8 +61,8 @@ impl SqlCipherKeyManager {
 
         // 2. Fallback: read or create key from local file
         if let Some(ref fallback_path) = self.fallback_path {
-            if let Ok(key) = std::fs::read_to_string(fallback_path) {
-                let key = key.trim().to_string();
+            if let Ok(content) = std::fs::read_to_string(fallback_path) {
+                let key = content.trim().to_string();
                 if key.len() == KEY_LENGTH * 2 && key.chars().all(|c| c.is_ascii_hexdigit()) {
                     return Ok(key);
                 }
@@ -67,12 +70,20 @@ impl SqlCipherKeyManager {
                     "[MindLedger] WARNING: fallback key file is invalid, regenerating"
                 );
             }
-            let key = Self::generate_hex_key();
+            let mut key = Self::generate_hex_key();
             if let Some(parent) = fallback_path.parent() {
                 let _ = std::fs::create_dir_all(parent);
             }
             std::fs::write(fallback_path, &key)
                 .context("Failed to write fallback key file")?;
+            // Set file permissions to owner-only read/write (0o600) on Unix
+            #[cfg(unix)]
+            {
+                std::fs::set_permissions(
+                    fallback_path,
+                    std::fs::Permissions::from_mode(0o600),
+                ).context("Failed to set key file permissions")?;
+            }
             eprintln!(
                 "[MindLedger] INFO: wrote fallback key to {}",
                 fallback_path.display()
