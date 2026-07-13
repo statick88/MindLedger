@@ -112,6 +112,14 @@ impl SqlCipherKeyManager {
         );
         hex.to_string()
     }
+
+    /// Test-visible wrapper for `generate_hex_key`.
+    /// Allows security audit tests to verify key generation properties
+    /// without exposing the private method in production builds.
+    #[cfg(test)]
+    pub fn generate_hex_key_for_test() -> String {
+        Self::generate_hex_key()
+    }
 }
 
 #[cfg(test)]
