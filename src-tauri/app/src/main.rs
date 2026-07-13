@@ -16,14 +16,38 @@ pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
             let app_handle = app.handle().clone();
+            let data_dir = app.path().app_data_dir().map_err(|e| {
+                eprintln!("[MindLedger] Failed to get app data dir: {}", e);
+                e
+            })?;
+            std::fs::create_dir_all(&data_dir).map_err(|e| {
+                eprintln!("[MindLedger] Failed to create app data dir: {}", e);
+                e
+            })?;
+            let db_path = data_dir.join("mind_ledger.db");
             
             tauri::async_runtime::block_on(async move {
-                let db = create_pool(std::path::Path::new("soft_gloria.db")).expect("Failed to initialize database");
-                run_migrations(&db).expect("Failed to run migrations");
-                run_accounting_migrations(&db).expect("Failed to run accounting migrations");
-                run_diagnostics_migrations(&db).expect("Failed to run diagnostics migrations");
+                let db = create_pool(&db_path, &data_dir).map_err(|e| {
+                    eprintln!("[MindLedger] Failed to initialize database: {}", e);
+                    e
+                })?;
+                run_migrations(&db).map_err(|e| {
+                    eprintln!("[MindLedger] Failed to run migrations: {}", e);
+                    e
+                })?;
+                run_accounting_migrations(&db).map_err(|e| {
+                    eprintln!("[MindLedger] Failed to run accounting migrations: {}", e);
+                    e
+                })?;
+                run_diagnostics_migrations(&db).map_err(|e| {
+                    eprintln!("[MindLedger] Failed to run diagnostics migrations: {}", e);
+                    e
+                })?;
                 
                 app_handle.manage(Arc::new(db));
+                Ok::<(), Box<dyn std::error::Error>>(())
+            }).unwrap_or_else(|e| {
+                eprintln!("[MindLedger] Critical error during setup: {}", e);
             });
             
             Ok(())

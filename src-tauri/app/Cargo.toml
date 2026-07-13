@@ -1,24 +1,5 @@
 [package]
-name = "soft-gloria-app"
+name = "mind-ledger-app"
 version = "0.1.0"
 edition = "2021"
 publish = false
-
-[[bin]]
-name = "soft-gloria"
-path = "src/main.rs"
-
-[dependencies]
-tauri = "2.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-anyhow = "1.0"
-
-soft-gloria-domain = { path = "../domain" }
-soft-gloria-infrastructure = { path = "../infrastructure" }
-soft-gloria-commands = { path = "../commands" }
-
-[build-dependencies]
-tauri-build = "2.0"

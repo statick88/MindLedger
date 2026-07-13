@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../src-tauri/app/dist',
+    outDir: './src-tauri/app/dist',
     emptyOutDir: true,
   },
 });

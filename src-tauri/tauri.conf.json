@@ -1,18 +1,18 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Soft Gloria",
+  "productName": "MindLedger",
   "version": "0.1.0",
-  "identifier": "com.soft-gloria.app",
+  "identifier": "com.mindledger.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:1420",
-    "distDir": "../dist"
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "app/dist"
   },
   "app": {
     "windows": [
       {
-        "title": "Soft Gloria",
+        "title": "MindLedger",
         "width": 1400,
         "height": 900,
         "minWidth": 1024,
@@ -22,7 +22,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; font-src 'self' data:"
     }
   },
   "bundle": {
@@ -34,7 +34,25 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "category": "Medical",
+    "shortDescription": "Clinical psychology practice management",
+    "longDescription": "MindLedger is a secure, offline-first practice management system for clinical psychologists in Ecuador. Features encrypted patient records, accounting, CIE-10/DSM-5 diagnostics, and clinical notes.",
+    "copyright": "Copyright © 2026 Diego Medardo Saavedra García",
+    "linux": {
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-dev", "libgtk-3-dev", "libsoup-3.0-dev"]
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    },
+    "windows": {
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "installMode": "both"
+      }
+    }
   },
   "plugins": {
     "sql": {

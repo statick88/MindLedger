@@ -1,37 +1,95 @@
 use anyhow::{Context, Result};
 use keyring::Entry;
 use rand::Rng;
+use std::path::Path;
 use zeroize::Zeroizing;
 
 const KEY_LENGTH: usize = 32;
+const FALLBACK_KEY_FILE: &str = "mind-ledger.key";
 
 pub struct SqlCipherKeyManager {
-    entry: Entry,
+    entry: Option<Entry>,
+    fallback_path: Option<std::path::PathBuf>,
 }
 
 impl SqlCipherKeyManager {
     pub fn new(service_name: &str, account_name: &str) -> Result<Self> {
         let entry = Entry::new(service_name, account_name)
             .context("Failed to create keyring entry")?;
-        Ok(Self { entry })
+        Ok(Self { entry: Some(entry), fallback_path: None })
+    }
+
+    /// Create a key manager with file-based fallback if keyring is unavailable.
+    /// `data_dir` is the app data directory where the fallback key file is stored.
+    pub fn new_with_fallback(
+        service_name: &str,
+        account_name: &str,
+        data_dir: &Path,
+    ) -> Self {
+        let entry = Entry::new(service_name, account_name).ok();
+        let fallback_path = Some(data_dir.join(FALLBACK_KEY_FILE));
+        if entry.is_none() {
+            eprintln!(
+                "[MindLedger] WARNING: keyring unavailable (service={}), using file-based key fallback",
+                service_name
+            );
+        }
+        Self { entry, fallback_path }
     }
 
     pub fn get_or_create_key(&self) -> Result<String> {
-        if let Ok(key) = self.entry.get_password() {
+        // 1. Try keyring first
+        if let Some(ref entry) = self.entry {
+            if let Ok(key) = entry.get_password() {
+                return Ok(key);
+            }
+            // Keyring has no key yet — try to create one
+            let key = Self::generate_hex_key();
+            match entry.set_password(&key) {
+                Ok(()) => return Ok(key),
+                Err(e) => {
+                    eprintln!(
+                        "[MindLedger] WARNING: keyring set_password failed: {}. Falling back to file key.",
+                        e
+                    );
+                }
+            }
+        }
+
+        // 2. Fallback: read or create key from local file
+        if let Some(ref fallback_path) = self.fallback_path {
+            if let Ok(key) = std::fs::read_to_string(fallback_path) {
+                let key = key.trim().to_string();
+                if key.len() == KEY_LENGTH * 2 && key.chars().all(|c| c.is_ascii_hexdigit()) {
+                    return Ok(key);
+                }
+                eprintln!(
+                    "[MindLedger] WARNING: fallback key file is invalid, regenerating"
+                );
+            }
+            let key = Self::generate_hex_key();
+            if let Some(parent) = fallback_path.parent() {
+                let _ = std::fs::create_dir_all(parent);
+            }
+            std::fs::write(fallback_path, &key)
+                .context("Failed to write fallback key file")?;
+            eprintln!(
+                "[MindLedger] INFO: wrote fallback key to {}",
+                fallback_path.display()
+            );
             return Ok(key);
         }
 
-        let key = Self::generate_hex_key();
-        self.entry
-            .set_password(&key)
-            .context("Failed to store key in keyring")?;
-        Ok(key)
+        anyhow::bail!("No keyring and no fallback path — cannot obtain encryption key")
     }
 
     pub fn delete_key(&self) -> Result<()> {
-        self.entry
-            .delete_credential()
-            .context("Failed to delete key from keyring")?;
+        if let Some(ref entry) = self.entry {
+            let _ = entry.delete_credential();
+        }
+        if let Some(ref fallback_path) = self.fallback_path {
+            let _ = std::fs::remove_file(fallback_path);
+        }
         Ok(())
     }
 

@@ -7,11 +7,17 @@ use crate::keyring::SqlCipherKeyManager;
 
 pub type DbPool = Arc<Mutex<Connection>>;
 
-const DEFAULT_SERVICE_NAME: &str = "soft-gloria";
+const DEFAULT_SERVICE_NAME: &str = "mind-ledger";
 const DEFAULT_ACCOUNT_NAME: &str = "sqlcipher-key";
 
-pub fn create_pool(database_path: &Path) -> Result<DbPool> {
-    let key_manager = SqlCipherKeyManager::new(DEFAULT_SERVICE_NAME, DEFAULT_ACCOUNT_NAME)?;
+/// Create a connection pool using the keyring (or file fallback) for the encryption key.
+/// `data_dir` is the app data directory — used for the file-based key fallback.
+pub fn create_pool(database_path: &Path, data_dir: &Path) -> Result<DbPool> {
+    let key_manager = SqlCipherKeyManager::new_with_fallback(
+        DEFAULT_SERVICE_NAME,
+        DEFAULT_ACCOUNT_NAME,
+        data_dir,
+    );
     let key = key_manager.get_or_create_key()?;
     create_pool_with_key(database_path, &key)
 }
@@ -32,9 +38,17 @@ pub fn create_pool_with_key(database_path: &Path, key: &str) -> Result<DbPool> {
     let pragma_key = format!("PRAGMA key = '{}';", key);
     conn.execute_batch(&pragma_key)
         .context("Failed to set encryption key")?;
-    conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;")
-        .context("Failed to set PRAGMAs")?;
-    
+
+    // Set journal mode — try WAL first, fall back to DELETE (SQLCipher may not support WAL).
+    if let Err(e) = conn.execute_batch("PRAGMA journal_mode=WAL;") {
+        eprintln!("[MindLedger] WAL mode unavailable ({}), using DELETE", e);
+        conn.execute_batch("PRAGMA journal_mode=DELETE;")
+            .context("Failed to set journal mode")?;
+    }
+
+    conn.execute_batch("PRAGMA foreign_keys=ON;")
+        .context("Failed to set foreign_keys pragma")?;
+
     Ok(Arc::new(Mutex::new(conn)))
 }
 
@@ -72,7 +86,7 @@ mod tests {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("test_keyring.db");
         
-        let pool = create_pool(&db_path);
+        let pool = create_pool(&db_path, dir.path());
         assert!(pool.is_ok());
     }
 }
