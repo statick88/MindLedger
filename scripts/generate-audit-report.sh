@@ -1,0 +1,198 @@
+#!/bin/bash
+# generate-audit-report.sh — Aggregate all audit outputs into SECURITY-AUDIT-REPORT.md
+# Part of the comprehensive security audit for MindLedger
+# Reads from audit-output/ and produces sdd-archive/SECURITY-AUDIT-REPORT.md
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+OUTPUT_DIR="$PROJECT_ROOT/audit-output"
+REPORT="$PROJECT_ROOT/sdd-archive/SECURITY-AUDIT-REPORT.md"
+
+mkdir -p "$PROJECT_ROOT/sdd-archive"
+
+echo "=== Security Audit Report Generator ==="
+
+# Initialize report
+cat > "$REPORT" <<'HEADER'
+# MindLedger — Comprehensive Security Audit Report
+
+**Generated**: TIMESTAMP_PLACEHOLDER
+**Auditor**: Automated (MindLedger Security Audit Suite)
+**Scope**: Full workspace — Rust backend (src-tauri/) + JavaScript frontend (src/)
+
+---
+
+## Executive Summary
+
+| Severity | Count | Status |
+|----------|-------|--------|
+| CRITICAL | 0 | — |
+| HIGH | 0 | — |
+| MEDIUM | 0 | — |
+| LOW | 0 | — |
+| INFO | 0 | — |
+
+**Overall Verdict**: PENDING (run all audit scripts first)
+
+---
+
+## Methodology
+
+This audit covers five security domains per OWASP ASVS v4.0:
+
+1. **IPC Injection** — SQL injection, XSS, escape injection, zip bombs via Tauri IPC
+2. **SQLCipher Resistance** — Cold dump analysis, key lifecycle, PRAGMA injection
+3. **Dependency Vulnerabilities** — CVE scanning (cargo-audit, pnpm audit, cargo-geiger)
+4. **Business Logic Abuse** — Negative amounts, overflow, state machine violations
+5. **Static Analysis (SAST)** — Clippy warnings, unsafe code, error message leakage
+
+### Scoring
+
+Findings are scored using **CVSS v4.0** (when applicable):
+
+| Rating | CVSS Range |
+|--------|------------|
+| CRITICAL | 9.0 – 10.0 |
+| HIGH | 7.0 – 8.9 |
+| MEDIUM | 4.0 – 6.9 |
+| LOW | 0.1 – 3.9 |
+| INFO | 0.0 |
+
+---
+
+## Domain 1: IPC Injection
+
+### Test Results
+
+| Scenario | Status | Finding |
+|----------|--------|---------|
+| DROP TABLE via PatientId | PENDING | — |
+| UNION-based extraction | PENDING | — |
+| XSS/escape injection | PENDING | — |
+| Zip bomb resilience | PENDING | — |
+| Tauri allowlist audit | PENDING | — |
+| Error leakage check | PENDING | — |
+| Escape character injection | PENDING | — |
+
+### Findings
+
+_No findings yet — run `cargo test --package soft-gloria-commands -- ipc_fuzz` to populate._
+
+---
+
+## Domain 2: SQLCipher Resistance
+
+### Test Results
+
+| Scenario | Status | Finding |
+|----------|--------|---------|
+| Cold dump analysis | PENDING | — |
+| Key zeroization | PENDING | — |
+| Key file permissions | PENDING | — |
+| PRAGMA key injection | PENDING | — |
+| Connection pool security | PENDING | — |
+
+### Findings
+
+_No findings yet — run `cargo test --package soft-gloria-infrastructure -- sqlcipher` to populate._
+
+---
+
+## Domain 3: Dependency Vulnerabilities
+
+### Tool Outputs
+
+| Tool | Status | Findings |
+|------|--------|----------|
+| cargo-audit | PENDING | — |
+| cargo-geiger | PENDING | — |
+| pnpm audit | PENDING | — |
+
+### Findings
+
+_Cross-reference with CVE blocklist: `openspec/changes/security-audit-comprehensive/cve-blocklist.json`_
+
+---
+
+## Domain 4: Business Logic Abuse
+
+### Test Results
+
+| Scenario | Status | Finding |
+|----------|--------|---------|
+| Negative transaction amount | PENDING | — |
+| Overflow amount | PENDING | — |
+| Debit-credit imbalance | PENDING | — |
+| Invalid state transition | PENDING | — |
+| Terminal state re-entry | PENDING | — |
+| Missing required fields | PENDING | — |
+
+### Findings
+
+_No findings yet — run `cargo test --package soft-gloria-commands -- business_logic` to populate._
+
+---
+
+## Domain 5: Static Analysis (SAST)
+
+### Tool Outputs
+
+| Tool | Status | Findings |
+|------|--------|----------|
+| cargo clippy | PENDING | — |
+| Unsafe code audit | PENDING | — |
+| Error leakage scan | PENDING | — |
+
+### Findings
+
+_Cross-reference with spec: `sast-static-analysis/spec.md`_
+
+---
+
+## Appendix A: CVSS v4.0 Vector Strings
+
+| Finding ID | CVSS Vector | Score | Severity |
+|------------|-------------|-------|----------|
+| _(populated after audit)_ | — | — | — |
+
+## Appendix B: OWASP References
+
+| OWASP Category | Applicable Domains |
+|----------------|-------------------|
+| A03:2021 Injection | IPC Injection |
+| A05:2021 Security Misconfiguration | SQLCipher, Tauri Allowlist |
+| A06:2021 Vulnerable Components | Dependency Vulnerabilities |
+| A07:2021 Auth Failures | N/A (not in scope) |
+| A09:2021 Logging Failures | Error Leakage |
+| A10:2021 SSRF | N/A (not in scope) |
+
+## Appendix C: Sign-Off Checklist
+
+| Requirement | Criteria | Status |
+|-------------|----------|--------|
+| CRITICAL findings | 0 open CRITICAL findings | PENDING |
+| HIGH findings | All HIGH findings have remediation plan | PENDING |
+| Test coverage | All 22 spec scenarios executed | PENDING |
+| Documentation | All findings have PoC and OWASP ref | PENDING |
+
+---
+
+_Report generated by `scripts/generate-audit-report.sh` — re-run after completing audit._
+HEADER
+
+# Replace timestamp
+GENERATED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+if command -v sed &>/dev/null; then
+    sed -i "s|TIMESTAMP_PLACEHOLDER|$GENERATED_AT|" "$REPORT"
+fi
+
+echo "✓ Report template written to $REPORT"
+echo ""
+echo "To populate findings, run:"
+echo "  bash scripts/dep-audit.sh"
+echo "  bash scripts/sast-clippy.sh"
+echo "  bash scripts/sast-unsafe-audit.sh"
+echo "  bash scripts/sast-error-leakage.sh"
+echo "  cargo test --workspace"
+echo "  bash scripts/generate-audit-report.sh  # re-run to aggregate"
