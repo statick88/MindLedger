@@ -3,6 +3,7 @@ pub mod patient_commands;
 pub mod accounting_commands;
 pub mod diagnostics_commands;
 pub mod age_commands;
+pub mod agenda_commands;
 
 #[cfg(test)]
 mod e2e_integration;
@@ -12,3 +13,4 @@ pub use patient_commands::*;
 pub use accounting_commands::*;
 pub use diagnostics_commands::*;
 pub use age_commands::*;
+pub use agenda_commands::*;

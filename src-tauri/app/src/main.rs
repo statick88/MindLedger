@@ -7,7 +7,8 @@ use soft_gloria_commands::patient_commands::*;
 use soft_gloria_commands::accounting_commands::*;
 use soft_gloria_commands::diagnostics_commands::*;
 use soft_gloria_commands::age_commands::*;
-use soft_gloria_infrastructure::{create_pool, run_migrations, run_accounting_migrations, run_diagnostics_migrations};
+use soft_gloria_commands::agenda_commands::*;
+use soft_gloria_infrastructure::{create_pool, run_migrations, run_accounting_migrations, run_diagnostics_migrations, run_agenda_migrations};
 use std::sync::Arc;
 use tauri::Manager;
 
@@ -41,6 +42,10 @@ pub fn run() {
                 })?;
                 run_diagnostics_migrations(&db).map_err(|e| {
                     eprintln!("[MindLedger] Failed to run diagnostics migrations: {}", e);
+                    e
+                })?;
+                run_agenda_migrations(&db).map_err(|e| {
+                    eprintln!("[MindLedger] Failed to run agenda migrations: {}", e);
                     e
                 })?;
                 
@@ -79,6 +84,17 @@ pub fn run() {
             calculate_age,
             calculate_age_at,
             calculate_age_breakdown,
+            // Agenda commands
+            crear_cita_agenda,
+            obtener_cita_agenda,
+            listar_citas_agenda,
+            finalizar_sesion_agenda,
+            reagendar_cita,
+            cancelar_cita,
+            obtener_citas_paciente,
+            obtener_recordatorios_pendientes,
+            procesar_recordatorios_pendientes,
+            obtener_kpis_agenda,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

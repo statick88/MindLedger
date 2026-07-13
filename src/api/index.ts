@@ -10,6 +10,13 @@ import type {
   VitalSigns,
   Settings,
 } from '@/types';
+import type {
+  AppointmentResponse,
+  ReminderResponse,
+  AgendaMetrics,
+  CreateAppointmentRequest,
+  UpdateAppointmentRequest,
+} from '@/types/agenda';
 
 // ─── Patient API ────────────────────────────────────────────────────────────
 
@@ -278,4 +285,71 @@ export const diagnosticsApi = {
 
   deleteMapeo: (id: string) =>
     invoke<boolean>('delete_mapeo', { id }),
+};
+
+// ─── Agenda API (v1.0 — new domain model) ──────────────────────────────────
+
+export const agendaApi = {
+  /** Create a new appointment */
+  crear: (request: CreateAppointmentRequest) =>
+    invoke<AppointmentResponse>('crear_cita_agenda', { request }),
+
+  /** Get a single appointment by ID */
+  obtener: (id: string) =>
+    invoke<AppointmentResponse>('obtener_cita', { id }),
+
+  /** Update mutable fields of an appointment */
+  actualizar: (id: string, request: UpdateAppointmentRequest) =>
+    invoke<AppointmentResponse>('actualizar_cita', { id, request }),
+
+  /** Cancel an appointment (state machine → Cancelada) */
+  cancelar: (id: string) =>
+    invoke<AppointmentResponse>('cancelar_cita', { id }),
+
+  /** Finalize session — marks Realizada and auto-creates accounting entry */
+  finalizarSesion: (id: string) =>
+    invoke<AppointmentResponse>('finalizar_sesion_agenda', { id }),
+
+  /** Reschedule — creates a new Appointment linked via reagendada_from_id */
+  reagendar: (id: string, newStart: string, newEnd: string) =>
+    invoke<AppointmentResponse>('reagendar_cita', { id, newStart, newEnd }),
+
+  /** List all appointments with optional filters */
+  listar: (query?: {
+    patient_id?: string;
+    therapist_id?: string;
+    status?: string;
+    date_from?: string;
+    date_to?: string;
+  }) =>
+    invoke<AppointmentResponse[]>('listar_citas', { query: query ?? {} }),
+
+  /** List appointments for a specific patient */
+  citasPaciente: (patientId: string) =>
+    invoke<AppointmentResponse[]>('citas_paciente', { patientId }),
+
+  /** List reminders (optionally filtered by patient) */
+  listarRecordatorios: (patientId?: string) =>
+    invoke<ReminderResponse[]>('listar_recordatorios', {
+      patientId: patientId ?? null,
+    }),
+
+  /** List appointments in a date range */
+  citasRango: (from: string, to: string) =>
+    invoke<AppointmentResponse[]>('listar_citas_rango', { from, to }),
+
+  /** List appointments for a therapist */
+  citasTerapeuta: (therapistId: string) =>
+    invoke<AppointmentResponse[]>('listar_citas_terapeuta', { therapistId }),
+
+  /** Get agenda metrics for a date range */
+  metricas: (from?: string, to?: string) =>
+    invoke<AgendaMetrics>('obtener_metricas', {
+      from: from ?? null,
+      to: to ?? null,
+    }),
+
+  /** Process pending reminders (batch job) */
+  procesarRecordatorios: () =>
+    invoke<number>('procesar_recordatorios'),
 };

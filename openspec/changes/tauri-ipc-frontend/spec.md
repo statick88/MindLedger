@@ -313,7 +313,7 @@ Applies MindLedger visual identity across the entire Tauri + React application. 
 | Artifact | Changes | Verification |
 |----------|---------|--------------|
 | `src/index.css` | CSS custom properties + base styles (reset, focus-visible) | Visual regression test |
-| `tailwind.config.js` | Extended theme with brand colors, fonts | `npm run build` compiles |
+| `tailwind.config.js` | Extended theme with brand colors, fonts | `pnpm build` compiles |
 | `tauri.conf.json` | `productName: "MindLedger"` | Tauri window title shows "MindLedger" |
 | Components | All use brand tokens via Tailwind classes | Storybook/Visual test |
 | Accessibility | Focus rings (`focus-visible:ring-2 focus-visible:ring-primary`), ARIA labels | axe-core CI + manual test |
@@ -325,7 +325,7 @@ Applies MindLedger visual identity across the entire Tauri + React application. 
 - [ ] **Contrast**: All text/background combos meet WCAG 2.1 AA (4.5:1 normal, 3:1 large)
 - [ ] **Focus States**: Visible focus rings on all interactive elements (Primary #0F4C5C)
 - [ ] **Coral Restriction**: ESLint rule passes; no Coral usage outside `AlertCard` net loss context
-- [ ] **Build**: `npm run build` + `cargo tauri build` succeed with zero warnings
+- [ ] **Build**: `pnpm build` + `cargo tauri build` succeed with zero warnings
 - [ ] **Cross-platform**: Verified on macOS (WebKit) and Windows (WebView2)
 
 ### Risk Factors
@@ -344,7 +344,7 @@ Applies MindLedger visual identity across the entire Tauri + React application. 
 ### Type Synchronization (Rust ↔ TypeScript)
 - **Tool**: `tauri-specta` (optional) or manual sync
 - **Source of Truth**: Rust command signatures + `src/types/index.ts`
-- **CI Check**: `npm run typecheck` + `cargo check` in same pipeline
+- **CI Check**: `pnpm typecheck` + `cargo check` in same pipeline
 
 ### Testing Strategy
 | Layer | Tool | Coverage Target |

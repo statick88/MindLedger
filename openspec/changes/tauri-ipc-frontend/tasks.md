@@ -636,7 +636,7 @@ Tasks are organized by **capability** (matching the spec) and **dependency order
   - [ ] `colors: { primary: 'var(--color-primary)', sage: 'var(--color-sage)', coral: 'var(--color-coral)', ... }`
   - [ ] `fontFamily: { sans: ['Inter', ...], mono: ['JetBrains Mono', ...] }`
   - [ ] `safelist: ['bg-primary', 'bg-sage', 'bg-coral', 'text-primary', 'text-sage', 'text-coral', ...]`
-  - [ ] `npm run build` compiles without purging brand colors
+  - [ ] `pnpm build` compiles without purging brand colors
 
 ### T-037: Update tauri.conf.json Product Name
 - **Capability**: `brand-integration`
@@ -664,7 +664,7 @@ Tasks are organized by **capability** (matching the spec) and **dependency order
 - **Acceptance Criteria**:
   - [ ] Rule detects `bg-coral`, `text-coral`, `border-coral`, `bg-[#E3645F]`, etc.
   - [ ] Allows usage in `AlertCard.tsx` only
-  - [ ] `npm run lint` passes on clean codebase
+  - [ ] `pnpm lint` passes on clean codebase
   - [ ] Rule documented in contributing guide
 
 ### T-039: Bundle Inter Font Locally
@@ -737,7 +737,7 @@ Tasks are organized by **capability** (matching the spec) and **dependency order
 - **Acceptance Criteria**:
   - [ ] >85% coverage on all new components
   - [ ] Tests cover prop variants, interactions, accessibility
-  - [ ] `npm run test` passes
+  - [ ] `pnpm test` passes
   - [ ] MSW mocks for IPC calls in hooks
 
 ### T-043: Frontend Hook Tests (Vitest + MSW)
@@ -833,7 +833,7 @@ Tasks are organized by **capability** (matching the spec) and **dependency order
   - [ ] `tsc --noEmit` — zero errors
   - [ ] `cargo clippy -- -D warnings` — zero warnings
   - [ ] `cargo audit` — zero vulnerabilities
-  - [ ] `npm run lint` — zero errors (including coral rule)
+  - [ ] `pnpm lint` — zero errors (including coral rule)
   - [ ] All checks pass in CI
 
 ---

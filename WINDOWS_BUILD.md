@@ -74,18 +74,27 @@ winget install NASM.NASM
 # Add to PATH: C:\Program Files\NASM
 ```
 
-### 6. Node.js & npm
+### 6. Node.js, fnm & pnpm
 
 ```powershell
-winget install OpenJS.NodeJS.LTS
-node --version   # Should show v20+ 
-npm --version
+# Install fnm (Fast Node Manager)
+winget install Schniz.fnm
+
+# Install Node.js LTS via fnm
+fnm install 24
+fnm use 24
+node --version   # Should show v24+
+
+# Install pnpm
+corepack enable
+corepack prepare pnpm@latest --activate
+pnpm --version
 ```
 
 ### 7. Tauri CLI
 
 ```powershell
-npm install -g @tauri-apps/cli@2
+pnpm add -g @tauri-apps/cli@2
 tauri --version   # Should show 2.x
 ```
 
@@ -100,10 +109,10 @@ git clone https://github.com/Statick/MindLedger.git
 cd MindLedger
 
 # Install frontend dependencies
-npm install
+pnpm install
 
 # Verify frontend builds
-npm run build
+pnpm build
 ```
 
 ### 2. Configure Environment Variables (if needed)

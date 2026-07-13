@@ -53,6 +53,8 @@ pub fn create_pool_with_key(database_path: &Path, key: &str) -> Result<DbPool> {
 }
 
 pub fn create_memory_pool() -> Result<DbPool> {
+    // Each call creates a fresh private in-memory database.
+    // Tests must NOT share pools — each test gets its own via create_memory_pool().
     let conn = Connection::open_in_memory()
         .context("Failed to open in-memory database")?;
     conn.execute_batch("PRAGMA foreign_keys=ON;")

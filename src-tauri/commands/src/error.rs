@@ -91,4 +91,10 @@ impl From<soft_gloria_domain::ContabilidadError> for AppError {
     }
 }
 
+impl From<soft_gloria_domain::DomainError> for AppError {
+    fn from(err: soft_gloria_domain::DomainError) -> Self {
+        AppError::Validation(err.to_string())
+    }
+}
+
 pub type AppResult<T> = Result<T, AppError>;

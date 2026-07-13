@@ -79,6 +79,8 @@ newtype_uuid!(DocumentId);
 newtype_uuid!(UserId);
 newtype_uuid!(OrganizationId);
 newtype_uuid!(LocationId);
+newtype_uuid!(TherapistId);
+newtype_uuid!(ReminderId);
 
 #[cfg(test)]
 mod tests {
