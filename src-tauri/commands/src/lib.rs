@@ -4,6 +4,9 @@ pub mod accounting_commands;
 pub mod diagnostics_commands;
 pub mod age_commands;
 
+#[cfg(test)]
+mod e2e_integration;
+
 pub use error::{AppError, AppResult};
 pub use patient_commands::*;
 pub use accounting_commands::*;

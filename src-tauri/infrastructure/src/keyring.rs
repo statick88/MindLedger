@@ -70,7 +70,7 @@ impl SqlCipherKeyManager {
                     "[MindLedger] WARNING: fallback key file is invalid, regenerating"
                 );
             }
-            let mut key = Self::generate_hex_key();
+            let key = Self::generate_hex_key();
             if let Some(parent) = fallback_path.parent() {
                 let _ = std::fs::create_dir_all(parent);
             }

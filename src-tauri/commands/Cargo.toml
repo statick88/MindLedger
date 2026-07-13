@@ -21,3 +21,5 @@ soft-gloria-infrastructure = { path = "../infrastructure" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt"] }
+docx-rs = "0.4"
+tempfile = "3"
