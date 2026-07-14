@@ -1,5 +1,5 @@
 [package]
-name = "soft-gloria-domain"
+name = "soft-mindledger-domain"
 version = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }

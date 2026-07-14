@@ -4,7 +4,7 @@ use chrono::NaiveDate;
 use rust_decimal::Decimal;
 use rusqlite::params;
 use serde_json;
-use soft_gloria_domain::{
+use soft_mindledger_domain::{
     accounting::{AsientoContable, LineaAsiento},
     repositories::{AccountingRepository, Pagination, RepositoryError},
 };
@@ -204,7 +204,7 @@ impl AccountingRepository for SqliteAccountingRepository {
         }).await.map_err(|e| RepositoryError::Database(format!("Task join error: {}", e)))?
     }
 
-    async fn get_balance_general(&self, fecha: NaiveDate) -> Result<soft_gloria_domain::BalanceGeneral, RepositoryError> {
+    async fn get_balance_general(&self, fecha: NaiveDate) -> Result<soft_mindledger_domain::BalanceGeneral, RepositoryError> {
         let asientos = self.list_asientos(
             Some(NaiveDate::from_ymd_opt(1900, 1, 1).unwrap()),
             Some(fecha),
@@ -245,7 +245,7 @@ impl AccountingRepository for SqliteAccountingRepository {
         let pasivos_vec: Vec<(String, Decimal)> = pasivos.into_iter().filter(|(_, v)| *v != Decimal::ZERO).collect();
         let patrimonio_vec: Vec<(String, Decimal)> = patrimonio.into_iter().filter(|(_, v)| *v != Decimal::ZERO).collect();
 
-        Ok(soft_gloria_domain::BalanceGeneral {
+        Ok(soft_mindledger_domain::BalanceGeneral {
             fecha,
             activos: activos_vec,
             pasivos: pasivos_vec,
@@ -253,7 +253,7 @@ impl AccountingRepository for SqliteAccountingRepository {
         })
     }
 
-    async fn get_estado_resultados(&self, desde: NaiveDate, hasta: NaiveDate) -> Result<soft_gloria_domain::EstadoResultados, RepositoryError> {
+    async fn get_estado_resultados(&self, desde: NaiveDate, hasta: NaiveDate) -> Result<soft_mindledger_domain::EstadoResultados, RepositoryError> {
         let asientos = self.list_asientos(Some(desde), Some(hasta), Pagination::new(0, 10000)).await?;
 
         let mut ingresos: std::collections::HashMap<String, Decimal> = std::collections::HashMap::new();
@@ -293,7 +293,7 @@ impl AccountingRepository for SqliteAccountingRepository {
         let ingresos_vec: Vec<(String, Decimal)> = ingresos.into_iter().filter(|(_, v)| *v != Decimal::ZERO).collect();
         let gastos_vec: Vec<(String, Decimal)> = gastos.into_iter().filter(|(_, v)| *v != Decimal::ZERO).collect();
 
-        Ok(soft_gloria_domain::EstadoResultados {
+        Ok(soft_mindledger_domain::EstadoResultados {
             fecha: hasta,
             ingresos: ingresos_vec,
             gastos: gastos_vec,
@@ -308,8 +308,8 @@ mod tests {
     use crate::database::create_memory_pool;
     use chrono::NaiveDate;
     use rust_decimal_macros::dec;
-    use soft_gloria_domain::accounting::{AsientoContable, LineaAsiento};
-    use soft_gloria_domain::repositories::AccountingRepository;
+    use soft_mindledger_domain::accounting::{AsientoContable, LineaAsiento};
+    use soft_mindledger_domain::repositories::AccountingRepository;
 
     fn create_test_repo() -> SqliteAccountingRepository {
         let pool = create_memory_pool().unwrap();
@@ -399,7 +399,7 @@ mod tests {
         let resultados = repo.list_asientos(
             Some(NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()),
             Some(NaiveDate::from_ymd_opt(2024, 1, 31).unwrap()),
-            soft_gloria_domain::repositories::Pagination::new(0, 10),
+            soft_mindledger_domain::repositories::Pagination::new(0, 10),
         ).await.unwrap();
 
         assert_eq!(resultados.len(), 2);

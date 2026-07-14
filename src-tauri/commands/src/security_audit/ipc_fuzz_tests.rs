@@ -10,9 +10,9 @@ mod ipc_fuzz_tests {
     use crate::accounting_commands::*;
     use crate::error::AppError;
     use crate::agenda_commands::*;
-    use soft_gloria_domain::appointment::{AppointmentStatus, Modality};
-    use soft_gloria_infrastructure::database::create_memory_pool;
-    use soft_gloria_infrastructure::DbPool;
+    use soft_mindledger_domain::appointment::{AppointmentStatus, Modality};
+    use soft_mindledger_infrastructure::database::create_memory_pool;
+    use soft_mindledger_infrastructure::DbPool;
     use chrono::{Duration, Utc};
     use rust_decimal_macros::dec;
     use uuid::Uuid;
@@ -20,7 +20,7 @@ mod ipc_fuzz_tests {
     /// Shared test pool with full schema for IPC fuzz tests.
     fn create_fuzz_pool() -> DbPool {
         let pool = create_memory_pool().expect("Failed to create memory pool");
-        soft_gloria_infrastructure::migrations::run_all_migrations(&pool)
+        soft_mindledger_infrastructure::migrations::run_all_migrations(&pool)
             .expect("Failed to run migrations");
         pool
     }
@@ -350,7 +350,7 @@ mod ipc_fuzz_tests {
 
         // Attempt to parse — should fail gracefully, not panic or OOM
         let result = std::panic::catch_unwind(|| {
-            let _ = soft_gloria_application::docx_parser::ClinicalNoteParser::parse_docx(
+            let _ = soft_mindledger_application::docx_parser::ClinicalNoteParser::parse_docx(
                 zip_path.to_str().unwrap(),
             );
         });

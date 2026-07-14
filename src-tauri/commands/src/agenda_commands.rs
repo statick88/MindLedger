@@ -3,7 +3,7 @@ use chrono::{DateTime, Duration, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
-use soft_gloria_domain::{
+use soft_mindledger_domain::{
     appointment::{
         Appointment, AppointmentStatus, Modality, DateTimeRange,
     },
@@ -15,7 +15,7 @@ use soft_gloria_domain::{
     accounting_trigger::AccountingTrigger,
     DomainError,
 };
-use soft_gloria_infrastructure::{DbPool, SqliteAppointmentRepository, SqlitePatientRepository, SqliteReminderRepository, SqliteAccountingRepository};
+use soft_mindledger_infrastructure::{DbPool, SqliteAppointmentRepository, SqlitePatientRepository, SqliteReminderRepository, SqliteAccountingRepository};
 use std::sync::Arc;
 use tauri::command;
 use uuid::Uuid;
@@ -93,8 +93,8 @@ pub struct AppointmentResponse {
     pub updated_at: String,
 }
 
-impl From<soft_gloria_domain::appointment::Appointment> for AppointmentResponse {
-    fn from(a: soft_gloria_domain::appointment::Appointment) -> Self {
+impl From<soft_mindledger_domain::appointment::Appointment> for AppointmentResponse {
+    fn from(a: soft_mindledger_domain::appointment::Appointment) -> Self {
         Self {
             id: a.id.to_string(),
             patient_id: a.patient_id.to_string(),
@@ -227,7 +227,7 @@ pub async fn crear_cita_agenda_impl(
     });
     
     // Create appointment
-    let mut appointment = soft_gloria_domain::appointment::Appointment::new(
+    let mut appointment = soft_mindledger_domain::appointment::Appointment::new(
         patient_id,
         therapist_id,
         time_range,
@@ -319,7 +319,7 @@ pub async fn finalizar_sesion_agenda_impl(
         .ok_or_else(|| AppError::NotFound(format!("Appointment {} not found", id)))?;
     
     // Validate transition
-    if !appointment.status.can_transition_to(soft_gloria_domain::appointment::AppointmentStatus::Realizada) {
+    if !appointment.status.can_transition_to(soft_mindledger_domain::appointment::AppointmentStatus::Realizada) {
         return Err(AppError::Validation(
             format!("Cannot transition from {} to Realizada", appointment.status)
         ));
@@ -332,21 +332,21 @@ pub async fn finalizar_sesion_agenda_impl(
         .ok_or_else(|| AppError::NotFound("Patient not found".to_string()))?;
     
     // Build accounting entry using domain trigger
-    let therapist_data = soft_gloria_domain::accounting_trigger::TherapistAccountingData {
+    let therapist_data = soft_mindledger_domain::accounting_trigger::TherapistAccountingData {
         id: appointment.therapist_id,
-        full_name: soft_gloria_domain::value_objects::FullName::new(
+        full_name: soft_mindledger_domain::value_objects::FullName::new(
             "Terapeuta".to_string(), "Apellido".to_string(), None
         ).unwrap(),
         specialty_code: "PSI".to_string(),
     };
     
-    let paciente_data = soft_gloria_domain::accounting_trigger::PatientAccountingData {
+    let paciente_data = soft_mindledger_domain::accounting_trigger::PatientAccountingData {
         id: appointment.patient_id,
         full_name: patient.full_name,
         session_fee_cents: appointment.fee_cents,
     };
     
-    let asiento = soft_gloria_domain::accounting_trigger::AccountingTrigger::build_session_asiento(
+    let asiento = soft_mindledger_domain::accounting_trigger::AccountingTrigger::build_session_asiento(
         appointment.id,
         &paciente_data,
         &therapist_data,
@@ -357,7 +357,7 @@ pub async fn finalizar_sesion_agenda_impl(
     )?;
     
     // Validate the asiento is balanced
-    soft_gloria_domain::accounting_trigger::AccountingTrigger::validate_asiento_balance(&asiento)?;
+    soft_mindledger_domain::accounting_trigger::AccountingTrigger::validate_asiento_balance(&asiento)?;
     
     // Perform atomic transaction: update appointment + insert asiento + audit log
     // The repo handles the transaction internally
@@ -365,7 +365,7 @@ pub async fn finalizar_sesion_agenda_impl(
     repo.update(&appointment).await?;
     
     // Save the asiento using existing accounting command
-    let accounting_repo = soft_gloria_infrastructure::SqliteAccountingRepository::new(pool.clone());
+    let accounting_repo = soft_mindledger_infrastructure::SqliteAccountingRepository::new(pool.clone());
     accounting_repo.create_asiento(&asiento).await?;
     
     Ok(appointment.into())
@@ -561,9 +561,9 @@ pub async fn obtener_kpis_agenda_impl(
     
     let all = repo.list(filter.clone(), Pagination::new(0, 10000)).await?;
     
-    let completed = all.iter().filter(|a| a.status == soft_gloria_domain::appointment::AppointmentStatus::Realizada).count() as u64;
-    let cancelled = all.iter().filter(|a| a.status == soft_gloria_domain::appointment::AppointmentStatus::Cancelada).count() as u64;
-    let scheduled = all.iter().filter(|a| a.status == soft_gloria_domain::appointment::AppointmentStatus::Programada).count() as u64;
+    let completed = all.iter().filter(|a| a.status == soft_mindledger_domain::appointment::AppointmentStatus::Realizada).count() as u64;
+    let cancelled = all.iter().filter(|a| a.status == soft_mindledger_domain::appointment::AppointmentStatus::Cancelada).count() as u64;
+    let scheduled = all.iter().filter(|a| a.status == soft_mindledger_domain::appointment::AppointmentStatus::Programada).count() as u64;
     
     let total_scheduled = scheduled + completed;
     let no_show_rate = if total_scheduled > 0 {
@@ -571,13 +571,13 @@ pub async fn obtener_kpis_agenda_impl(
     } else { 0.0 };
     
     let revenue: i64 = all.iter()
-        .filter(|a| a.status == soft_gloria_domain::appointment::AppointmentStatus::Realizada)
+        .filter(|a| a.status == soft_mindledger_domain::appointment::AppointmentStatus::Realizada)
         .map(|a| a.fee_cents)
         .sum();
     
     let now = Utc::now();
     let upcoming_24h = all.iter()
-        .filter(|a| a.status == soft_gloria_domain::appointment::AppointmentStatus::Programada)
+        .filter(|a| a.status == soft_mindledger_domain::appointment::AppointmentStatus::Programada)
         .filter(|a| a.time_range.start <= now + Duration::hours(24))
         .count() as u64;
     
@@ -695,8 +695,8 @@ pub async fn obtener_kpis_agenda(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soft_gloria_infrastructure::database::create_memory_pool;
-    use soft_gloria_domain::{PatientId, TherapistId, Modality, AppointmentStatus, ReminderChannel, ReminderTemplate, Reminder, ReminderId, AppointmentId, PatientId as DomainPatientId};
+    use soft_mindledger_infrastructure::database::create_memory_pool;
+    use soft_mindledger_domain::{PatientId, TherapistId, Modality, AppointmentStatus, ReminderChannel, ReminderTemplate, Reminder, ReminderId, AppointmentId, PatientId as DomainPatientId};
     use chrono::{Utc, Duration};
     use uuid::Uuid;
 

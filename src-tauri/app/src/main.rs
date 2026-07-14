@@ -3,13 +3,13 @@
     windows_subsystem = "windows"
 )]
 
-use soft_gloria_commands::patient_commands::*;
-use soft_gloria_commands::accounting_commands::*;
-use soft_gloria_commands::diagnostics_commands::*;
-use soft_gloria_commands::age_commands::*;
-use soft_gloria_commands::agenda_commands::*;
-use soft_gloria_commands::tenant::*;
-use soft_gloria_infrastructure::{create_pool_for_tenant, run_migrations, run_accounting_migrations, run_diagnostics_migrations, run_agenda_migrations};
+use soft_mindledger_commands::patient_commands::*;
+use soft_mindledger_commands::accounting_commands::*;
+use soft_mindledger_commands::diagnostics_commands::*;
+use soft_mindledger_commands::age_commands::*;
+use soft_mindledger_commands::agenda_commands::*;
+use soft_mindledger_commands::tenant::*;
+use soft_mindledger_infrastructure::{create_pool_for_tenant, run_migrations, run_accounting_migrations, run_diagnostics_migrations, run_agenda_migrations};
 use std::sync::Arc;
 use tauri::Manager;
 

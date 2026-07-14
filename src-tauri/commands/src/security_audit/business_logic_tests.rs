@@ -9,9 +9,9 @@ mod business_logic_tests {
     use crate::accounting_commands::*;
     use crate::agenda_commands::*;
     use crate::error::AppError;
-    use soft_gloria_domain::appointment::{AppointmentStatus, Modality};
-    use soft_gloria_infrastructure::database::create_memory_pool;
-    use soft_gloria_infrastructure::DbPool;
+    use soft_mindledger_domain::appointment::{AppointmentStatus, Modality};
+    use soft_mindledger_infrastructure::database::create_memory_pool;
+    use soft_mindledger_infrastructure::DbPool;
     use chrono::{Duration, Utc};
     use rust_decimal::Decimal;
     use rust_decimal_macros::dec;
@@ -20,7 +20,7 @@ mod business_logic_tests {
     /// Shared test pool with full schema for business logic tests.
     fn create_bl_pool() -> DbPool {
         let pool = create_memory_pool().expect("Failed to create memory pool");
-        soft_gloria_infrastructure::migrations::run_all_migrations(&pool)
+        soft_mindledger_infrastructure::migrations::run_all_migrations(&pool)
             .expect("Failed to run migrations");
         pool
     }

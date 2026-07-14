@@ -11,14 +11,14 @@ mod e2e_tests {
     use chrono::NaiveDate;
     use docx_rs::*;
     use rust_decimal_macros::dec;
-    use soft_gloria_domain::accounting::{AsientoContable, LineaAsiento};
-    use soft_gloria_domain::age::Age;
-    use soft_gloria_domain::repositories::*;
-    use soft_gloria_domain::value_objects::{DocumentNumber, DocumentType, FullName, Gender};
-    use soft_gloria_domain::*;
-    use soft_gloria_infrastructure::accounting_repository_sqlite::SqliteAccountingRepository;
-    use soft_gloria_infrastructure::repositories::SqlitePatientRepository;
-    use soft_gloria_infrastructure::{create_memory_pool, DbPool};
+    use soft_mindledger_domain::accounting::{AsientoContable, LineaAsiento};
+    use soft_mindledger_domain::age::Age;
+    use soft_mindledger_domain::repositories::*;
+    use soft_mindledger_domain::value_objects::{DocumentNumber, DocumentType, FullName, Gender};
+    use soft_mindledger_domain::*;
+    use soft_mindledger_infrastructure::accounting_repository_sqlite::SqliteAccountingRepository;
+    use soft_mindledger_infrastructure::repositories::SqlitePatientRepository;
+    use soft_mindledger_infrastructure::{create_memory_pool, DbPool};
     use std::fs;
     use tempfile::tempdir;
     use uuid::Uuid;
@@ -32,7 +32,7 @@ mod e2e_tests {
 
         // run_all_migrations acquires its own lock — do NOT pre-lock here
         // (std::sync::Mutex is not reentrant → pre-lock causes deadlock)
-        soft_gloria_infrastructure::migrations::run_all_migrations(&pool)
+        soft_mindledger_infrastructure::migrations::run_all_migrations(&pool)
             .expect("Failed to run migrations");
 
         pool
@@ -55,8 +55,8 @@ mod e2e_tests {
     /// Local patient creation helper — mirrors patient_commands::create_patient but
     /// takes &DbPool directly (no Tauri State needed in tests).
     async fn create_patient_impl(pool: &DbPool, request: CreatePatientRequest) -> Result<crate::patient_commands::PatientResponse, crate::AppError> {
-        use soft_gloria_domain::patient::Patient;
-        use soft_gloria_infrastructure::repositories::SqlitePatientRepository;
+        use soft_mindledger_domain::patient::Patient;
+        use soft_mindledger_infrastructure::repositories::SqlitePatientRepository;
 
         let repo = SqlitePatientRepository::new(pool.clone());
 
@@ -91,7 +91,7 @@ mod e2e_tests {
         asiento_id: String,
         request: UpdateAsientoRequest,
     ) -> Result<AsientoResponse, crate::AppError> {
-        use soft_gloria_infrastructure::accounting_repository_sqlite::SqliteAccountingRepository;
+        use soft_mindledger_infrastructure::accounting_repository_sqlite::SqliteAccountingRepository;
 
         let repo = SqliteAccountingRepository::new(pool.clone());
         let id = Uuid::parse_str(&asiento_id)
@@ -168,7 +168,7 @@ Plan de tratamiento: Continuar con terapia semanal, aumentar exposición gradual
         let docx_path = create_clinical_note_docx(&dir, clinical_content);
 
         // Step 2: Parse the DOCX
-        let note = soft_gloria_application::docx_parser::ClinicalNoteParser::parse_docx(
+        let note = soft_mindledger_application::docx_parser::ClinicalNoteParser::parse_docx(
             docx_path.to_str().unwrap(),
         )
         .expect("Failed to parse clinical note DOCX");
@@ -292,7 +292,7 @@ Plan de tratamiento: Continuar con terapia semanal, aumentar exposición gradual
             );
             let docx_path = create_clinical_note_docx(&dir, &content);
 
-            let note = soft_gloria_application::docx_parser::ClinicalNoteParser::parse_docx(
+            let note = soft_mindledger_application::docx_parser::ClinicalNoteParser::parse_docx(
                 docx_path.to_str().unwrap(),
             )
             .unwrap();
@@ -381,7 +381,7 @@ Plan de tratamiento: Continuar con terapia semanal, aumentar exposición gradual
         let content = "Paciente: PT-SPARSE-001\nSolo tiene paciente y diagnóstico.\nDiagnóstico: F41.1";
         let docx_path = create_clinical_note_docx(&dir, content);
 
-        let note = soft_gloria_application::docx_parser::ClinicalNoteParser::parse_docx(
+        let note = soft_mindledger_application::docx_parser::ClinicalNoteParser::parse_docx(
             docx_path.to_str().unwrap(),
         )
         .unwrap();

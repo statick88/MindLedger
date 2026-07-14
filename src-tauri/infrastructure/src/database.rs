@@ -126,18 +126,18 @@ mod tests {
     #[test]
     fn test_create_pool_for_tenant_isolation() {
         let dir = tempdir().unwrap();
-        let data_dir = dir.path().join("mind-ledger-gloria-once");
+        let data_dir = dir.path().join("mind-ledger-default");
         
         let pool = create_pool_for_tenant(
             &data_dir,
-            "sqlcipher-key-gloria-once",
-            "mind_ledger_gloria_once.db"
+            "sqlcipher-key-default",
+            "mind_ledger_default.db"
         );
         
         assert!(pool.is_ok());
         
         // Verify DB file created in tenant-specific directory
-        let db_path = data_dir.join("mind_ledger_gloria_once.db");
+        let db_path = data_dir.join("mind_ledger_default.db");
         assert!(db_path.exists());
     }
 }

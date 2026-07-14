@@ -150,7 +150,7 @@ mod tests {
 
     #[test]
     fn test_get_or_create_key_creates_new() {
-        let manager = SqlCipherKeyManager::new("test-soft-gloria", "test-create").unwrap();
+        let manager = SqlCipherKeyManager::new("test-soft-mindledger", "test-create").unwrap();
         let _ = manager.delete_key();
         
         let key = manager.get_or_create_key().unwrap();
@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn test_get_or_create_key_retrieves_existing() {
-        let manager = SqlCipherKeyManager::new("test-soft-gloria", "test-retrieve").unwrap();
+        let manager = SqlCipherKeyManager::new("test-soft-mindledger", "test-retrieve").unwrap();
         let _ = manager.delete_key();
         
         let key1 = manager.get_or_create_key().unwrap();
