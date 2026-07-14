@@ -30,7 +30,7 @@ fn main() {
         
         // Template tauri.conf.json with tenant-specific values
         let tenant_id = config["tenant"]["id"].as_str().unwrap_or("default");
-        let commercial_name = config["tenant"]["commercialName"].as_str().unwrap_or("MindLedger");
+        let commercial_name = config["tenant"]["commercialName"].as_str().unwrap_or("MindLdger");
         
         template_tauri_conf(tenant_id, commercial_name);
     }

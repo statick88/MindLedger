@@ -1,8 +1,8 @@
 # CONTRIBUTING.md
 
-# Contributing to Soft Gloria (MindLedger)
+# Contributing to Soft Gloria (MindLdger)
 
-> **Brand**: MindLedger (white-label: Soft Gloria)  
+> **Brand**: MindLdger (white-label: Soft Gloria)  
 > **Purpose**: Local-first desktop app for clinical psychology practice management in Ecuador  
 > **Stack**: Rust + Tauri v2 + SQLCipher + React/TypeScript  
 > **Architecture**: Clean Architecture (Domain → Use Cases → Infrastructure → Presentation)  
@@ -28,7 +28,7 @@
 
 ## Project Overview
 
-**Soft Gloria** (brand: **MindLedger**) is a local-first desktop application for clinical psychology practice management, built specifically for the Ecuadorian market. It handles:
+**Soft Gloria** (brand: **MindLdger**) is a local-first desktop application for clinical psychology practice management, built specifically for the Ecuadorian market. It handles:
 
 - **Patient Registry** — Demographics, document validation (CI/RUC), clinical history
 - **Appointments** — Scheduling, status tracking, doctor/room assignment

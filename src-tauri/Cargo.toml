@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [[bin]]
-name = "MindLedger"
+name = "MindLdger"
 path = "app/src/main.rs"
 
 [build-dependencies]

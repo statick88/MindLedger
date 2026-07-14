@@ -1,23 +1,24 @@
-# MindLedger — Comprehensive Security Audit Report
+# MindLdger — Comprehensive Security Audit Report
 
 **Generated**: 2026-07-13T23:56:04Z
-**Last Updated**: 2026-07-14 (Post-Mitigation)
-**Auditor**: Automated (MindLedger Security Audit Suite)
+**Last Updated**: 2026-07-14 (Post-Verification — Kali Linux DevSecOps Pipeline)
+**Auditor**: Automated (MindLedger Security Audit Suite) + Manual Kali Verification
 **Scope**: Full workspace — Rust backend (src-tauri/) + JavaScript frontend (src/)
+**Verification Environment**: Kali Linux, rustc 1.97.0, manual static analysis
 
 ---
 
 ## Executive Summary
 
-| Severity | Found | Mitigated | Remaining |
-|----------|-------|-----------|-----------|
-| CRITICAL | 1 | 1 | 0 |
-| HIGH | 3 | 3 | 0 |
-| MEDIUM | 3 | 2 | 1 |
-| LOW | 2 | 1 | 1 |
-| INFO | 2 | 0 | 2 |
+| Severity | Found | Mitigated | Verified-Safe | Remaining |
+|----------|-------|-----------|---------------|-----------|
+| CRITICAL | 1 | 1 | 1 | 0 |
+| HIGH | 3 | 3 | 3 | 0 |
+| MEDIUM | 3 | 2 | 1 | 1 |
+| LOW | 2 | 1 | 0 | 1 |
+| INFO | 2 | 0 | 0 | 2 |
 
-**Overall Verdict**: **PASS WITH CONDITIONS** — All CRITICAL and HIGH findings mitigated. MEDIUM/LOW findings documented with compensating controls. Runtime verification pending (cargo toolchain required).
+**Overall Verdict**: **CONDITIONAL PASS** — All CRITICAL and HIGH findings mitigated and verified via manual static analysis on Kali Linux. Runtime verification (`cargo test --workspace`) blocked by missing `libgtk-3-dev` system dependency (requires root). SCA confirms argon2 removed, all critical crates at current versions, 0 unsafe blocks in source.
 
 ---
 

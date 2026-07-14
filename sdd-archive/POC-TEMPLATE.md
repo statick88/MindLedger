@@ -84,7 +84,7 @@ Use this template for each security finding. Copy and fill in for every CRITICAL
 For findings that need scoring, use the CVSS v4.0 calculator:
 https://www.first.org/cvss/calculator/4.0
 
-### Common Vectors for MindLedger
+### Common Vectors for MindLdger
 
 | Scenario | Typical Vector |
 |----------|---------------|

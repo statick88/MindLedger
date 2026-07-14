@@ -96,7 +96,7 @@ These items were created before SDD. Mark as **DONE** after verification.
 - **Dependencies**: None
 - **Complexity**: Low
 - **Files**: `tenant-configs/default.json` (new)
-- **Changes**: Create minimal valid tenant config matching current hardcoded MindLedger defaults
+- **Changes**: Create minimal valid tenant config matching current hardcoded MindLdger defaults
 - **Acceptance**: Build succeeds without `TENANT_CONFIG` env var; app runs with default branding
 
 ### Task 1.4: Verify Database Isolation (Integration)
@@ -146,8 +146,8 @@ These items were created before SDD. Mark as **DONE** after verification.
 - **Files**: `src-tauri/build.rs`, `src-tauri/tauri.conf.json`
 - **Verify**: 
   - `identifier` → `com.mindledger.gloriaonce.desktop`
-  - `productName` → `MindLedger - Psic. Gloria Once`
-  - `app.windows[0].title` → `MindLedger - Psic. Gloria Once`
+  - `productName` → `MindLdger - Psic. Gloria Once`
+  - `app.windows[0].title` → `MindLdger - Psic. Gloria Once`
 - **Acceptance**: Built `.app`/`.exe` has correct bundle ID and window title
 
 ### Task 3.2: Ensure tauri.conf.json is tracked but template-safe
@@ -175,7 +175,7 @@ These items were created before SDD. Mark as **DONE** after verification.
 - **Complexity**: Medium
 - **Files**: `src/index.css`
 - **Changes**:
-  - Define `:root` CSS variables with current MindLedger defaults (design.md §4.2)
+  - Define `:root` CSS variables with current MindLdger defaults (design.md §4.2)
   - Define `.dark` overrides with current dark mode defaults
   - Add `.dark` selector mapping `--*-dark` variables to base variables (design.md §4.2 lines 475-493)
   - Use `@layer base` for proper Tailwind precedence
@@ -225,7 +225,7 @@ These items were created before SDD. Mark as **DONE** after verification.
   - Pass `tenantConfig` to `<Layout />`
 - **Acceptance**: 
   - App loads with Gloria Once colors without flash
-  - Window title shows "MindLedger - Psic. Gloria Once"
+  - Window title shows "MindLdger - Psic. Gloria Once"
   - Dark mode uses `brandDark` values
 
 ---
@@ -238,10 +238,10 @@ These items were created before SDD. Mark as **DONE** after verification.
 - **Files**: `src/components/layout/Layout.tsx`
 - **Changes**:
   - Accept `tenantConfig?: TenantConfig | null` prop
-  - Extract `brandName = tenantConfig?.tenant.commercialName ?? 'MindLedger'`
+  - Extract `brandName = tenantConfig?.tenant.commercialName ?? 'MindLdger'`
   - Extract `subtitle = tenantConfig?.tenant.clinicalRole ?? 'Clinical Psychology'`
   - Pass to `<Sidebar brandName={brandName} subtitle={subtitle} />`
-- **Acceptance**: Sidebar header shows "MindLedger - Psic. Gloria Once" / "Neuropsicóloga Clínica"
+- **Acceptance**: Sidebar header shows "MindLdger - Psic. Gloria Once" / "Neuropsicóloga Clínica"
 
 ### Task 5.2: Modify `src/components/ui/sidebar.tsx` — Accept Brand Props
 - **Dependencies**: Task 5.1
@@ -249,7 +249,7 @@ These items were created before SDD. Mark as **DONE** after verification.
 - **Files**: `src/components/ui/sidebar.tsx`
 - **Changes**:
   - Add `brandName: string`, `subtitle: string` props
-  - Replace hardcoded "MindLedger" / "Clinical Psychology" with props
+  - Replace hardcoded "MindLdger" / "Clinical Psychology" with props
 - **Acceptance**: Sidebar renders dynamic brand correctly
 
 ### Task 5.3: Create `src/pages/LoginPage.tsx` — Dynamic Login Branding (Optional)
@@ -320,9 +320,9 @@ These items were created before SDD. Mark as **DONE** after verification.
 - **Command**: `TENANT_CONFIG=../tenant-configs/gloria-once.json cargo tauri build`
 - **Acceptance Criteria** (from proposal §Success Criteria):
   - [ ] Bundle ID: `com.mindledger.gloriaonce.desktop`
-  - [ ] App name: `MindLedger - Psic. Gloria Once`
-  - [ ] Window title: `MindLedger - Psic. Gloria Once`
-  - [ ] Sidebar shows "MindLedger - Psic. Gloria Once" + "Neuropsicóloga Clínica"
+  - [ ] App name: `MindLdger - Psic. Gloria Once`
+  - [ ] Window title: `MindLdger - Psic. Gloria Once`
+  - [ ] Sidebar shows "MindLdger - Psic. Gloria Once" + "Neuropsicóloga Clínica"
   - [ ] Primary `#1A5F60` (Teal) on buttons, sidebar, focus rings
   - [ ] Secondary `#E5F1EE` (Sage) on metric cards, hover states
   - [ ] Accent `#E3645F` (Coral) on destructive actions only
@@ -336,7 +336,7 @@ These items were created before SDD. Mark as **DONE** after verification.
 - **Complexity**: Low
 - **Command**: `cargo tauri build` (no TENANT_CONFIG)
 - **Acceptance**: 
-  - App builds and runs with default MindLedger branding
+  - App builds and runs with default MindLdger branding
   - DB at `$APPDATA/mind-ledger/mind_ledger.db`
   - Keyring: `mind-ledger` / `sqlcipher-key`
   - All existing tests pass (74+ tests)

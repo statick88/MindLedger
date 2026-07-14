@@ -1,4 +1,4 @@
-# MindLedger — Guía de Despliegue Multi-Cliente / White-Label
+# MindLdger — Guía de Despliegue Multi-Cliente / White-Label
 
 > **Versión:** 1.0.0  
 > **Fecha:** 2026-07-13  
@@ -9,7 +9,7 @@
 
 ## 1. Visión General del Modelo White-Label
 
-MindLedger **no es multi-tenant lógico** (una BD compartida con `tenant_id`). Cada cliente recibe:
+MindLdger **no es multi-tenant lógico** (una BD compartida con `tenant_id`). Cada cliente recibe:
 
 | Recurso | Aislamiento |
 |---------|-------------|
@@ -33,7 +33,7 @@ Cliente A (Clínica San José)          Cliente B (Dr. Pérez - Consultorio)
                         ▼
               ┌───────────────────┐
               │ Mismo Binario     │
-              │ MindLedger.app    │
+              │ MindLdger.app    │
               │ (firmado, notarizado)│
               └───────────────────┘
 ```
@@ -65,7 +65,7 @@ cargo tauri --version  # 2.x
 
 ```bash
 # 1. Clonar repo canónico (private)
-git clone git@github.com:Statick88/MindLedger.git mindledger-template
+git clone git@github.com:Statick88/MindLdger.git mindledger-template
 cd mindledger-template
 
 # 2. Verificar estado limpio (124 tests verdes)
@@ -89,10 +89,10 @@ El archivo **no existe en el repo** — se genera por tenant en tiempo de build 
 
 **Ubicación recomendada (macOS):**
 ```
-MindLedger.app/
+MindLdger.app/
 ├── Contents/
 │   ├── MacOS/
-│   │   └── MindLedger          ← Binario
+│   │   └── MindLdger          ← Binario
 │   ├── Resources/
 │   │   ├── app.config.json     ← ← ← AQUÍ (readonly, firmado)
 │   │   └── ...
@@ -242,7 +242,7 @@ export function useTenantConfig() {
 function Header() {
   const { data: config } = useTenantConfig();
   const logo = config?.branding.logo.light;
-  const appTitle = config?.ui.appTitle ?? 'MindLedger';
+  const appTitle = config?.ui.appTitle ?? 'MindLdger';
   const primary = config?.branding.colors.primary;
   
   return (
@@ -260,7 +260,7 @@ function Header() {
 /* src/index.css — Se inyecta via :root en mount */
 @layer base {
   :root {
-    /* Valores por defecto (MindLedger base) */
+    /* Valores por defecto (MindLdger base) */
     --brand-primary: 192 72% 21%;        /* #0F4C5C */
     --brand-secondary: 165 30% 92%;      /* #E5F1EE */
     --brand-accent: 2 72% 63%;           /* #E3645F */
@@ -342,7 +342,7 @@ app_handle.manage(Arc::new(pool));
 
 ```mermaid
 flowchart TD
-    A[Usuario lanza MindLedger.app] --> B{Existe TENANT_ID?}
+    A[Usuario lanza MindLdger.app] --> B{Existe TENANT_ID?}
     B -->|No| C[Leer app.config.json → tenant.id]
     C --> D[Crear $APPDATA/mind-ledger-{tenant.id}/]
     D --> E[SqlCipherKeyManager::new_with_fallback]
@@ -408,19 +408,19 @@ TENANT_CONFIG="../../${CONFIG_FILE}" TENANT_ID="${TENANT_ID}" cargo tauri build 
 
 # 5. Copiar artifacts
 mkdir -p "../../${OUT_DIR}"
-cp -r target/universal-apple-darwin/release/bundle/macos/MindLedger.app "../../${OUT_DIR}/"
+cp -r target/universal-apple-darwin/release/bundle/macos/MindLdger.app "../../${OUT_DIR}/"
 cp -r target/universal-apple-darwin/release/bundle/dmg/*.dmg "../../${OUT_DIR}/" 2>/dev/null || true
 
 # 6. Firmar y notarizar (requiere certs Apple Developer)
 # codesign --deep --force --verify --verbose --sign "Developer ID Application: ..." \
-#   --options runtime "../../${OUT_DIR}/MindLedger.app"
-# xcrun notarytool submit "../../${OUT_DIR}/MindLedger.dmg" \
+#   --options runtime "../../${OUT_DIR}/MindLdger.app"
+# xcrun notarytool submit "../../${OUT_DIR}/MindLdger.dmg" \
 #   --apple-id "..." --team-id "..." --password "@keychain:notary" --wait
-# xcrun stapler staple "../../${OUT_DIR}/MindLedger.app"
+# xcrun stapler staple "../../${OUT_DIR}/MindLdger.app"
 
 echo "✅ Build completo en: ${OUT_DIR}"
-echo "   App: ${OUT_DIR}/MindLedger.app"
-echo "   DMG: ${OUT_DIR}/MindLedger-${TENANT_ID}.dmg"
+echo "   App: ${OUT_DIR}/MindLdger.app"
+echo "   DMG: ${OUT_DIR}/MindLdger-${TENANT_ID}.dmg"
 ```
 
 ### 6.2 Estructura de Carpeta de Tenant
@@ -553,7 +553,7 @@ cargo run --bin seed_diagnostics -- --tenant-id clinica-san-jose-quito
 
 | Ítem | Verificación | Responsable |
 |------|--------------|-------------|
-| ✅ **Binario firmado + notarizado** | `codesign -dv MindLedger.app` + `spctl -a -v MindLedger.app` | DevOps |
+| ✅ **Binario firmado + notarizado** | `codesign -dv MindLdger.app` + `spctl -a -v MindLdger.app` | DevOps |
 | ✅ **DMG instalable** | Montar DMG → arrastrar a Applications → lanzar sin Gatekeeper | QA |
 | ✅ **Aislamiento BD verificado** | 2 instancias paralelas → datos no se cruzan | QA |
 | ✅ **Branding correcto** | Logo, colores, textos menú, login screen match `app.config.json` | Diseño |
@@ -659,7 +659,7 @@ ls -la ~/Library/Application\ Support/mind-ledger-*/mind-ledger.key
 
 | Término | Definición |
 |---------|------------|
-| **Tenant** | Instancia aislada de MindLedger para un cliente (clínica/especialista) |
+| **Tenant** | Instancia aislada de MindLdger para un cliente (clínica/especialista) |
 | **Branding Injection** | Inyección de tokens visuales (colores, logos, textos) via `app.config.json` sin recompilar Rust |
 | **Keyring Entry** | Credencial en almacenamiento seguro del OS (Keychain/Credential Manager/Secret Service) |
 | **Fallback Key File** | Archivo `mind-ledger.key` (0o600) usado si keyring no disponible |

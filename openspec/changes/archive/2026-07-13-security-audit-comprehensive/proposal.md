@@ -2,7 +2,7 @@
 
 ## Intent
 
-MindLedger handles PHI (patient records, CIE-10/DSM-5 diagnostics, clinical notes) and financial accounting data. Before production deployment, a systematic penetration test is required to identify exploitable vulnerabilities across IPC, cryptography, dependencies, and business logic. This is an audit, not a feature — it produces findings and remediation tasks, not new capabilities.
+MindLdger handles PHI (patient records, CIE-10/DSM-5 diagnostics, clinical notes) and financial accounting data. Before production deployment, a systematic penetration test is required to identify exploitable vulnerabilities across IPC, cryptography, dependencies, and business logic. This is an audit, not a feature — it produces findings and remediation tasks, not new capabilities.
 
 ## Scope
 

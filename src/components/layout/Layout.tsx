@@ -38,7 +38,7 @@ export function Layout({ tenantConfig }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
 
-  const brandName = tenantConfig?.tenant.commercialName ?? 'MindLedger';
+  const brandName = tenantConfig?.tenant.commercialName ?? 'MindLdger';
 
   const renderNavItem = (item: typeof navigation[0]) => {
     const isActive = location.pathname === item.href ||

@@ -1,7 +1,7 @@
 # SDD Task Breakdown: tauri-ipc-frontend
 
 **Change ID**: `tauri-ipc-frontend`
-**Project**: MindLedger (Soft Gloria) — Clinical Psychology Practice Management for Ecuador
+**Project**: MindLdger (Soft Gloria) — Clinical Psychology Practice Management for Ecuador
 **Phase**: FASE 2 — Tauri IPC Commands + Frontend SPA
 **Status**: Ready for Implementation
 
@@ -640,16 +640,16 @@ Tasks are organized by **capability** (matching the spec) and **dependency order
 
 ### T-037: Update tauri.conf.json Product Name
 - **Capability**: `brand-integration`
-- **Description**: Update Tauri configuration with product name "MindLedger" and identifier.
+- **Description**: Update Tauri configuration with product name "MindLdger" and identifier.
 - **Files**:
   - `src-tauri/tauri.conf.json` — Modify: `productName`, `identifier`
 - **Dependencies**: None
 - **Effort**: Small
 - **Priority**: High
 - **Acceptance Criteria**:
-  - [ ] `"productName": "MindLedger"`
+  - [ ] `"productName": "MindLdger"`
   - [ ] `"identifier": "com.softgloria.mindledger"`
-  - [ ] Window title shows "MindLedger" on macOS/Windows
+  - [ ] Window title shows "MindLdger" on macOS/Windows
   - [ ] `cargo tauri build` succeeds
 
 ### T-038: Add ESLint Rule for Coral Restriction
@@ -954,7 +954,7 @@ All → T-048
 - [ ] ClinicalNotesPage has predictive form: real-time age + diagnosis autocomplete
 - [ ] SearchDropdown translates all 7 Rust enums to Spanish labels
 - [ ] Sidebar navigation has 7 items (Contabilidad, Diagnósticos added)
-- [ ] tauri.conf.json productName = "MindLedger"
+- [ ] tauri.conf.json productName = "MindLdger"
 - [ ] Brand colors applied correctly (Primary, Sage, Coral restricted, Background, Text)
 - [ ] 0 TypeScript errors, 0 Rust clippy warnings
 - [ ] All 74 existing tests + new tests pass (>90% coverage new code)

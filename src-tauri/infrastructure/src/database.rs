@@ -72,7 +72,7 @@ pub fn create_pool_with_key(database_path: &Path, key: &str) -> Result<DbPool> {
 
     // Set journal mode — try WAL first, fall back to DELETE (SQLCipher may not support WAL).
     if let Err(e) = conn.execute_batch("PRAGMA journal_mode=WAL;") {
-        eprintln!("[MindLedger] WAL mode unavailable ({}), using DELETE", e);
+        eprintln!("[MindLdger] WAL mode unavailable ({}), using DELETE", e);
         conn.execute_batch("PRAGMA journal_mode=DELETE;")
             .context("Failed to set journal mode")?;
     }

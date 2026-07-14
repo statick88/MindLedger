@@ -280,14 +280,14 @@ Background service that schedules OS-level notifications 30 minutes before appoi
 1. **Startup**: `ReminderService::spawn(app_state: AppState)` — tokio task, 1-min interval
 2. **Tick**: `ReminderDomain::process_due_reminders(now)` → returns `Vec<Appointment>` needing reminder
 3. **Schedule**: For each appointment, `calendar_provider.schedule_notification(appt)` → stores `external_id` in `appointment.reminder_external_id`
-4. **Fire**: At notification time, OS shows: "MindLedger: Sesión con [Paciente] en 30 min — [Hora]"
+4. **Fire**: At notification time, OS shows: "MindLdger: Sesión con [Paciente] en 30 min — [Hora]"
 5. **Cancel**: On `reagendar_appointment` / `cancelar_appointment` → `calendar_provider.cancel_notification(external_id)`
 6. **Completion**: On `finalizar_sesion_agenda` → cancel any pending reminder
 
 ### Output
 | Artifact | Description |
 |----------|-------------|
-| **OS Notification** | Native toast/banner at T-30min; title "MindLedger"; body includes patient name, time |
+| **OS Notification** | Native toast/banner at T-30min; title "MindLdger"; body includes patient name, time |
 | **Database** | `appointments.reminder_sent = true`, `appointments.reminder_external_id = <provider_id>` |
 | **Logs** | `tracing::info!("Reminder sent for appointment {}", id)`; warnings on failure |
 

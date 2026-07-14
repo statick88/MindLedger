@@ -1,4 +1,4 @@
-# MindLedger v1.0.0 — Release Manifest
+# MindLdger v1.0.0 — Release Manifest
 
 **Tenant:** Psic. Gloria Once | Neuropsicóloga Clínica
 **Release Date:** 2026-07-13
@@ -24,7 +24,7 @@
 
 | Artifact | Size | SHA-256 |
 |----------|------|---------|
-| `MindLedger_1.0.0_universal.dmg` | 6.1 MB | `fc8d05ad609ccad7c9ce37b92746c9b69b21eebd2b3e70bcdf9af8c568b5ff80` |
+| `MindLdger_1.0.0_universal.dmg` | 6.1 MB | `fc8d05ad609ccad7c9ce37b92746c9b69b21eebd2b3e70bcdf9af8c568b5ff80` |
 
 - **Target:** universal-apple-darwin (x86_64 + arm64)
 - **Binary:** Mach-O universal, no crash on launch
@@ -47,7 +47,7 @@
 | Property | Expected | Verified |
 |----------|----------|----------|
 | Tenant ID | `gloria-once` | ✅ |
-| Commercial Name | `MindLedger - Psic. Gloria Once` | ✅ |
+| Commercial Name | `MindLdger - Psic. Gloria Once` | ✅ |
 | Bundle ID | `com.mindledger.gloriaonce.desktop` | ✅ |
 | Primary Color | `#1A5F60` (Teal, HSL 192 72% 21%) | ✅ |
 | Accent Color | `#E3645F` (Coral, HSL 2 72% 63%) | ✅ |
@@ -96,7 +96,7 @@ Pre-existing failures (not blocking release):
 
 ## Deployment Notes
 
-1. **macOS:** Distribute `MindLedger_1.0.0_universal.dmg`. Users drag to Applications.
+1. **macOS:** Distribute `MindLdger_1.0.0_universal.dmg`. Users drag to Applications.
 2. **Windows:** Execute `scripts/build-windows-vm.ps1` in Windows 11 VM. Collect NSIS/MSI from `src-tauri/target/release/bundle/`.
 3. **First launch:** App creates keyring entry `sqlcipher-key-gloria-once` on first run. User must grant keyring access.
 4. **Data isolation:** All DB files stored under `$APPDATA/mind-ledger-gloria-once/`.

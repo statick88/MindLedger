@@ -1,10 +1,10 @@
-# Security Audit Exploration: MindLedger
+# Security Audit Exploration: MindLdger
 
 ## Exploration: Comprehensive Security Audit
 
 ### Current State
 
-MindLedger is a Tauri 2.0 desktop application for clinical psychology practice management in Ecuador. It stores encrypted patient records, accounting data, CIE-10/DSM-5 diagnostics, and clinical notes using SQLCipher. The architecture follows hexagonal principles with clear separation: domain → application → infrastructure → commands (IPC).
+MindLdger is a Tauri 2.0 desktop application for clinical psychology practice management in Ecuador. It stores encrypted patient records, accounting data, CIE-10/DSM-5 diagnostics, and clinical notes using SQLCipher. The architecture follows hexagonal principles with clear separation: domain → application → infrastructure → commands (IPC).
 
 **Security Architecture Map:**
 

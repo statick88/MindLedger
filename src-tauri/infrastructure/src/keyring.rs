@@ -33,7 +33,7 @@ impl SqlCipherKeyManager {
         let fallback_path = Some(data_dir.join(FALLBACK_KEY_FILE));
         if entry.is_none() {
             eprintln!(
-                "[MindLedger] WARNING: keyring unavailable (service={}), using file-based key fallback",
+                "[MindLdger] WARNING: keyring unavailable (service={}), using file-based key fallback",
                 service_name
             );
         }
@@ -52,7 +52,7 @@ impl SqlCipherKeyManager {
                 Ok(()) => return Ok(key),
                 Err(e) => {
                     eprintln!(
-                        "[MindLedger] WARNING: keyring set_password failed: {}. Falling back to file key.",
+                        "[MindLdger] WARNING: keyring set_password failed: {}. Falling back to file key.",
                         e
                     );
                 }
@@ -67,7 +67,7 @@ impl SqlCipherKeyManager {
                     return Ok(key);
                 }
                 eprintln!(
-                    "[MindLedger] WARNING: fallback key file is invalid, regenerating"
+                    "[MindLdger] WARNING: fallback key file is invalid, regenerating"
                 );
             }
             let key = Self::generate_hex_key();
@@ -85,7 +85,7 @@ impl SqlCipherKeyManager {
                 ).context("Failed to set key file permissions")?;
             }
             eprintln!(
-                "[MindLedger] INFO: wrote fallback key to {}",
+                "[MindLdger] INFO: wrote fallback key to {}",
                 fallback_path.display()
             );
             return Ok(key);

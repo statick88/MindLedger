@@ -1,6 +1,6 @@
-# MindLedger — Windows 11 Build Guide
+# MindLdger — Windows 11 Build Guide
 
-> Complete instructions for building MindLedger on Windows 11 (native or VM).
+> Complete instructions for building MindLdger on Windows 11 (native or VM).
 > Target: `.msi` installer via WiX or `.exe` installer via NSIS.
 
 ---
@@ -23,7 +23,7 @@ rustup target add x86_64-pc-windows-msvc
 
 ### 2. Microsoft C++ Build Tools (MSVC)
 
-MindLedger requires the MSVC linker and C++ runtime for compiling native dependencies (SQLCipher, OpenSSL).
+MindLdger requires the MSVC linker and C++ runtime for compiling native dependencies (SQLCipher, OpenSSL).
 
 ```powershell
 # Option A: Install via Visual Studio Installer
@@ -105,8 +105,8 @@ tauri --version   # Should show 2.x
 ### 1. Clone & Install Dependencies
 
 ```powershell
-git clone https://github.com/Statick/MindLedger.git
-cd MindLedger
+git clone https://github.com/Statick/MindLdger.git
+cd MindLdger
 
 # Install frontend dependencies
 pnpm install
@@ -137,8 +137,8 @@ cargo tauri dev
 cargo tauri build
 
 # The installer will be generated at:
-#   src-tauri/target/release/bundle/msi/MindLedger_0.1.0_x64.msi
-#   src-tauri/target/release/bundle/nsis/MindLedger_0.1.0_x64-setup.exe
+#   src-tauri/target/release/bundle/msi/MindLdger_0.1.0_x64.msi
+#   src-tauri/target/release/bundle/nsis/MindLdger_0.1.0_x64-setup.exe
 ```
 
 ### 4. Build with WiX MSI Only
@@ -223,10 +223,10 @@ panic = "abort"
 ## Bundle Identifier
 
 - Package: `mind-ledger`
-- Binary: `MindLedger.exe`
+- Binary: `MindLdger.exe`
 - Bundle ID: `com.mindledger.desktop`
-- Display Name: MindLedger
+- Display Name: MindLdger
 
 ---
 
-*Last updated: 2026-07-13 | MindLedger v0.1.0*
+*Last updated: 2026-07-13 | MindLdger v0.1.0*

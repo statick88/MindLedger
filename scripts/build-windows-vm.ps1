@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    MindLedger v1.0.0 — Windows 11 VM Build Script (MSVC Native)
+    MindLdger v1.0.0 — Windows 11 VM Build Script (MSVC Native)
 .DESCRIPTION
     Prepares the workspace on a Windows 11 VM using fnm + pnpm,
     then builds the Tauri release binary with SQLCipher 4.5.3.
@@ -14,14 +14,14 @@
 param(
     [string]$Fnmdir = "$env:USERPROFILE\.fnm",
     [string]$NodeVersion = "v24.13.1",
-    [string]$WorkspacePath = "$env:USERPROFILE\dev\MindLedger"
+    [string]$WorkspacePath = "$env:USERPROFILE\dev\MindLdger"
 )
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
 Write-Host "============================================" -ForegroundColor Cyan
-Write-Host " MindLedger v1.0.0 — Windows Build Pipeline" -ForegroundColor Cyan
+Write-Host " MindLdger v1.0.0 — Windows Build Pipeline" -ForegroundColor Cyan
 Write-Host " Tenant: Psic. Gloria Once" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
@@ -152,7 +152,7 @@ if (Test-Path $binary) {
 
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Cyan
-Write-Host " Build Complete — MindLedger v1.0.0" -ForegroundColor Green
+Write-Host " Build Complete — MindLdger v1.0.0" -ForegroundColor Green
 Write-Host " Tenant: Psic. Gloria Once" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Cyan
 

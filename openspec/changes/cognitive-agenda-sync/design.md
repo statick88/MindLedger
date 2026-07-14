@@ -2,7 +2,7 @@
 
 ## Technical Approach
 
-This design implements **FASE 3** of MindLedger: Cognitive Agenda (Agenda Cognitiva) with automated double-entry accounting triggers, OS calendar synchronization, predictive patient search, and KPI dashboard. FASE 2 (Tauri IPC + Frontend SPA) is complete with Accounting, Diagnostics, Age Calculation commands and brand-compliant UI.
+This design implements **FASE 3** of MindLdger: Cognitive Agenda (Agenda Cognitiva) with automated double-entry accounting triggers, OS calendar synchronization, predictive patient search, and KPI dashboard. FASE 2 (Tauri IPC + Frontend SPA) is complete with Accounting, Diagnostics, Age Calculation commands and brand-compliant UI.
 
 The architecture follows **Clean Architecture** principles extended with **Command Query Responsibility Segregation (CQRS)** for appointment lifecycle:
 
