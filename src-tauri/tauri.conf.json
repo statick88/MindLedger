@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Psic. Gloria Once",
+  "productName": "MindLedger",
   "version": "1.0.0",
   "identifier": "com.mindldger.gloriaonce.desktop",
   "build": {
