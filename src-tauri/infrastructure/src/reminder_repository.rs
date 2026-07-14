@@ -5,6 +5,7 @@ use soft_mindledger_domain::{
     RepositoryError,
 };
 use rusqlite::params;
+use std::str::FromStr;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use async_trait::async_trait;
@@ -31,9 +32,9 @@ fn row_to_reminder(row: &rusqlite::Row) -> rusqlite::Result<Reminder> {
         let updated_at: String = row.get("updated_at")?;
 
         Ok(Reminder {
-            id: ReminderId(Uuid::parse_str(&id).unwrap()),
-            appointment_id: AppointmentId(Uuid::parse_str(&appointment_id).unwrap()),
-            patient_id: PatientId(Uuid::parse_str(&patient_id).unwrap()),
+            id: ReminderId::from_str(&id).unwrap(),
+            appointment_id: AppointmentId::from_str(&appointment_id).unwrap(),
+            patient_id: PatientId::from_str(&patient_id).unwrap(),
             remind_at: DateTime::parse_from_rfc3339(&remind_at).unwrap_or_default().into(),
             channel: match channel.as_str() {
                 "push" => ReminderChannel::Push,

@@ -7,6 +7,7 @@ use soft_mindledger_domain::{
 use soft_mindledger_infrastructure::{DbPool, SqlitePatientRepository};
 use tauri::command;
 use uuid::Uuid;
+use std::str::FromStr;
 use chrono::NaiveDate;
 use std::sync::Arc;
 
@@ -180,7 +181,8 @@ pub async fn get_patient(
     id: String,
 ) -> AppResult<PatientResponse> {
     let repo = SqlitePatientRepository::new((**db).clone());
-    let patient_id = PatientId(Uuid::parse_str(&id)?);
+    let patient_id = PatientId::from_str(&id)
+        .map_err(|e| AppError::Validation(format!("Invalid patient_id: {}", e)))?;
     
     let patient = repo.get_by_id(patient_id).await?
         .ok_or_else(|| AppError::NotFound(format!("Patient with id {} not found", id)))?;
@@ -273,7 +275,8 @@ pub async fn update_patient(
     request: UpdatePatientRequest,
 ) -> AppResult<PatientResponse> {
     let repo = SqlitePatientRepository::new((**db).clone());
-    let patient_id = PatientId(Uuid::parse_str(&id)?);
+    let patient_id = PatientId::from_str(&id)
+        .map_err(|e| AppError::Validation(format!("Invalid patient_id: {}", e)))?;
     
     let mut patient = repo.get_by_id(patient_id).await?
         .ok_or_else(|| AppError::NotFound(format!("Patient with id {} not found", id)))?;
@@ -348,7 +351,8 @@ pub async fn delete_patient(
     id: String,
 ) -> AppResult<bool> {
     let repo = SqlitePatientRepository::new((**db).clone());
-    let patient_id = PatientId(Uuid::parse_str(&id)?);
+    let patient_id = PatientId::from_str(&id)
+        .map_err(|e| AppError::Validation(format!("Invalid patient_id: {}", e)))?;
     let deleted = repo.delete(patient_id).await?;
     Ok(deleted)
 }

@@ -197,14 +197,14 @@ pub async fn crear_cita_agenda_impl(
         .with_timezone(&Utc);
     
     // Validate patient exists
-    let patient_id = PatientId(Uuid::parse_str(&request.patient_id)
-        .map_err(|e| AppError::Validation(format!("Invalid patient_id: {}", e)))?);
+    let patient_id = PatientId::from_str(&request.patient_id)
+        .map_err(|e| AppError::Validation(format!("Invalid patient_id: {}", e)))?;
     let _patient = patient_repo.get_by_id(patient_id).await?
         .ok_or_else(|| AppError::NotFound(format!("Patient not found: {}", request.patient_id)))?;
     
     // Validate therapist exists (simplified - just check ID format)
-    let therapist_id = TherapistId(Uuid::parse_str(&request.therapist_id)
-        .map_err(|e| AppError::Validation(format!("Invalid therapist_id: {}", e)))?);
+    let therapist_id = TherapistId::from_str(&request.therapist_id)
+        .map_err(|e| AppError::Validation(format!("Invalid therapist_id: {}", e)))?;
     
     // Create time range
     let time_range = DateTimeRange::new(start_at, end_at)
@@ -259,7 +259,8 @@ pub async fn obtener_cita_agenda_impl(
     id: String,
 ) -> AppResult<AppointmentResponse> {
     let repo = SqliteAppointmentRepository::new(pool.clone());
-    let appointment_id = AppointmentId(Uuid::parse_str(&id)?);
+    let appointment_id = AppointmentId::from_str(&id)
+        .map_err(|e| AppError::Validation(format!("Invalid appointment id: {}", e)))?;
     
     let appointment = repo.get_by_id(appointment_id).await?
         .ok_or_else(|| AppError::NotFound(format!("Appointment with id {} not found", id)))?;
@@ -289,8 +290,8 @@ pub async fn listar_citas_agenda_impl(
         }
     }
     filter.status = query.status;
-    filter.patient_id = query.patient_id.map(|s| PatientId(Uuid::parse_str(&s))).transpose()?;
-    filter.therapist_id = query.therapist_id.map(|s| TherapistId(Uuid::parse_str(&s))).transpose()?;
+    filter.patient_id = query.patient_id.map(|s| PatientId::from_str(&s).unwrap());
+    filter.therapist_id = query.therapist_id.map(|s| TherapistId::from_str(&s).unwrap());
     
     let pagination = Pagination::new(page, page_size);
     let total = repo.count(filter.clone()).await?;
@@ -395,7 +396,8 @@ pub async fn finalizar_sesion_agenda_impl(
     notes: Option<String>,
 ) -> AppResult<AppointmentResponse> {
     let repo = SqliteAppointmentRepository::new(pool.clone());
-    let appointment_id = AppointmentId(Uuid::parse_str(&id)?);
+    let appointment_id = AppointmentId::from_str(&id)
+        .map_err(|e| AppError::Validation(format!("Invalid appointment id: {}", e)))?;
     
     // Get appointment
     let mut appointment = repo.get_by_id(appointment_id).await?
@@ -460,7 +462,8 @@ pub async fn reagendar_cita_impl(
     reason: String,
 ) -> AppResult<AppointmentResponse> {
     let repo = SqliteAppointmentRepository::new(pool.clone());
-    let appointment_id = AppointmentId(Uuid::parse_str(&id)?);
+    let appointment_id = AppointmentId::from_str(&id)
+        .map_err(|e| AppError::Validation(format!("Invalid appointment id: {}", e)))?;
     
     let new_start = DateTime::parse_from_rfc3339(&new_start_at)
         .map_err(|e| AppError::Validation(format!("Invalid new_start_at: {}", e)))?
@@ -472,7 +475,8 @@ pub async fn reagendar_cita_impl(
     let new_range = DateTimeRange::new(new_start, new_end)
         .map_err(|e| AppError::Validation(e.to_string()))?;
     
-    let mut appointment = repo.get_by_id(AppointmentId(Uuid::parse_str(&id)?)).await?
+    let mut appointment = repo.get_by_id(AppointmentId::from_str(&id)
+        .map_err(|e| AppError::Validation(format!("Invalid appointment id: {}", e)))?).await?
         .ok_or_else(|| AppError::NotFound("Appointment not found".to_string()))?;
     
     // Check overlapping for new time (excluding self)
@@ -520,7 +524,8 @@ pub async fn cancelar_cita_impl(
     reason: String,
 ) -> AppResult<AppointmentResponse> {
     let repo = SqliteAppointmentRepository::new(pool.clone());
-    let appointment_id = AppointmentId(Uuid::parse_str(&id)?);
+    let appointment_id = AppointmentId::from_str(&id)
+        .map_err(|e| AppError::Validation(format!("Invalid appointment id: {}", e)))?;
     
     let mut appointment = repo.get_by_id(appointment_id).await?
         .ok_or_else(|| AppError::NotFound("Appointment not found".to_string()))?;
@@ -553,7 +558,8 @@ pub async fn obtener_citas_paciente_impl(
 ) -> AppResult<PaginatedResponse<AppointmentResponse>> {
     let repo = SqliteAppointmentRepository::new(pool.clone());
     
-    let patient_id = PatientId(Uuid::parse_str(&query.patient_id)?);
+    let patient_id = PatientId::from_str(&query.patient_id)
+        .map_err(|e| AppError::Validation(format!("Invalid patient_id: {}", e)))?;
     
     let range = if let (Some(start), Some(end)) = (query.start_date, query.end_date) {
         Some(DateRange {
@@ -639,7 +645,7 @@ pub async fn obtener_kpis_agenda_impl(
 ) -> AppResult<KpiMetricsResponse> {
     let repo = SqliteAppointmentRepository::new(pool.clone());
     
-    let tid = therapist_id.map(|s| TherapistId(Uuid::parse_str(&s))).transpose()?;
+    let tid = therapist_id.map(|s| TherapistId::from_str(&s).unwrap());
     
     let filter = AppointmentFilter {
         therapist_id: tid,
@@ -798,7 +804,8 @@ mod tests {
     use soft_mindledger_infrastructure::database::create_memory_pool;
     use soft_mindledger_domain::{PatientId, TherapistId, Modality, AppointmentStatus, ReminderChannel, ReminderTemplate, Reminder, ReminderId, AppointmentId, PatientId as DomainPatientId};
     use chrono::{Utc, Duration};
-    use uuid::Uuid;
+use uuid::Uuid;
+use std::str::FromStr;
 
 fn create_test_pool() -> DbPool {
         let pool = create_memory_pool().unwrap();
@@ -1087,7 +1094,7 @@ fn create_test_pool() -> DbPool {
         // Create a reminder due now
         let repo = SqliteReminderRepository::new(pool.clone());
         let reminder = Reminder::new(
-            AppointmentId(Uuid::parse_str(&appointment.id).unwrap()),
+            AppointmentId::from_str(&appointment.id).unwrap(),
             PatientId(patient_id),
             Utc::now() - Duration::minutes(5),
             ReminderChannel::Push,
