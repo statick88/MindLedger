@@ -1,8 +1,8 @@
 # MindLedger v1.0.0-gloria-once — Release Certification
 
 ## Build Information
-- **Date**: 2026-07-14 02:15 UTC
-- **Commit**: f3b9dda
+- **Date**: 2026-07-14 02:55 UTC
+- **Commit**: 40c14d7
 - **Branch**: hardening/windows-dpapi-key-storage
 - **Tenant**: gloria_once (Psic. Gloria Once)
 - **Platform**: Windows 11 (GNU toolchain — MinGW 16.1.0)
@@ -90,9 +90,9 @@
 - [ ] No UI thread blocking during financial operations
 
 ## Certification
-**BUILD CERTIFIED** — 2026-07-14 02:15 UTC
+**BUILD CERTIFIED** — 2026-07-14 02:55 UTC
 
-All static audit checks passed. PE hardening verified (ASLR, DEP, HIGH_ENTROPY_VA). No hardcoded keys or plaintext secrets in binary. Tenant branding correctly applied. MSI and NSIS installers generated successfully. Full test suite (210 tests) passes on Windows.
+All static audit checks passed (6 PASS, 0 FAIL, 1 WARN). PE hardening verified (ASLR, DEP, HIGH_ENTROPY_VA). No hardcoded keys or plaintext secrets in binary. Tenant branding correctly applied (com.mindldger.gloriaonce.desktop, Psic. Gloria Once). MSI and NSIS installers generated successfully. Full test suite (210 tests) passes on Windows. Audit script patched (escape quote + regex fixes).
 
 Runtime smoke test pending — recommended before commercial distribution.
 

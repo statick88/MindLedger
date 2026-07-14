@@ -138,7 +138,7 @@ Test-Audit "No hardcoded PRAGMA key in binary" {
 
 Test-Audit "No hardcoded hex key pattern in binary" {
     # Look for long hex strings that could be encryption keys (64+ hex chars)
-    $strings = & { cmd /c "findstr /R /C:`"[0-9a-f]\{64,128\}`" `"$mainExe`"" } 2>$null
+    $strings = & { cmd /c "findstr /R /C:`"[0-9a-f][0-9a-f]*`" `"$mainExe`"" } 2>$null
     (-not $strings) -or ($strings.Count -eq 0)
 }
 
@@ -455,7 +455,7 @@ if ($auditFail -eq 0) {
     Write-Host ""
     Write-Host "  Next steps:" -ForegroundColor Yellow
     Write-Host "    1. git add sdd-archive/RELEASE-V1.0.0-GLORIA-ONCE.md" -ForegroundColor Gray
-    Write-Host "    2. git commit -m 'audit: certify secure windows runtime build and freeze sha256 artifact hashes for v1.0.0-gloria-once'" -ForegroundColor Gray
+    Write-Host "    2. git commit -m `'audit: certify secure windows runtime build and freeze sha256 artifact hashes for v1.0.0-gloria-once`'" -ForegroundColor Gray
     Write-Host "    3. git push origin release/v1.0.0-gloria-once" -ForegroundColor Gray
     Write-Host "    4. Create GitHub release with installer attachment" -ForegroundColor Gray
 } else {

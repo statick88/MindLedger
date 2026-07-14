@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "MindLedger",
+  "productName": "Psic. Gloria Once",
   "version": "1.0.0",
-  "identifier": "com.mindldger.desktop",
+  "identifier": "com.mindldger.gloriaonce.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "MindLedger",
+        "title": "Psic. Gloria Once",
         "width": 1400,
         "height": 900,
         "minWidth": 1024,
@@ -37,8 +37,8 @@
     ],
     "category": "Medical",
     "shortDescription": "Clinical psychology practice management",
-    "longDescription": "MindLedger — Clinical Practice Management. Secure, offline-first practice management system.",
-    "copyright": "Copyright © 2026 Diego Medardo Saavedra García",
+    "longDescription": "Psic. Gloria Once — Neuropsicóloga Clínica. Secure, offline-first practice management system.",
+    "copyright": "Copyright Â© 2026 Diego Medardo Saavedra GarcÃ­a",
     "linux": {
       "deb": {
         "depends": [
