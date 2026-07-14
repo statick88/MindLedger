@@ -335,7 +335,7 @@ jobs:
   macos-notarize:
     name: macOS Notarization
     needs: tauri-build
-    if: runner.os == 'macOS' && github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request'
     runs-on: macos-latest
     timeout-minutes: 20
     steps:
