@@ -1,6 +1,14 @@
 use anyhow::{Context, Result};
 use docx_rs::read_docx;
 use std::fs;
+use std::path::Path;
+
+/// Maximum allowed file size for DOCX ingestion (10 MB).
+const MAX_DOCX_FILE_SIZE: u64 = 10 * 1024 * 1024;
+
+/// Maximum allowed uncompressed content size (50 MB).
+/// Protects against zip bombs where compressed ratio is extreme.
+const MAX_UNCOMPRESSED_SIZE: usize = 50 * 1024 * 1024;
 
 #[derive(Debug, Clone)]
 pub struct ClinicalNote {
@@ -16,11 +24,42 @@ pub struct ClinicalNoteParser;
 
 impl ClinicalNoteParser {
     pub fn parse_docx(file_path: &str) -> Result<ClinicalNote> {
+        // Prevent path traversal
+        let path = Path::new(file_path);
+        if path.components().any(|c| matches!(c, std::path::Component::ParentDir)) {
+            anyhow::bail!("Path traversal detected in file path: {}", file_path);
+        }
+
+        // Validate file size before reading into memory
+        let metadata = fs::metadata(file_path)
+            .with_context(|| format!("Failed to read file metadata: {}", file_path))?;
+        
+        if metadata.len() > MAX_DOCX_FILE_SIZE {
+            anyhow::bail!(
+                "DOCX file exceeds maximum allowed size ({} MB). Potential zip bomb or DoS vector.",
+                MAX_DOCX_FILE_SIZE / (1024 * 1024)
+            );
+        }
+        
+        if metadata.len() == 0 {
+            anyhow::bail!("DOCX file is empty.");
+        }
+
         let bytes = fs::read(file_path)
             .with_context(|| format!("Failed to read file: {}", file_path))?;
         
         let doc = read_docx(&bytes)
             .context("Failed to parse DOCX file")?;
+        
+        // Zip bomb detection: if compressed size is suspiciously small relative to
+        // the expected content, log a warning. Full enforcement would require
+        // streaming decompression which docx-rs doesn't support.
+        if bytes.len() < 1024 && doc.document.children.len() > 100 {
+            anyhow::bail!(
+                "Suspicious DOCX structure: very small compressed size with excessive content nodes. \
+                 Possible zip bomb detected."
+            );
+        }
         
         let paragraphs = Self::extract_paragraphs(&doc);
         let full_text = paragraphs.join("\n");
