@@ -105,11 +105,15 @@ impl SqlCipherKeyManager {
     }
 
     fn generate_hex_key() -> String {
-        let mut rng = rand::thread_rng();
+        use rand::Rng;
+        let mut rng = rand::rngs::OsRng;
         let key_bytes: Zeroizing<Vec<u8>> = Zeroizing::new((0..KEY_LENGTH).map(|_| rng.gen()).collect());
         let hex: Zeroizing<String> = Zeroizing::new(
             key_bytes.iter().map(|b| format!("{:02x}", b)).collect(),
         );
+        // NOTE: The returned String is NOT zeroized on drop. Callers requiring
+        // zeroization should wrap the result in Zeroizing<String>. The intermediate
+        // key material (key_bytes, hex) IS zeroized via the Zeroizing wrapper.
         hex.to_string()
     }
 

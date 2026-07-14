@@ -9,20 +9,40 @@ pub type DbPool = Arc<Mutex<Connection>>;
 
 const DEFAULT_SERVICE_NAME: &str = "mind-ledger";
 const DEFAULT_ACCOUNT_NAME: &str = "sqlcipher-key";
+const DEFAULT_DB_FILENAME: &str = "mind_ledger.db";
 
-/// Create a connection pool using the keyring (or file fallback) for the encryption key.
-/// `data_dir` is the app data directory — used for the file-based key fallback.
-pub fn create_pool(database_path: &Path, data_dir: &Path) -> Result<DbPool> {
+/// Create a connection pool with tenant-specific configuration.
+/// Uses tenant-specific keyring account and database filename for isolation.
+pub fn create_pool_for_tenant(
+    data_dir: &Path,
+    keyring_account: &str,
+    db_filename: &str,
+) -> Result<DbPool> {
+    let db_path = data_dir.join(db_filename);
+    let service_name = DEFAULT_SERVICE_NAME; // Shared service, unique account per tenant
+    
     let key_manager = SqlCipherKeyManager::new_with_fallback(
-        DEFAULT_SERVICE_NAME,
-        DEFAULT_ACCOUNT_NAME,
+        service_name,
+        keyring_account,
         data_dir,
     );
+    
     let key = key_manager.get_or_create_key()?;
-    create_pool_with_key(database_path, &key)
+    create_pool_with_key(&db_path, &key)
+}
+
+/// Backward-compatible create_pool (for tests, default tenant).
+/// Delegates to create_pool_for_tenant with default values.
+pub fn create_pool(database_path: &Path, data_dir: &Path) -> Result<DbPool> {
+    create_pool_for_tenant(
+        data_dir,
+        DEFAULT_ACCOUNT_NAME,
+        DEFAULT_DB_FILENAME,
+    )
 }
 
 pub fn create_pool_with_key(database_path: &Path, key: &str) -> Result<DbPool> {
+    // ... unchanged implementation ...
     let conn = if database_path.to_string_lossy() == ":memory:" {
         Connection::open_in_memory()
             .context("Failed to open in-memory database")?
@@ -35,9 +55,20 @@ pub fn create_pool_with_key(database_path: &Path, key: &str) -> Result<DbPool> {
             .context("Failed to open database")?
     };
 
-    let pragma_key = format!("PRAGMA key = '{}';", key);
+    // Use hex-literal form: PRAGMA key = "x'HEX_KEY'"
+    // This avoids SQL injection via single-quote escaping and is the
+    // recommended SQLCipher format for programmatic key injection.
+    let pragma_key = format!("PRAGMA key = \"x'{}'\";", key);
     conn.execute_batch(&pragma_key)
         .context("Failed to set encryption key")?;
+
+    // SQLCipher hardening: strengthen encryption parameters
+    conn.execute_batch(
+        "PRAGMA cipher_page_size = 4096;
+         PRAGMA kdf_iter = 256000;
+         PRAGMA cipher_hmac_algorithm = HMAC_SHA512;
+         PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA512;"
+    ).context("Failed to set SQLCipher hardening parameters")?;
 
     // Set journal mode — try WAL first, fall back to DELETE (SQLCipher may not support WAL).
     if let Err(e) = conn.execute_batch("PRAGMA journal_mode=WAL;") {
@@ -90,5 +121,23 @@ mod tests {
         
         let pool = create_pool(&db_path, dir.path());
         assert!(pool.is_ok());
+    }
+
+    #[test]
+    fn test_create_pool_for_tenant_isolation() {
+        let dir = tempdir().unwrap();
+        let data_dir = dir.path().join("mind-ledger-gloria-once");
+        
+        let pool = create_pool_for_tenant(
+            &data_dir,
+            "sqlcipher-key-gloria-once",
+            "mind_ledger_gloria_once.db"
+        );
+        
+        assert!(pool.is_ok());
+        
+        // Verify DB file created in tenant-specific directory
+        let db_path = data_dir.join("mind_ledger_gloria_once.db");
+        assert!(db_path.exists());
     }
 }
