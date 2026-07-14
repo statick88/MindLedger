@@ -6,7 +6,6 @@ use soft_mindledger_domain::{
     RepositoryError,
 };
 use rusqlite::params;
-use std::str::FromStr;
 use uuid::Uuid;
 use chrono::{DateTime, Utc, NaiveDate};
 use async_trait::async_trait;
@@ -54,9 +53,9 @@ fn row_to_appointment(row: &rusqlite::Row) -> rusqlite::Result<Appointment> {
         let end_datetime = scheduled_datetime + chrono::Duration::minutes(duration_minutes);
 
         Ok(Appointment {
-            id: AppointmentId::from_str(&id).unwrap(),
-            patient_id: PatientId::from_str(&patient_id).unwrap(),
-            therapist_id: TherapistId::from_str(&therapist_id).unwrap(), // Map DB professional_id to domain therapist_id
+            id: AppointmentId(Uuid::parse_str(&id).unwrap()),
+            patient_id: PatientId(Uuid::parse_str(&patient_id).unwrap()),
+            therapist_id: TherapistId(Uuid::parse_str(&therapist_id).unwrap()), // Map DB professional_id to domain therapist_id
             time_range: DateTimeRange::new(
                 scheduled_datetime,
                 end_datetime,
@@ -78,7 +77,7 @@ fn row_to_appointment(row: &rusqlite::Row) -> rusqlite::Result<Appointment> {
             notes,
             reminder_sent: reminder_sent != 0,
             reminder_external_id,
-            reagendada_from_id: reagendada_from_id.map(|s| AppointmentId::from_str(&s).unwrap()),
+            reagendada_from_id: reagendada_from_id.map(|s| AppointmentId(Uuid::parse_str(&s).unwrap())),
             external_calendar_id,
             calendar_provider,
             created_at: DateTime::parse_from_rfc3339(&created_at).unwrap_or_default().into(),
