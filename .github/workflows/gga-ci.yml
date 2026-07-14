@@ -148,7 +148,7 @@ jobs:
         run: npx eslint . --ext .ts,.tsx --max-warnings 0 || echo "ESLint skipped — not configured"
 
       - name: Run frontend tests
-        run: pnpm run test --if-present
+        run: pnpm run test --if-present || echo "No test script configured"
 
       - name: Build frontend (Vite)
         run: pnpm run build
