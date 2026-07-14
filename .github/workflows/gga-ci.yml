@@ -76,14 +76,19 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           # Install OpenSSL via vcpkg (required by openssl-sys crate)
-          vcpkg install openssl:x64-windows-static-md
+          vcpkg install openssl:x64-windows-static
         shell: pwsh
 
       - name: Set OpenSSL env (Windows)
         if: runner.os == 'Windows'
         run: |
-          echo "OPENSSL_DIR=$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows-static-md" >> $env:GITHUB_ENV
+          $opensslRoot = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows-static"
+          echo "OPENSSL_DIR=$opensslRoot" >> $env:GITHUB_ENV
           echo "OPENSSL_STATIC=1" >> $env:GITHUB_ENV
+          echo "OPENSSL_LIB_DIR=$opensslRoot\lib" >> $env:GITHUB_ENV
+          echo "OPENSSL_INCLUDE_DIR=$opensslRoot\include" >> $env:GITHUB_ENV
+          # Ensure Windows system libs (crypt32, user32) are on the linker path
+          echo "RUSTFLAGS=-C link-arg=crypt32.lib -C link-arg=user32.lib -C link-arg=advapi32.lib -C link-arg=gdi32.lib" >> $env:GITHUB_ENV
         shell: pwsh
 
       - name: Build Rust workspace
