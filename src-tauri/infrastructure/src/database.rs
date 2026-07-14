@@ -42,7 +42,21 @@ pub fn create_pool(database_path: &Path, data_dir: &Path) -> Result<DbPool> {
 }
 
 pub fn create_pool_with_key(database_path: &Path, key: &str) -> Result<DbPool> {
-    // ... unchanged implementation ...
+    // Security: validate key format before passing to SQLCipher.
+    // Keys must be exactly KEY_LENGTH*2 hex characters (64 chars for 32-byte key).
+    // This prevents SQL injection via malformed keys and ensures proper key derivation.
+    const EXPECTED_KEY_LEN: usize = 64; // 32 bytes * 2 hex chars
+    if key.len() != EXPECTED_KEY_LEN {
+        anyhow::bail!(
+            "Invalid encryption key length: expected {} hex chars, got {}",
+            EXPECTED_KEY_LEN,
+            key.len()
+        );
+    }
+    if !key.chars().all(|c| c.is_ascii_hexdigit()) {
+        anyhow::bail!("Invalid encryption key: must contain only hex characters (0-9, a-f)");
+    }
+
     let conn = if database_path.to_string_lossy() == ":memory:" {
         Connection::open_in_memory()
             .context("Failed to open in-memory database")?
