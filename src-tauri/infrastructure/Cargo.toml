@@ -1,11 +1,11 @@
 [package]
-name = "soft-gloria-infrastructure"
+name = "soft-mindledger-infrastructure"
 version = "0.1.0"
 edition = "2021"
 publish = false
 
 [dependencies]
-soft-gloria-domain = { path = "../domain" }
+soft-mindledger-domain = { path = "../domain" }
 rusqlite = { version = "0.31", features = ["bundled-sqlcipher"] }
 tokio = { version = "1.40", features = ["full"] }
 chrono = { version = "0.4", features = ["serde"] }

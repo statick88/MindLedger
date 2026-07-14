@@ -5,11 +5,13 @@ edition = "2021"
 publish = false
 
 [[bin]]
-name = "MindLedger"
+name = "MindLdger"
 path = "app/src/main.rs"
 
 [build-dependencies]
 tauri-build = { version = "2.0", features = [] }
+serde_json = "1.0"
+dotenvy = "0.15"
 
 [dependencies]
 tauri = { version = "2.0", features = [] }
@@ -19,9 +21,9 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 anyhow = "1.0"
 
-soft-gloria-domain = { path = "domain" }
-soft-gloria-infrastructure = { path = "infrastructure" }
-soft-gloria-commands = { path = "commands" }
+soft-mindledger-domain = { path = "domain" }
+soft-mindledger-infrastructure = { path = "infrastructure" }
+soft-mindledger-commands = { path = "commands" }
 
 [workspace]
 resolver = "2"
@@ -57,7 +59,7 @@ uuid = { version = "1.0", features = ["v4", "serde", "fast-rng"] }
 # Security
 keyring = "3"
 zeroize = "1.0"
-argon2 = "0.5"
+# argon2 removed — unused dependency, dead code reduces attack surface
 
 # Testing
 mockall = "0.12"

@@ -33,7 +33,7 @@ impl SqlCipherKeyManager {
         let fallback_path = Some(data_dir.join(FALLBACK_KEY_FILE));
         if entry.is_none() {
             eprintln!(
-                "[MindLedger] WARNING: keyring unavailable (service={}), using file-based key fallback",
+                "[MindLdger] WARNING: keyring unavailable (service={}), using file-based key fallback",
                 service_name
             );
         }
@@ -52,7 +52,7 @@ impl SqlCipherKeyManager {
                 Ok(()) => return Ok(key),
                 Err(e) => {
                     eprintln!(
-                        "[MindLedger] WARNING: keyring set_password failed: {}. Falling back to file key.",
+                        "[MindLdger] WARNING: keyring set_password failed: {}. Falling back to file key.",
                         e
                     );
                 }
@@ -67,7 +67,7 @@ impl SqlCipherKeyManager {
                     return Ok(key);
                 }
                 eprintln!(
-                    "[MindLedger] WARNING: fallback key file is invalid, regenerating"
+                    "[MindLdger] WARNING: fallback key file is invalid, regenerating"
                 );
             }
             let key = Self::generate_hex_key();
@@ -85,7 +85,7 @@ impl SqlCipherKeyManager {
                 ).context("Failed to set key file permissions")?;
             }
             eprintln!(
-                "[MindLedger] INFO: wrote fallback key to {}",
+                "[MindLdger] INFO: wrote fallback key to {}",
                 fallback_path.display()
             );
             return Ok(key);
@@ -105,12 +105,24 @@ impl SqlCipherKeyManager {
     }
 
     fn generate_hex_key() -> String {
-        let mut rng = rand::thread_rng();
+        use rand::Rng;
+        let mut rng = rand::rngs::OsRng;
         let key_bytes: Zeroizing<Vec<u8>> = Zeroizing::new((0..KEY_LENGTH).map(|_| rng.gen()).collect());
         let hex: Zeroizing<String> = Zeroizing::new(
             key_bytes.iter().map(|b| format!("{:02x}", b)).collect(),
         );
+        // NOTE: The returned String is NOT zeroized on drop. Callers requiring
+        // zeroization should wrap the result in Zeroizing<String>. The intermediate
+        // key material (key_bytes, hex) IS zeroized via the Zeroizing wrapper.
         hex.to_string()
+    }
+
+    /// Test-visible wrapper for `generate_hex_key`.
+    /// Allows security audit tests to verify key generation properties
+    /// without exposing the private method in production builds.
+    #[cfg(test)]
+    pub fn generate_hex_key_for_test() -> String {
+        Self::generate_hex_key()
     }
 }
 
@@ -138,7 +150,7 @@ mod tests {
 
     #[test]
     fn test_get_or_create_key_creates_new() {
-        let manager = SqlCipherKeyManager::new("test-soft-gloria", "test-create").unwrap();
+        let manager = SqlCipherKeyManager::new("test-soft-mindledger", "test-create").unwrap();
         let _ = manager.delete_key();
         
         let key = manager.get_or_create_key().unwrap();
@@ -150,7 +162,7 @@ mod tests {
 
     #[test]
     fn test_get_or_create_key_retrieves_existing() {
-        let manager = SqlCipherKeyManager::new("test-soft-gloria", "test-retrieve").unwrap();
+        let manager = SqlCipherKeyManager::new("test-soft-mindledger", "test-retrieve").unwrap();
         let _ = manager.delete_key();
         
         let key1 = manager.get_or_create_key().unwrap();
