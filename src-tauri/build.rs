@@ -42,7 +42,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         template_tauri_conf(&tenant_id, &commercial_name)?;
     }
 
-    tauri_build::build()?;
+    // Build Tauri application
+    tauri_build::build();
 
     Ok(())
 }
