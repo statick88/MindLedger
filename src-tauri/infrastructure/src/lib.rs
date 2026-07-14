@@ -10,7 +10,7 @@ pub mod reminder_repository;
 #[cfg(test)]
 pub mod security_audit;
 
-pub use database::{DbPool, create_pool, create_pool_with_key, create_memory_pool};
+pub use database::{DbPool, create_pool, create_pool_for_tenant, create_pool_with_key, create_memory_pool};
 pub use keyring::SqlCipherKeyManager;
 pub use migrations::{run_migrations, run_accounting_migrations, run_diagnostics_migrations, run_all_migrations, run_agenda_migrations};
 pub use repositories::SqlitePatientRepository;

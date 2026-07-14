@@ -1,0 +1,63 @@
+{
+  "tenant": {
+    "id": "default",
+    "commercialName": "MindLedger",
+    "clinicalRole": "Clinical Psychology",
+    "ownerName": "",
+    "ownerTitle": ""
+  },
+  "brand": {
+    "primary": "#1A5F7A",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#E5F1EE",
+    "secondaryForeground": "#1A5F7A",
+    "accent": "#E3645F",
+    "accentForeground": "#FFFFFF",
+    "background": "#FFFFFF",
+    "foreground": "#0F172A",
+    "muted": "#F1F5F9",
+    "mutedForeground": "#64748B",
+    "card": "#FFFFFF",
+    "cardForeground": "#0F172A",
+    "border": "#E2E8F0",
+    "input": "#E2E8F0",
+    "ring": "#1A5F7A",
+    "destructive": "#E3645F",
+    "destructiveForeground": "#FFFFFF"
+  },
+  "brandDark": {
+    "primary": "#1A5F7A",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#1E293B",
+    "secondaryForeground": "#E5F1EE",
+    "accent": "#E3645F",
+    "accentForeground": "#FFFFFF",
+    "background": "#0F172A",
+    "foreground": "#F8FAFC",
+    "muted": "#1E293B",
+    "mutedForeground": "#94A3B8",
+    "card": "#1E293B",
+    "cardForeground": "#F8FAFC",
+    "border": "#334155",
+    "input": "#334155",
+    "ring": "#1A5F7A",
+    "destructive": "#E3645F",
+    "destructiveForeground": "#FFFFFF"
+  },
+  "typography": {
+    "fontFamily": "Inter, system-ui, sans-serif",
+    "headingWeight": "600",
+    "bodyWeight": "400"
+  },
+  "crypto": {
+    "keyringService": "mind-ledger",
+    "keyringAccount": "sqlcipher-key",
+    "dbFileName": "mind_ledger.db"
+  },
+  "features": {
+    "clinicalNotes": true,
+    "accounting": true,
+    "agenda": true,
+    "diagnostics": true
+  }
+}

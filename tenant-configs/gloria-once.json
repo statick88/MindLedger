@@ -1,0 +1,63 @@
+{
+  "tenant": {
+    "id": "gloria-once",
+    "commercialName": "MindLedger - Psic. Gloria Once",
+    "clinicalRole": "Neuropsicóloga Clínica",
+    "ownerName": "Psic. Gloria Once",
+    "ownerTitle": "Neuropsicóloga Clínica"
+  },
+  "brand": {
+    "primary": "#1A5F60",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#E5F1EE",
+    "secondaryForeground": "#212529",
+    "accent": "#E3645F",
+    "accentForeground": "#FFFFFF",
+    "background": "#F8F9FA",
+    "foreground": "#212529",
+    "muted": "#F0F2F5",
+    "mutedForeground": "#6B7280",
+    "card": "#FFFFFF",
+    "cardForeground": "#212529",
+    "border": "#DEE2E6",
+    "input": "#DEE2E6",
+    "ring": "#1A5F60",
+    "destructive": "#DC3545",
+    "destructiveForeground": "#FFFFFF"
+  },
+  "brandDark": {
+    "primary": "#2A8F90",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#1E3A3A",
+    "secondaryForeground": "#E5F1EE",
+    "accent": "#D45A55",
+    "accentForeground": "#FFFFFF",
+    "background": "#1A1D21",
+    "foreground": "#F0F2F5",
+    "muted": "#2A2D31",
+    "mutedForeground": "#9CA3AF",
+    "card": "#222529",
+    "cardForeground": "#F0F2F5",
+    "border": "#333639",
+    "input": "#333639",
+    "ring": "#2A8F90",
+    "destructive": "#B82E2E",
+    "destructiveForeground": "#FFFFFF"
+  },
+  "typography": {
+    "fontFamily": "'Inter', system-ui, -apple-system, sans-serif",
+    "headingWeight": "700",
+    "bodyWeight": "400"
+  },
+  "crypto": {
+    "keyringService": "mind-ledger",
+    "keyringAccount": "sqlcipher-key-gloria-once",
+    "dbFileName": "mind_ledger_gloria_once.db"
+  },
+  "features": {
+    "clinicalNotes": true,
+    "accounting": true,
+    "agenda": true,
+    "diagnostics": true
+  }
+}

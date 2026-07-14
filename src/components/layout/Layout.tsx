@@ -14,7 +14,9 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Brain,
 } from 'lucide-react';
+import type { TenantConfig } from '@/types/tenant';
 
 const navigation = [
   { name: 'Pacientes', href: '/patients', icon: Users },
@@ -27,10 +29,16 @@ const secondaryNav = [
   { name: 'Configuración', href: '/settings', icon: Settings },
 ];
 
-export function Layout() {
+interface LayoutProps {
+  tenantConfig?: TenantConfig | null;
+}
+
+export function Layout({ tenantConfig }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+
+  const brandName = tenantConfig?.tenant.commercialName ?? 'MindLedger';
 
   const renderNavItem = (item: typeof navigation[0]) => {
     const isActive = location.pathname === item.href ||
@@ -70,9 +78,9 @@ export function Layout() {
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">M</span>
+                <Brain className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold text-primary">MindLedger</span>
+              <span className="text-xl font-bold text-primary">{brandName}</span>
             </div>
           )}
           <Button
