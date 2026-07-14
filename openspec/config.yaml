@@ -1,0 +1,37 @@
+schema: spec-driven
+
+context: |
+  Tech stack: TypeScript (React 18) + Rust (Tauri 2.0) desktop app
+  Architecture: Hexagonal — domain/application/infrastructure/commands workspace crates; React frontend with Radix UI + Tailwind + Zustand
+  Testing: Rust — mockall, rstest, proptest, tempfile (dev-deps in workspace); no frontend test runner configured
+  Style: Strict TypeScript, Rust 2021 edition, conventional commits
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Consider both frontend and backend impact for Tauri IPC changes
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for Tauri IPC flows
+    - Document architecture decisions with rationale
+    - Separate frontend concerns from Rust backend concerns
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+    - Separate frontend tasks from backend tasks
+  apply:
+    guidelines:
+      - Follow existing hexagonal architecture patterns
+      - Keep domain layer free of infrastructure dependencies
+      - Use workspace dependencies from root Cargo.toml
+    tdd: true
+    test_command: "cargo test --workspace"
+  verify:
+    test_command: "cargo test --workspace"
+    build_command: "pnpm build && cd src-tauri && cargo build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
+    - Verify all workspace crates compile after merge

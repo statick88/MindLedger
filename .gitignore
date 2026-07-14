@@ -36,3 +36,9 @@ pnpm-debug.log*
 # Test
 coverage/
 .nyc_output/
+
+# Build artifacts
+audit-output/
+
+# CodeGraph index
+.codegraph/
