@@ -1,5 +1,5 @@
 [package]
-name = "soft-gloria-commands"
+name = "soft-mindledger-commands"
 version = "0.1.0"
 edition = "2021"
 publish = false
@@ -11,14 +11,15 @@ serde_json = "1.0"
 thiserror = "1.0"
 anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1.8", features = ["serde", "v4"] }
+uuid = { workspace = true }
 rust_decimal = "1.35"
 rust_decimal_macros = "1.35"
-rusqlite = "0.31"
+rusqlite = { version = "0.31", features = ["bundled-sqlcipher"] }
+secrecy = { workspace = true }
 
-soft-gloria-domain = { path = "../domain" }
-soft-gloria-application = { path = "../application" }
-soft-gloria-infrastructure = { path = "../infrastructure" }
+soft-mindledger-domain = { path = "../domain" }
+soft-mindledger-application = { path = "../application" }
+soft-mindledger-infrastructure = { path = "../infrastructure" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt"] }

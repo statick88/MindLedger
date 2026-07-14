@@ -1,0 +1,32 @@
+# Cargo configuration for cross-platform builds
+# Adds necessary linker flags for Windows DPAPI and SQLCipher
+
+[target.x86_64-pc-windows-msvc]
+rustflags = [
+  "-C", "link-args=/NODEFAULTLIB:libcmt.lib",  # Avoid CRT conflicts
+  "-C", "link-args=crypt32.lib",               # DPAPI for keyring
+  "-C", "link-args=advapi32.lib",              # Windows crypto API
+  "-C", "link-args=user32.lib",                # User32 for DPAPI UI
+  "-C", "link-args=bcrypt.lib",                # Windows crypto primitives
+  "-C", "link-args=ws2_32.lib",                # Winsock for any network ops
+]
+
+# Linux: no special flags needed (uses pkg-config for system deps)
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+  "-C", "link-arg=-Wl,--no-as-needed",  # Ensure all deps are linked
+]
+
+# macOS: use system keychain, no special flags needed
+[target.x86_64-apple-darwin]
+rustflags = []
+
+# Universal macOS (Apple Silicon + Intel)
+[target.universal-apple-darwin]
+rustflags = []
+
+[profile.release]
+strip = true
+lto = "thin"
+codegen-units = 1
+panic = "abort"
