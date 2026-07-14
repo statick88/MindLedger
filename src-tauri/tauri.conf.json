@@ -60,7 +60,7 @@
   },
   "plugins": {
     "sql": {
-      "preload": "sqlite:soft_gloria.db"
+      "preload": "sqlite:mind_ledger.db"
     }
   }
 }
