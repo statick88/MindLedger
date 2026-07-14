@@ -229,8 +229,9 @@ jobs:
     needs: [rust-build-test, frontend-build-test]
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
@@ -238,9 +239,6 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             artifact: MindLdger.exe
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            artifact: MindLdger
     timeout-minutes: 45
     steps:
       - name: Checkout repository
@@ -284,23 +282,21 @@ jobs:
             libsoup-3.0-dev \
             libjavascriptcoregtk-4.1-dev
 
-      - name: Install system dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          # macOS dependencies are minimal - Xcode command line tools should be present
-          echo "macOS build environment ready"
-
       - name: Install system dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          vcpkg install openssl:x64-windows-static-md
+          vcpkg install openssl:x64-windows-static
         shell: pwsh
 
       - name: Set OpenSSL env (Windows)
         if: runner.os == 'Windows'
         run: |
-          echo "OPENSSL_DIR=$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows-static-md" >> $env:GITHUB_ENV
+          $opensslRoot = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows-static"
+          echo "OPENSSL_DIR=$opensslRoot" >> $env:GITHUB_ENV
           echo "OPENSSL_STATIC=1" >> $env:GITHUB_ENV
+          echo "OPENSSL_LIB_DIR=$opensslRoot\lib" >> $env:GITHUB_ENV
+          echo "OPENSSL_INCLUDE_DIR=$opensslRoot\include" >> $env:GITHUB_ENV
+          echo "RUSTFLAGS=-C link-arg=crypt32.lib -C link-arg=user32.lib -C link-arg=advapi32.lib -C link-arg=gdi32.lib" >> $env:GITHUB_ENV
         shell: pwsh
 
       - name: Cache Cargo dependencies
@@ -333,32 +329,6 @@ jobs:
           path: |
             src-tauri/target/${{ matrix.target }}/release/bundle/**/*
           retention-days: 30
-
-  # =========================================================================
-  # MACOS NOTARIZATION (Post-build)
-  # =========================================================================
-  macos-notarize:
-    name: macOS Notarization
-    needs: tauri-build
-    if: github.event_name != 'pull_request'
-    runs-on: macos-latest
-    timeout-minutes: 20
-    steps:
-      - name: Download macOS artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: tauri-macos-latest-x86_64-apple-darwin
-          path: artifacts
-
-      - name: Notarize .dmg
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        with:
-          args: --target x86_64-apple-darwin --notarize
 
   # =========================================================================
   # RELEASE (Merge to main)
