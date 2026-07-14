@@ -6,9 +6,9 @@ Generates platform-specific builds from a tenant JSON definition.
 No source code modification required.
 
 Usage:
-    python3 scripts/bundle-tenant.py tenants/gloria_once.json
-    python3 scripts/bundle-tenant.py tenants/gloria_once.json --dry-run
-    python3 scripts/bundle-tenant.py tenants/gloria_once.json --skip-icons
+    python3 scripts/bundle-tenant.py tenants/mindledger.json
+    python3 scripts/bundle-tenant.py tenants/mindledger.json --dry-run
+    python3 scripts/bundle-tenant.py tenants/mindledger.json --skip-icons
 
 Outputs (pre-build):
     - src-tauri/tauri.conf.json     (templated productName, identifier)

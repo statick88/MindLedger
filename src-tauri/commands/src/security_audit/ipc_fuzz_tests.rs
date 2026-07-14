@@ -194,9 +194,9 @@ mod ipc_fuzz_tests {
             "Error message must not contain SQL: {}",
             err_msg
         );
-        // Error must NOT contain stack traces
+        // Error must NOT contain stack traces or debug info
         assert!(
-            !err_msg.contains("at ") && !err_msg.contains("thread '") && !err_msg.contains("stack backtrace"),
+            !err_msg.contains("stack backtrace") && !err_msg.contains("panicked at") && !err_msg.contains("thread '") && !err_msg.contains("  at src/"),
             "Error message must not contain stack traces: {}",
             err_msg
         );
@@ -212,6 +212,8 @@ mod ipc_fuzz_tests {
     #[test]
     fn test_tauri_allowlist_no_wildcards() {
         let conf_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("Failed to get parent dir")
             .join("tauri.conf.json");
         let conf_str = std::fs::read_to_string(&conf_path)
             .expect("Failed to read tauri.conf.json");

@@ -52,18 +52,20 @@ CREATE INDEX IF NOT EXISTS idx_patients_active ON patients(is_active);
 CREATE TABLE IF NOT EXISTS appointments (
     id TEXT PRIMARY KEY NOT NULL,
     patient_id TEXT NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
-    appointment_type TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'Scheduled',
+    modality TEXT NOT NULL DEFAULT 'Presencial',
+    status TEXT NOT NULL DEFAULT 'Programada',
     scheduled_date TEXT NOT NULL,
     scheduled_time TEXT NOT NULL,
     duration_minutes INTEGER NOT NULL DEFAULT 30,
-    reason TEXT NOT NULL,
+    reason TEXT,
     notes TEXT,
-    doctor_name TEXT NOT NULL,
-    room TEXT,
-    completed_at TEXT,
-    cancelled_at TEXT,
-    cancellation_reason TEXT,
+    professional_id TEXT,
+    fee_cents INTEGER NOT NULL DEFAULT 0,
+    reminder_sent INTEGER NOT NULL DEFAULT 0,
+    reminder_external_id TEXT,
+    reagendada_from_id TEXT,
+    external_calendar_id TEXT,
+    calendar_provider TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -71,7 +73,7 @@ CREATE TABLE IF NOT EXISTS appointments (
 CREATE INDEX IF NOT EXISTS idx_appointments_patient ON appointments(patient_id);
 CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(scheduled_date);
 CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
-CREATE INDEX IF NOT EXISTS idx_appointments_doctor_date ON appointments(doctor_name, scheduled_date);
+CREATE INDEX IF NOT EXISTS idx_appointments_professional_date ON appointments(professional_id, scheduled_date);
 
 -- Clinical Notes table
 CREATE TABLE IF NOT EXISTS clinical_notes (
@@ -193,18 +195,17 @@ SELECT
     a.patient_id,
     p.first_name || ' ' || p.last_name AS patient_name,
     p.document_number,
-    a.appointment_type,
+    a.modality,
     a.status,
     a.scheduled_date,
     a.scheduled_time,
     a.duration_minutes,
-    a.reason,
-    a.doctor_name,
-    a.room
+    a.fee_cents,
+    a.professional_id
 FROM appointments a
 JOIN patients p ON a.patient_id = p.id
 WHERE a.scheduled_date >= date('now')
-    AND a.status IN ('Scheduled', 'Confirmed')
+    AND a.status IN ('Programada', 'Confirmada')
 ORDER BY a.scheduled_date, a.scheduled_time;
 
 CREATE VIEW IF NOT EXISTS v_patient_age AS
