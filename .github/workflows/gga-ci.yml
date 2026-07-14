@@ -30,7 +30,6 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            -unknown-linux-gnu
             artifact: MindLdger
           - os: windows-latest
             target: x86_64-pc-windows-msvc
@@ -76,9 +75,16 @@ jobs:
       - name: Install system dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          # Windows dependencies are minimal for Tauri
-          # Ensure WebView2 is available (usually pre-installed)
-          echo "Windows build environment ready"
+          # Install OpenSSL via vcpkg (required by openssl-sys crate)
+          vcpkg install openssl:x64-windows-static-md
+        shell: pwsh
+
+      - name: Set OpenSSL env (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          echo "OPENSSL_DIR=$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows-static-md" >> $env:GITHUB_ENV
+          echo "OPENSSL_STATIC=1" >> $env:GITHUB_ENV
+        shell: pwsh
 
       - name: Build Rust workspace
         working-directory: src-tauri
@@ -278,6 +284,19 @@ jobs:
         run: |
           # macOS dependencies are minimal - Xcode command line tools should be present
           echo "macOS build environment ready"
+
+      - name: Install system dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          vcpkg install openssl:x64-windows-static-md
+        shell: pwsh
+
+      - name: Set OpenSSL env (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          echo "OPENSSL_DIR=$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows-static-md" >> $env:GITHUB_ENV
+          echo "OPENSSL_STATIC=1" >> $env:GITHUB_ENV
+        shell: pwsh
 
       - name: Cache Cargo dependencies
         uses: Swatinem/rust-cache@v2
