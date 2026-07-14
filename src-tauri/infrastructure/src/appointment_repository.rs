@@ -1,5 +1,5 @@
 use crate::database::DbPool;
-use soft_gloria_domain::{
+use soft_mindledger_domain::{
     Appointment, AppointmentId, PatientId, TherapistId, AppointmentStatus, Modality,
     DateRange, DateTimeRange, Pagination, AppointmentFilter,
     AppointmentRepository,
@@ -424,7 +424,7 @@ impl AppointmentRepository for SqliteAppointmentRepository {
 mod tests {
     use super::*;
     use crate::database::create_memory_pool;
-    use soft_gloria_domain::{AppointmentId, PatientId, TherapistId, AppointmentStatus, Modality, DateRange};
+    use soft_mindledger_domain::{AppointmentId, PatientId, TherapistId, AppointmentStatus, Modality, DateRange};
     use chrono::{Utc, Duration};
 
     fn create_test_repo() -> SqliteAppointmentRepository {
@@ -467,7 +467,7 @@ mod tests {
         let repo = create_test_repo();
         let start = Utc::now() + Duration::hours(1);
         let end = start + Duration::minutes(50);
-        let time_range = soft_gloria_domain::DateTimeRange::new(start, end).unwrap();
+        let time_range = soft_mindledger_domain::DateTimeRange::new(start, end).unwrap();
         
         let appointment = Appointment::new(
             PatientId::new(),
@@ -492,7 +492,7 @@ mod tests {
         let repo = create_test_repo();
         let start = Utc::now() + Duration::hours(1);
         let end = start + Duration::minutes(50);
-        let time_range = soft_gloria_domain::DateTimeRange::new(start, end).unwrap();
+        let time_range = soft_mindledger_domain::DateTimeRange::new(start, end).unwrap();
         
         let mut appointment = Appointment::new(
             PatientId::new(),
@@ -521,7 +521,7 @@ mod tests {
         
         let start = Utc::now() + Duration::hours(2);
         let end = start + Duration::minutes(50);
-        let time_range = soft_gloria_domain::DateTimeRange::new(start, end).unwrap();
+        let time_range = soft_mindledger_domain::DateTimeRange::new(start, end).unwrap();
         
         let appt1 = Appointment::new(
             PatientId::new(),
@@ -560,7 +560,7 @@ mod tests {
         // Appointment due for reminder (30 min before)
         let start = Utc::now() + Duration::minutes(25);
         let end = start + Duration::minutes(50);
-        let time_range = soft_gloria_domain::DateTimeRange::new(start, end).unwrap();
+        let time_range = soft_mindledger_domain::DateTimeRange::new(start, end).unwrap();
         
         let mut appt_due = Appointment::new(
             PatientId::new(),
@@ -576,7 +576,7 @@ mod tests {
         // Appointment not due yet (60 min before)
         let start2 = Utc::now() + Duration::minutes(65);
         let end2 = start2 + Duration::minutes(50);
-        let time_range2 = soft_gloria_domain::DateTimeRange::new(start2, end2).unwrap();
+        let time_range2 = soft_mindledger_domain::DateTimeRange::new(start2, end2).unwrap();
         
         let mut appt_not_due = Appointment::new(
             PatientId::new(),
@@ -592,7 +592,7 @@ mod tests {
         // Already sent
         let start3 = Utc::now() + Duration::minutes(25);
         let end3 = start3 + Duration::minutes(50);
-        let time_range3 = soft_gloria_domain::DateTimeRange::new(start3, end3).unwrap();
+        let time_range3 = soft_mindledger_domain::DateTimeRange::new(start3, end3).unwrap();
         
         let mut appt_sent = Appointment::new(
             PatientId::new(),

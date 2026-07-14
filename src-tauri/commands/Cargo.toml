@@ -1,5 +1,5 @@
 [package]
-name = "soft-gloria-commands"
+name = "soft-mindledger-commands"
 version = "0.1.0"
 edition = "2021"
 publish = false
@@ -16,9 +16,9 @@ rust_decimal = "1.35"
 rust_decimal_macros = "1.35"
 rusqlite = "0.31"
 
-soft-gloria-domain = { path = "../domain" }
-soft-gloria-application = { path = "../application" }
-soft-gloria-infrastructure = { path = "../infrastructure" }
+soft-mindledger-domain = { path = "../domain" }
+soft-mindledger-application = { path = "../application" }
+soft-mindledger-infrastructure = { path = "../infrastructure" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt"] }

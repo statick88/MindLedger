@@ -1,5 +1,5 @@
 use crate::database::DbPool;
-use soft_gloria_domain::{
+use soft_mindledger_domain::{
     Patient, PatientId, DocumentNumber, Email, PhoneNumber, FullName, Address,
     EmergencyContact, PatientFilter, Pagination, RepositoryError,
     PatientRepository,

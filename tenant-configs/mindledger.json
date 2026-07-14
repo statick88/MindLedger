@@ -1,10 +1,10 @@
 {
   "tenant": {
-    "id": "gloria-once",
-    "commercialName": "Psic. Gloria Once",
-    "clinicalRole": "Neuropsicóloga Clínica",
-    "ownerName": "Psic. Gloria Once",
-    "ownerTitle": "Neuropsicóloga Clínica"
+    "id": "mindledger",
+    "commercialName": "MindLedger",
+    "clinicalRole": "Clinical Practice Management",
+    "ownerName": "MindLedger",
+    "ownerTitle": "Clinical Practice Management"
   },
   "brand": {
     "primary": "#1A5F60",
@@ -51,8 +51,8 @@
   },
   "crypto": {
     "keyringService": "mind-ledger",
-    "keyringAccount": "sqlcipher-key-gloria-once",
-    "dbFileName": "mind_ledger_gloria_once.db"
+    "keyringAccount": "sqlcipher-key-mindledger",
+    "dbFileName": "mind_ledger_mindledger.db"
   },
   "features": {
     "clinicalNotes": true,

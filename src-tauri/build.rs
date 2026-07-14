@@ -10,7 +10,7 @@ fn main() {
     // TENANT_CONFIG is set by bundle-tenant.py via .env
     // Falls back to legacy default for backward compatibility
     let tenant_config_path = std::env::var("TENANT_CONFIG")
-        .unwrap_or_else(|_| "tenant-configs/gloria-once.json".to_string());
+        .unwrap_or_else(|_| "tenant-configs/default.json".to_string());
 
     let config_path = Path::new(&tenant_config_path);
     if config_path.exists() {

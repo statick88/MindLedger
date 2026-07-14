@@ -21,9 +21,9 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 anyhow = "1.0"
 
-soft-gloria-domain = { path = "domain" }
-soft-gloria-infrastructure = { path = "infrastructure" }
-soft-gloria-commands = { path = "commands" }
+soft-mindledger-domain = { path = "domain" }
+soft-mindledger-infrastructure = { path = "infrastructure" }
+soft-mindledger-commands = { path = "commands" }
 
 [workspace]
 resolver = "2"
