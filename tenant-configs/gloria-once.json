@@ -1,7 +1,7 @@
 {
   "tenant": {
     "id": "gloria-once",
-    "commercialName": "MindLedger - Psic. Gloria Once",
+    "commercialName": "Psic. Gloria Once",
     "clinicalRole": "Neuropsicóloga Clínica",
     "ownerName": "Psic. Gloria Once",
     "ownerTitle": "Neuropsicóloga Clínica"
@@ -26,11 +26,11 @@
     "destructiveForeground": "#FFFFFF"
   },
   "brandDark": {
-    "primary": "#2A8F90",
+    "primary": "#477f7f",
     "primaryForeground": "#FFFFFF",
     "secondary": "#1E3A3A",
     "secondaryForeground": "#E5F1EE",
-    "accent": "#D45A55",
+    "accent": "#cc5a55",
     "accentForeground": "#FFFFFF",
     "background": "#1A1D21",
     "foreground": "#F0F2F5",
@@ -40,7 +40,7 @@
     "cardForeground": "#F0F2F5",
     "border": "#333639",
     "input": "#333639",
-    "ring": "#2A8F90",
+    "ring": "#477f7f",
     "destructive": "#B82E2E",
     "destructiveForeground": "#FFFFFF"
   },

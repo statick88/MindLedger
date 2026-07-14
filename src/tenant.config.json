@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "generated_by": "bundle-tenant.py",
+    "tenant_id": "gloria-once",
+    "do_not_edit": true
+  },
+  "tenant": {
+    "id": "gloria-once",
+    "name": "Psic. Gloria Once",
+    "role": "Neuropsicóloga Clínica"
+  },
+  "theme": {
+    "primary": "#1A5F60",
+    "background_sage": "#E5F1EE",
+    "accent_coral": "#E3645F"
+  },
+  "appDataDir": "mind-ledger-gloria-once"
+}
