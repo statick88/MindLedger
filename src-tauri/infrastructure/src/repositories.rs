@@ -5,6 +5,7 @@ use soft_mindledger_domain::{
     PatientRepository,
 };
 use rusqlite::params;
+use std::str::FromStr;
 use uuid::Uuid;
 use chrono::{DateTime, Utc, NaiveDate};
 use async_trait::async_trait;
@@ -108,7 +109,7 @@ impl SqlitePatientRepository {
         let updated_at: String = row.get("updated_at")?;
 
         Ok(Patient {
-            id: PatientId(Uuid::parse_str(&id).map_err(|e| rusqlite::Error::InvalidParameterName(format!("{}", e)))?),
+            id: PatientId::from_str(&id).map_err(|e| rusqlite::Error::InvalidParameterName(format!("{}", e)))?,
             document_number,
             full_name,
             date_of_birth: NaiveDate::parse_from_str(&date_of_birth, "%Y-%m-%d")

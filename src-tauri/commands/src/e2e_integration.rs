@@ -228,7 +228,7 @@ Plan de tratamiento: Continuar con terapia semanal, aumentar exposición gradual
 
         // Step 4: Verify patient can be queried back
         let repo = SqlitePatientRepository::new(pool.clone());
-        let patient_id = PatientId(Uuid::parse_str(&patient_response.id).unwrap());
+        let patient_id = PatientId::from_str(&patient_response.id).unwrap();
         let retrieved = repo.get_by_id(patient_id).await.unwrap();
         assert!(retrieved.is_some());
         let retrieved = retrieved.unwrap();
