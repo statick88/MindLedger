@@ -1,6 +1,5 @@
 use crate::error::{AppError, AppResult};
 use chrono::{DateTime, Duration, NaiveDate, Utc};
-use rust_decimal::Decimal;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use soft_mindledger_domain::{
@@ -8,17 +7,17 @@ use soft_mindledger_domain::{
         Appointment, AppointmentStatus, Modality, DateTimeRange,
     },
     calendar_provider::DateRange,
-    identifiers::{AppointmentId, PatientId, TherapistId, ReminderId},
+    identifiers::{AppointmentId, PatientId, TherapistId},
     reminder::{Reminder, ReminderChannel, ReminderTemplate},
-    repositories::{AppointmentRepository, AppointmentFilter, Pagination, ReminderRepository, AccountingRepository, PatientRepository},
-    accounting::{AsientoContable, LineaAsiento},
-    accounting_trigger::AccountingTrigger,
-    DomainError,
+    repositories::{AppointmentRepository, AppointmentFilter, Pagination, ReminderRepository, PatientRepository},
 };
-use soft_mindledger_infrastructure::{DbPool, SqliteAppointmentRepository, SqlitePatientRepository, SqliteReminderRepository, SqliteAccountingRepository};
+use soft_mindledger_infrastructure::{DbPool, SqliteAppointmentRepository, SqlitePatientRepository, SqliteReminderRepository};
 use std::sync::Arc;
 use std::str::FromStr;
 use tauri::command;
+
+/// Default session fee in cents (500.00) when not specified by patient config.
+const DEFAULT_SESSION_FEE_CENTS: i64 = 50_000;
 
 // ============================================================================
 // Request/Response DTOs
@@ -181,6 +180,7 @@ pub struct ProcessRemindersResult {
 
 // --- Appointment CRUD ---
 
+/// Create a new appointment with patient validation and overlap check.
 pub async fn crear_cita_agenda_impl(
     pool: &DbPool,
     request: CreateAppointmentRequest,
@@ -221,10 +221,7 @@ pub async fn crear_cita_agenda_impl(
     }
     
     // Get patient's default fee if not provided
-    let fee_cents = request.fee_cents.unwrap_or_else(|| {
-        // In a real implementation, fetch from patient config
-        50000 // Default 500.00
-    });
+    let fee_cents = request.fee_cents.unwrap_or(DEFAULT_SESSION_FEE_CENTS);
     
     // Create appointment
     let mut appointment = soft_mindledger_domain::appointment::Appointment::new(
@@ -256,6 +253,7 @@ pub async fn crear_cita_agenda_impl(
     Ok(appointment.into())
 }
 
+/// Retrieve a single appointment by ID.
 pub async fn obtener_cita_agenda_impl(
     pool: &DbPool,
     id: String,
@@ -270,6 +268,7 @@ pub async fn obtener_cita_agenda_impl(
     Ok(appointment.into())
 }
 
+/// List appointments with optional filters (date range, status, patient, therapist) and pagination.
 pub async fn listar_citas_agenda_impl(
     pool: &DbPool,
     query: ListAppointmentsQuery,
@@ -283,8 +282,10 @@ pub async fn listar_citas_agenda_impl(
     if let Some(start) = query.start_date {
         if let Some(end) = query.end_date {
             filter.date_range = Some(DateRange {
-                start: NaiveDate::parse_from_str(&start, "%Y-%m-%d")?.and_hms_opt(0, 0, 0).unwrap().and_utc(),
-                end: NaiveDate::parse_from_str(&end, "%Y-%m-%d")?.and_hms_opt(23, 59, 59).unwrap().and_utc(),
+                start: NaiveDate::parse_from_str(&start, "%Y-%m-%d")?.and_hms_opt(0, 0, 0)
+                    .ok_or_else(|| AppError::Validation("Invalid date".to_string()))?.and_utc(),
+                end: NaiveDate::parse_from_str(&end, "%Y-%m-%d")?.and_hms_opt(23, 59, 59)
+                    .ok_or_else(|| AppError::Validation("Invalid date".to_string()))?.and_utc(),
             });
         }
     }
@@ -307,6 +308,88 @@ pub async fn listar_citas_agenda_impl(
 
 // --- State Transitions ---
 
+/// Execute appointment finalization + accounting entry atomically within a
+/// single SQLite transaction. If either operation fails, both are rolled back.
+fn finalize_appointment_atomic(
+    pool: &DbPool,
+    appointment: &soft_mindledger_domain::appointment::Appointment,
+    asiento: &soft_mindledger_domain::accounting::AsientoContable,
+    notes: Option<String>,
+) -> Result<(), AppError> {
+    let conn = pool.lock().map_err(|e| AppError::Internal(format!("Lock poisoned: {}", e)))?;
+
+    let tx = conn.unchecked_transaction()
+        .map_err(|e| AppError::Database(format!("Failed to begin transaction: {}", e)))?;
+
+    // --- 1. UPDATE appointment ---
+    let status_str = match appointment.status {
+        soft_mindledger_domain::appointment::AppointmentStatus::Programada => "Programada",
+        soft_mindledger_domain::appointment::AppointmentStatus::Realizada => "Realizada",
+        soft_mindledger_domain::appointment::AppointmentStatus::Reagendada => "Reagendada",
+        soft_mindledger_domain::appointment::AppointmentStatus::Cancelada => "Cancelada",
+    };
+    let modality_str = match appointment.modality {
+        soft_mindledger_domain::appointment::Modality::Presencial => "Presencial",
+        soft_mindledger_domain::appointment::Modality::Virtual => "Virtual",
+        soft_mindledger_domain::appointment::Modality::Hibrida => "Hibrida",
+    };
+    let scheduled_date = appointment.time_range.start.format("%Y-%m-%d").to_string();
+    let scheduled_time = appointment.time_range.start.format("%H:%M").to_string();
+    let duration_minutes = (appointment.time_range.end - appointment.time_range.start).num_minutes();
+    let reminder_sent = if appointment.reminder_sent { 1 } else { 0 };
+    let now = chrono::Utc::now().to_rfc3339();
+
+    let affected = tx.execute(
+        "UPDATE appointments SET
+            status = ?1, scheduled_date = ?2, scheduled_time = ?3,
+            duration_minutes = ?4, modality = ?5, fee_cents = ?6, notes = ?7,
+            reminder_sent = ?8, reminder_external_id = ?9, reagendada_from_id = ?10,
+            external_calendar_id = ?11, calendar_provider = ?12,
+            updated_at = ?13
+        WHERE id = ?14",
+        params![
+            status_str,
+            scheduled_date,
+            scheduled_time,
+            duration_minutes,
+            modality_str,
+            appointment.fee_cents,
+            notes,
+            reminder_sent,
+            appointment.reminder_external_id,
+            appointment.reagendada_from_id.map(|id| id.to_string()),
+            appointment.external_calendar_id,
+            appointment.calendar_provider,
+            now,
+            appointment.id.to_string(),
+        ],
+    ).map_err(|e| AppError::Database(format!("Failed to update appointment: {}", e)))?;
+
+    if affected == 0 {
+        tx.rollback().ok();
+        return Err(AppError::NotFound(format!("Appointment not found: {}", appointment.id)));
+    }
+
+    // --- 2. INSERT accounting entry ---
+    let asiento_id = asiento.id.to_string();
+    let asiento_fecha = asiento.fecha.format("%Y-%m-%d").to_string();
+    let asiento_descripcion = asiento.descripcion.clone();
+    let asiento_lineas = serde_json::to_string(&asiento.lineas)
+        .map_err(|e| AppError::Accounting(format!("Failed to serialize lineas: {}", e)))?;
+
+    tx.execute(
+        "INSERT INTO asientos_contables (id, fecha, descripcion, lineas, created_at) VALUES (?1, ?2, ?3, ?4, datetime('now'))",
+        params![asiento_id, asiento_fecha, asiento_descripcion, asiento_lineas],
+    ).map_err(|e| AppError::Database(format!("Failed to insert accounting entry: {}", e)))?;
+
+    // --- 3. COMMIT ---
+    tx.commit()
+        .map_err(|e| AppError::Database(format!("Failed to commit transaction: {}", e)))?;
+
+    Ok(())
+}
+
+/// Finalize a session: atomically mark appointment as Realizada and create accounting entry.
 pub async fn finalizar_sesion_agenda_impl(
     pool: &DbPool,
     id: String,
@@ -328,7 +411,6 @@ pub async fn finalizar_sesion_agenda_impl(
     }
     
     // Build accounting entry before state change (need patient & therapist data)
-    // In a real implementation, fetch patient and therapist details
     let patient_repo = SqlitePatientRepository::new(pool.clone());
     let patient = patient_repo.get_by_id(appointment.patient_id).await?
         .ok_or_else(|| AppError::NotFound("Patient not found".to_string()))?;
@@ -338,7 +420,7 @@ pub async fn finalizar_sesion_agenda_impl(
         id: appointment.therapist_id,
         full_name: soft_mindledger_domain::value_objects::FullName::new(
             "Terapeuta".to_string(), "Apellido".to_string(), None
-        ).unwrap(),
+        )?,
         specialty_code: "PSI".to_string(),
     };
     
@@ -361,18 +443,17 @@ pub async fn finalizar_sesion_agenda_impl(
     // Validate the asiento is balanced
     soft_mindledger_domain::accounting_trigger::AccountingTrigger::validate_asiento_balance(&asiento)?;
     
-    // Perform atomic transaction: update appointment + insert asiento + audit log
-    // The repo handles the transaction internally
+    // Mark appointment as finalized (domain state change)
     appointment.finalize(notes)?;
-    repo.update(&appointment).await?;
     
-    // Save the asiento using existing accounting command
-    let accounting_repo = soft_mindledger_infrastructure::SqliteAccountingRepository::new(pool.clone());
-    accounting_repo.create_asiento(&asiento).await?;
+    // Execute both operations atomically inside a single SQLite transaction.
+    // If the accounting entry fails, the appointment UPDATE is also rolled back.
+    finalize_appointment_atomic(pool, &appointment, &asiento, appointment.notes.clone())?;
     
     Ok(appointment.into())
 }
 
+/// Reschedule an appointment to a new time slot with conflict check.
 pub async fn reagendar_cita_impl(
     pool: &DbPool,
     id: String,
@@ -436,6 +517,7 @@ pub async fn reagendar_cita_impl(
     Ok(appointment.into())
 }
 
+/// Cancel an appointment with mandatory reason.
 pub async fn cancelar_cita_impl(
     pool: &DbPool,
     id: String,
@@ -469,6 +551,7 @@ pub async fn cancelar_cita_impl(
 
 // --- Patient-specific queries ---
 
+/// List appointments for a specific patient with optional date range and status filters.
 pub async fn obtener_citas_paciente_impl(
     pool: &DbPool,
     query: GetPatientAppointmentsQuery,
@@ -480,8 +563,10 @@ pub async fn obtener_citas_paciente_impl(
     
     let range = if let (Some(start), Some(end)) = (query.start_date, query.end_date) {
         Some(DateRange {
-            start: NaiveDate::parse_from_str(&start, "%Y-%m-%d")?.and_hms_opt(0, 0, 0).unwrap().and_utc(),
-            end: NaiveDate::parse_from_str(&end, "%Y-%m-%d")?.and_hms_opt(23, 59, 59).unwrap().and_utc(),
+            start: NaiveDate::parse_from_str(&start, "%Y-%m-%d")?.and_hms_opt(0, 0, 0)
+                    .ok_or_else(|| AppError::Validation("Invalid date".to_string()))?.and_utc(),
+            end: NaiveDate::parse_from_str(&end, "%Y-%m-%d")?.and_hms_opt(23, 59, 59)
+                    .ok_or_else(|| AppError::Validation("Invalid date".to_string()))?.and_utc(),
         })
     } else {
         None
@@ -512,6 +597,7 @@ pub async fn obtener_citas_paciente_impl(
 
 // --- Reminders ---
 
+/// Get all pending (unsent) reminders.
 pub async fn obtener_recordatorios_pendientes_impl(
     pool: &DbPool,
 ) -> AppResult<Vec<ReminderResponse>> {
@@ -522,6 +608,7 @@ pub async fn obtener_recordatorios_pendientes_impl(
     Ok(reminders.into_iter().map(Into::into).collect())
 }
 
+/// Process all due reminders: send notifications and mark as sent.
 pub async fn procesar_recordatorios_pendientes_impl(
     pool: &DbPool,
 ) -> AppResult<ProcessRemindersResult> {
@@ -550,6 +637,7 @@ pub async fn procesar_recordatorios_pendientes_impl(
 
 // --- KPIs ---
 
+/// Calculate KPI metrics (sessions completed, revenue, no-show rate, occupancy) for a date range.
 pub async fn obtener_kpis_agenda_impl(
     pool: &DbPool,
     therapist_id: Option<String>,
@@ -609,6 +697,7 @@ pub async fn obtener_kpis_agenda_impl(
 // Tauri Command Wrappers
 // ============================================================================
 
+/// Tauri IPC command: create appointment.
 #[command]
 pub async fn crear_cita_agenda(
     db: tauri::State<'_, Arc<DbPool>>,
@@ -617,6 +706,7 @@ pub async fn crear_cita_agenda(
     crear_cita_agenda_impl(&db, request).await
 }
 
+/// Tauri IPC command: get appointment by ID.
 #[command]
 pub async fn obtener_cita_agenda(
     db: tauri::State<'_, Arc<DbPool>>,
@@ -625,6 +715,7 @@ pub async fn obtener_cita_agenda(
     obtener_cita_agenda_impl(&db, id).await
 }
 
+/// Tauri IPC command: list appointments with filters.
 #[command]
 pub async fn listar_citas_agenda(
     db: tauri::State<'_, Arc<DbPool>>,
@@ -633,6 +724,7 @@ pub async fn listar_citas_agenda(
     listar_citas_agenda_impl(&db, query).await
 }
 
+/// Tauri IPC command: finalize session (atomic appointment + accounting).
 #[command]
 pub async fn finalizar_sesion_agenda(
     db: tauri::State<'_, Arc<DbPool>>,
@@ -642,6 +734,7 @@ pub async fn finalizar_sesion_agenda(
     finalizar_sesion_agenda_impl(&db, id, notes).await
 }
 
+/// Tauri IPC command: reschedule appointment.
 #[command]
 pub async fn reagendar_cita(
     db: tauri::State<'_, Arc<DbPool>>,
@@ -653,6 +746,7 @@ pub async fn reagendar_cita(
     reagendar_cita_impl(&db, id, new_start_at, new_end_at, reason).await
 }
 
+/// Tauri IPC command: cancel appointment.
 #[command]
 pub async fn cancelar_cita(
     db: tauri::State<'_, Arc<DbPool>>,
@@ -662,6 +756,7 @@ pub async fn cancelar_cita(
     cancelar_cita_impl(&db, id, reason).await
 }
 
+/// Tauri IPC command: list patient appointments.
 #[command]
 pub async fn obtener_citas_paciente(
     db: tauri::State<'_, Arc<DbPool>>,
@@ -670,6 +765,7 @@ pub async fn obtener_citas_paciente(
     obtener_citas_paciente_impl(&db, query).await
 }
 
+/// Tauri IPC command: get pending reminders.
 #[command]
 pub async fn obtener_recordatorios_pendientes(
     db: tauri::State<'_, Arc<DbPool>>,
@@ -677,6 +773,7 @@ pub async fn obtener_recordatorios_pendientes(
     obtener_recordatorios_pendientes_impl(&db).await
 }
 
+/// Tauri IPC command: process due reminders.
 #[command]
 pub async fn procesar_recordatorios_pendientes(
     db: tauri::State<'_, Arc<DbPool>>,
@@ -684,6 +781,7 @@ pub async fn procesar_recordatorios_pendientes(
     procesar_recordatorios_pendientes_impl(&db).await
 }
 
+/// Tauri IPC command: get agenda KPIs.
 #[command]
 pub async fn obtener_kpis_agenda(
     db: tauri::State<'_, Arc<DbPool>>,
@@ -692,8 +790,10 @@ pub async fn obtener_kpis_agenda(
     end_date: String,
 ) -> AppResult<KpiMetricsResponse> {
     let range = DateRange {
-        start: NaiveDate::parse_from_str(&start_date, "%Y-%m-%d")?.and_hms_opt(0, 0, 0).unwrap().and_utc(),
-        end: NaiveDate::parse_from_str(&end_date, "%Y-%m-%d")?.and_hms_opt(23, 59, 59).unwrap().and_utc(),
+        start: NaiveDate::parse_from_str(&start_date, "%Y-%m-%d")?.and_hms_opt(0, 0, 0)
+                    .ok_or_else(|| AppError::Validation("Invalid date".to_string()))?.and_utc(),
+        end: NaiveDate::parse_from_str(&end_date, "%Y-%m-%d")?.and_hms_opt(23, 59, 59)
+                    .ok_or_else(|| AppError::Validation("Invalid date".to_string()))?.and_utc(),
     };
     obtener_kpis_agenda_impl(&db, therapist_id, range).await
 }
@@ -704,7 +804,8 @@ mod tests {
     use soft_mindledger_infrastructure::database::create_memory_pool;
     use soft_mindledger_domain::{PatientId, TherapistId, Modality, AppointmentStatus, ReminderChannel, ReminderTemplate, Reminder, ReminderId, AppointmentId, PatientId as DomainPatientId};
     use chrono::{Utc, Duration};
-    use uuid::Uuid;
+use uuid::Uuid;
+use std::str::FromStr;
 
 fn create_test_pool() -> DbPool {
         let pool = create_memory_pool().unwrap();

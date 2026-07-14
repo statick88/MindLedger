@@ -20,6 +20,7 @@ mod e2e_tests {
     use soft_mindledger_infrastructure::repositories::SqlitePatientRepository;
     use soft_mindledger_infrastructure::{create_memory_pool, DbPool};
     use std::fs;
+    use std::str::FromStr;
     use tempfile::tempdir;
     use uuid::Uuid;
 

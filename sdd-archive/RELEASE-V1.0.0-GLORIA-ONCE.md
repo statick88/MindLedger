@@ -1,9 +1,9 @@
 # MindLedger v1.0.0-gloria-once — Release Certification
 
 ## Build Information
-- **Date**: 2026-07-14 02:55 UTC
-- **Commit**: 40c14d7
-- **Branch**: hardening/windows-dpapi-key-storage
+- **Date**: 2026-07-14 01:33 UTC
+- **Commit**: 179c485
+- **Branch**: release/v1.0.0-gloria-once
 - **Tenant**: gloria_once (Psic. Gloria Once)
 - **Platform**: Windows 11 (GNU toolchain — MinGW 16.1.0)
 
@@ -42,14 +42,14 @@
 | ASLR (DYNAMIC_BASE) | ✅ PASS |
 | DEP (NX_COMPAT) | ✅ PASS |
 | HIGH_ENTROPY_VA | ✅ PASS |
-| CFG (GUARD_CF) | ⚠️ WARN — GNU toolchain limitation |
+| CFG (GUARD_CF) | ⚠️ WARN — not set (common for GNU toolchain builds) |
 | Stripped | ✅ PASS (7.35 MB) |
 
 ### String Scanning (Sensitive Data Exposure)
 | Check | Result |
 |-------|--------|
-| Hardcoded hex key (32+ char) | ✅ PASS — no hardcoded keys (source templates only) |
-| Hardcoded PRAGMA key | ✅ PASS — strings are SQL templates, not actual keys |
+| Hardcoded hex key (32+ char) | ✅ PASS — no hardcoded keys found |
+| Hardcoded PRAGMA key | ✅ PASS — strings are source templates, not actual keys |
 | Plaintext secrets | ✅ PASS — no plaintext credentials found |
 
 ### Runtime Verification (Smoke Test)
@@ -75,7 +75,6 @@
 - **Failed**: 0
 - **Warnings**: 1 (CFG — GNU toolchain limitation)
 - **Pending**: 2 (Runtime smoke test — requires manual app launch)
-- **Tests**: 210 passed / 0 failed
 
 ## Smoke Test Checklist
 - [ ] Installer runs without errors
@@ -90,35 +89,31 @@
 - [ ] No UI thread blocking during financial operations
 
 ## Certification
-**BUILD CERTIFIED** — 2026-07-14 02:55 UTC
+**BUILD CERTIFIED** — 2026-07-14 01:45 UTC
 
-All static audit checks passed (6 PASS, 0 FAIL, 1 WARN). PE hardening verified (ASLR, DEP, HIGH_ENTROPY_VA). No hardcoded keys or plaintext secrets in binary. Tenant branding correctly applied (com.mindldger.gloriaonce.desktop, Psic. Gloria Once). MSI and NSIS installers generated successfully. Full test suite (210 tests) passes on Windows. Audit script patched (escape quote + regex fixes).
+All static audit checks passed. PE hardening verified (ASLR, DEP, HIGH_ENTROPY_VA). No hardcoded keys or plaintext secrets in binary. Tenant branding correctly applied. MSI and NSIS installers generated successfully.
 
 Runtime smoke test pending — recommended before commercial distribution.
 
 ## Build Commands Used
 ```powershell
-# Step 1: Sync
-git fetch origin
-git checkout hardening/windows-dpapi-key-storage
-git rebase origin/hardening/windows-dpapi-key-storage
+# Step 1: Build
+git pull origin release/v1.0.0-gloria-once
+fnm use 24.13.1
+pnpm install
+python scripts/bundle-tenant.py tenants/gloria_once.json
+pnpm tauri build
 
-# Step 2: Branding
-python scripts\bundle-tenant.py tenants\mindledger.json
+# Step 2: Audit & Certify
+powershell -ExecutionPolicy Bypass -File scripts/windows-audit.ps1
 
-# Step 3: Test
-cargo test --workspace
-
-# Step 4: Audit (manual — no admin)
-# PE hardening + SHA-256 hash collection
-
-# Step 5: Commit
+# Step 3: Commit results
 git add sdd-archive/RELEASE-V1.0.0-GLORIA-ONCE.md
-git commit -m "audit: freeze secure windows msi hashes and runtime certification for v1.0.0-gloria-once"
-git push origin hardening/windows-dpapi-key-storage
+git commit -m "audit: certify secure windows runtime build and freeze sha256 artifact hashes for v1.0.0-gloria-once"
+git push origin release/v1.0.0-gloria-once
 ```
 
 ## Notes
 Automated build + audit pipeline. All branding injected via
-scripts/bundle-tenant.py. Security audit via manual PE analysis (no admin).
-No core source code modifications required. CFG warning is expected on GNU toolchain.
+scripts/bundle-tenant.py. Security audit via scripts/windows-audit.ps1.
+No core source code modifications required.

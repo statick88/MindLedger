@@ -7,6 +7,7 @@ use soft_mindledger_domain::{
 use soft_mindledger_infrastructure::{DbPool, SqlitePatientRepository};
 use tauri::command;
 use uuid::Uuid;
+use std::str::FromStr;
 use chrono::NaiveDate;
 use std::sync::Arc;
 

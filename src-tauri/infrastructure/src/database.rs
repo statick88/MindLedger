@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use rusqlite::Connection;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
+use tracing::warn;
 
 use crate::keyring::SqlCipherKeyManager;
 
@@ -33,7 +34,7 @@ pub fn create_pool_for_tenant(
 
 /// Backward-compatible create_pool (for tests, default tenant).
 /// Delegates to create_pool_for_tenant with default values.
-pub fn create_pool(database_path: &Path, data_dir: &Path) -> Result<DbPool> {
+pub fn create_pool(_database_path: &Path, data_dir: &Path) -> Result<DbPool> {
     create_pool_for_tenant(
         data_dir,
         DEFAULT_ACCOUNT_NAME,
@@ -41,6 +42,8 @@ pub fn create_pool(database_path: &Path, data_dir: &Path) -> Result<DbPool> {
     )
 }
 
+/// Open (or create) an encrypted SQLCipher database with the given hex key.
+/// Validates key format (64 hex chars) before executing PRAGMA to prevent injection.
 pub fn create_pool_with_key(database_path: &Path, key: &str) -> Result<DbPool> {
     // Security: validate key format before passing to SQLCipher.
     // Keys must be exactly KEY_LENGTH*2 hex characters (64 chars for 32-byte key).
@@ -86,7 +89,7 @@ pub fn create_pool_with_key(database_path: &Path, key: &str) -> Result<DbPool> {
 
     // Set journal mode — try WAL first, fall back to DELETE (SQLCipher may not support WAL).
     if let Err(e) = conn.execute_batch("PRAGMA journal_mode=WAL;") {
-        eprintln!("[MindLdger] WAL mode unavailable ({}), using DELETE", e);
+        warn!("[MindLedger] WAL mode unavailable ({}), using DELETE", e);
         conn.execute_batch("PRAGMA journal_mode=DELETE;")
             .context("Failed to set journal mode")?;
     }
