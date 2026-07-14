@@ -13,8 +13,8 @@ use soft_mindledger_domain::{
 };
 use soft_mindledger_infrastructure::{DbPool, SqliteAppointmentRepository, SqlitePatientRepository, SqliteReminderRepository};
 use std::sync::Arc;
-use std::str::FromStr;
 use tauri::command;
+use uuid::Uuid;
 
 /// Default session fee in cents (500.00) when not specified by patient config.
 const DEFAULT_SESSION_FEE_CENTS: i64 = 50_000;
