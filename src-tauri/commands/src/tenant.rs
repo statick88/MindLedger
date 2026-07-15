@@ -72,11 +72,14 @@ static TENANT_CONFIG: OnceLock<Result<TenantConfig, String>> = OnceLock::new();
 /// Load tenant config from embedded file (set by build.rs via TENANT_CONFIG_PATH)
 /// Falls back to default.json for tests and backward compatibility.
 fn load_tenant_config() -> Result<TenantConfig, String> {
-    // Try to read from TENANT_CONFIG_PATH (set by build.rs at compile time)
+    // At compile time, build.rs (mind-ledger crate) copies the active tenant config
+    // to OUT_DIR/tenant-config.json and sets TENANT_CONFIG_PATH via cargo:rustc-env.
+    // But cargo:rustc-env is crate-scoped — commands crate can't see it.
+    // So we also set the process env var from main.rs before this is called.
     if let Ok(config_path) = std::env::var("TENANT_CONFIG_PATH") {
-        let config_str = std::fs::read_to_string(&config_path)
-            .map_err(|e| format!("Failed to read tenant config from {}: {}", config_path, e))?;
-        return serde_json::from_str(&config_str).map_err(|e| format!("Failed to parse tenant config: {}", e));
+        if let Ok(config_str) = std::fs::read_to_string(&config_path) {
+            return serde_json::from_str(&config_str).map_err(|e| format!("Failed to parse tenant config: {}", e));
+        }
     }
     
     // Fallback: compile-time default config (for tests and backward compatibility)

@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "MindLedger",
+        "title": "Psic. Gloria Once",
         "width": 1400,
         "height": 900,
         "minWidth": 1024,
@@ -37,7 +37,7 @@
     ],
     "category": "Medical",
     "shortDescription": "Clinical psychology practice management",
-    "longDescription": "MindLedger — Clinical Practice Management. Secure, offline-first practice management system.",
+    "longDescription": "Psic. Gloria Once — Neuropsicóloga Clínica. Secure, offline-first practice management system.",
     "copyright": "Copyright © 2026 Diego Medardo Saavedra García",
     "linux": {
       "deb": {
@@ -56,7 +56,11 @@
         "installerIcon": "icons/icon.ico",
         "installMode": "both"
       }
-    }
+    },
+    "resources": [
+      "resources/openssl/libcrypto-3-x64.dll",
+      "resources/openssl/libssl-3-x64.dll"
+    ]
   },
   "plugins": {
     "sql": {
