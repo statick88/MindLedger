@@ -30,10 +30,10 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact: MindLdger
+            artifact: MindLedger
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact: MindLdger.exe
+            artifact: MindLedger.exe
     timeout-minutes: 30
     steps:
       - name: Checkout repository
@@ -235,10 +235,10 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact: MindLdger
+            artifact: MindLedger
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact: MindLdger.exe
+            artifact: MindLedger.exe
     timeout-minutes: 45
     steps:
       - name: Checkout repository
@@ -338,7 +338,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.ref_name }}
-          name: "MindLdger Release v${{ github.ref_name }}"
+          name: "MindLedger Release v${{ github.ref_name }}"
           body: |
             Automated release from main branch.
             See CHANGELOG.md for details.

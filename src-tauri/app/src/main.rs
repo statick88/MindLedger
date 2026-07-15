@@ -15,13 +15,22 @@ use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Set TENANT_CONFIG_PATH as a process env var so commands crate can read it at runtime.
+    // build.rs sets this via cargo:rustc-env (compile-time only for mind-ledger crate),
+    // but commands crate can't see cargo:rustc-env from another crate.
+    if let Ok(path) = std::env::var("TENANT_CONFIG_PATH") {
+        // Already set as process env (e.g. from bundle-tenant.py or manual export)
+    } else if let Some(compile_time_path) = option_env!("TENANT_CONFIG_PATH") {
+        std::env::set_var("TENANT_CONFIG_PATH", compile_time_path);
+    }
+
     tauri::Builder::default()
         .setup(|app| {
             let app_handle = app.handle().clone();
             
             // Get tenant config at startup (sync, compiled into binary)
             let tenant_config = get_tenant_config_cached().map_err(|e| {
-                eprintln!("[MindLdger] Failed to load tenant config: {}", e);
+                eprintln!("[MindLedger] Failed to load tenant config: {}", e);
                 e
             })?;
             
@@ -31,45 +40,45 @@ pub fn run() {
             
             // Derive tenant-specific data directory
             let base_data_dir = app.path().app_data_dir().map_err(|e| {
-                eprintln!("[MindLdger] Failed to get app data dir: {}", e);
+                eprintln!("[MindLedger] Failed to get app data dir: {}", e);
                 e
             })?;
             
             let data_dir = base_data_dir.join(format!("mind-ledger-{}", tenant_id));
             std::fs::create_dir_all(&data_dir).map_err(|e| {
-                eprintln!("[MindLdger] Failed to create tenant data dir: {}", e);
+                eprintln!("[MindLedger] Failed to create tenant data dir: {}", e);
                 e
             })?;
             
             tauri::async_runtime::block_on(async move {
                 let db = create_pool_for_tenant(&data_dir, &keyring_account, &db_filename)
                     .map_err(|e| {
-                        eprintln!("[MindLdger] Failed to initialize database: {}", e);
+                        eprintln!("[MindLedger] Failed to initialize database: {}", e);
                         e
                     })?;
                 
                 // Run migrations...
                 run_migrations(&db).map_err(|e| {
-                    eprintln!("[MindLdger] Failed to run migrations: {}", e);
+                    eprintln!("[MindLedger] Failed to run migrations: {}", e);
                     e
                 })?;
                 run_accounting_migrations(&db).map_err(|e| {
-                    eprintln!("[MindLdger] Failed to run accounting migrations: {}", e);
+                    eprintln!("[MindLedger] Failed to run accounting migrations: {}", e);
                     e
                 })?;
                 run_diagnostics_migrations(&db).map_err(|e| {
-                    eprintln!("[MindLdger] Failed to run diagnostics migrations: {}", e);
+                    eprintln!("[MindLedger] Failed to run diagnostics migrations: {}", e);
                     e
                 })?;
                 run_agenda_migrations(&db).map_err(|e| {
-                    eprintln!("[MindLdger] Failed to run agenda migrations: {}", e);
+                    eprintln!("[MindLedger] Failed to run agenda migrations: {}", e);
                     e
                 })?;
                 
                 app_handle.manage(Arc::new(db));
                 Ok::<(), Box<dyn std::error::Error>>(())
             }).unwrap_or_else(|e| {
-                eprintln!("[MindLdger] Critical error during setup: {}", e);
+                eprintln!("[MindLedger] Critical error during setup: {}", e);
             });
             
             Ok(())
