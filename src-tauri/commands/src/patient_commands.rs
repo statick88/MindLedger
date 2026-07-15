@@ -1,10 +1,10 @@
 use crate::error::{AppError, AppResult};
-use soft_gloria_domain::{
+use soft_mindledger_domain::{
     Patient, PatientId, PatientFilter, Pagination,
     DocumentNumber, Email, PhoneNumber, FullName, Address, EmergencyContact,
     Gender, PatientRepository,
 };
-use soft_gloria_infrastructure::{DbPool, SqlitePatientRepository};
+use soft_mindledger_infrastructure::{DbPool, SqlitePatientRepository};
 use tauri::command;
 use uuid::Uuid;
 use chrono::NaiveDate;
@@ -13,7 +13,7 @@ use std::sync::Arc;
 #[derive(serde::Deserialize)]
 pub struct CreatePatientRequest {
     pub document_number: String,
-    pub document_type: soft_gloria_domain::DocumentType,
+    pub document_type: soft_mindledger_domain::DocumentType,
     pub country_code: String,
     pub first_name: String,
     pub last_name: String,
@@ -48,7 +48,7 @@ pub struct CreatePatientRequest {
 pub struct PatientResponse {
     pub id: String,
     pub document_number: String,
-    pub document_type: soft_gloria_domain::DocumentType,
+    pub document_type: soft_mindledger_domain::DocumentType,
     pub country_code: String,
     pub first_name: String,
     pub last_name: String,

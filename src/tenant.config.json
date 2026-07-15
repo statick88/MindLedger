@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "generated_by": "bundle-tenant.py",
+    "tenant_id": "mindledger",
+    "do_not_edit": true
+  },
+  "tenant": {
+    "id": "mindledger",
+    "name": "MindLedger",
+    "role": "Clinical Practice Management"
+  },
+  "theme": {
+    "primary": "#1A5F60",
+    "background_sage": "#E5F1EE",
+    "accent_coral": "#E3645F"
+  },
+  "appDataDir": "mind-ledger"
+}

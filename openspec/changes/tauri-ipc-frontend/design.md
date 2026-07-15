@@ -2,7 +2,7 @@
 
 ## Technical Approach
 
-This design implements **FASE 2** of MindLedger: Tauri v2 IPC commands layer (Rust) + React/TypeScript SPA frontend. FASE 1 (Domain Core, Encrypted Persistence, ETL Documental) is complete with 74/74 tests passing. This change delivers Accounting, Diagnostics, Age Calculation IPC commands and a fully functional desktop SPA with brand-compliant UI.
+This design implements **FASE 2** of MindLdger: Tauri v2 IPC commands layer (Rust) + React/TypeScript SPA frontend. FASE 1 (Domain Core, Encrypted Persistence, ETL Documental) is complete with 74/74 tests passing. This change delivers Accounting, Diagnostics, Age Calculation IPC commands and a fully functional desktop SPA with brand-compliant UI.
 
 The architecture follows **Clean Architecture** principles:
 - **Domain Layer** (`soft_gloria_domain`): Pure Rust, zero dependencies, contains `accounting.rs`, `diagnostics.rs`, `age.rs`
@@ -141,7 +141,7 @@ Component (e.g., AccountingPage)
 | `src/components/layout/Layout.tsx` | Modify | Add "Contabilidad" (Calculator icon) and "Diagnósticos" (Search icon) nav items |
 | `src/index.css` | Modify | CSS custom properties for brand tokens + base styles |
 | `tailwind.config.js` | Modify | Extend theme with brand colors, fonts (Inter, JetBrains Mono) |
-| `tauri.conf.json` | Modify | `productName: "MindLedger"`, `identifier: "com.softgloria.mindledger"` |
+| `tauri.conf.json` | Modify | `productName: "MindLdger"`, `identifier: "com.softgloria.mindledger"` |
 
 ### Removed Files
 

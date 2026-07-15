@@ -3,35 +3,61 @@
     windows_subsystem = "windows"
 )]
 
-use soft_gloria_commands::patient_commands::*;
-use soft_gloria_commands::accounting_commands::*;
-use soft_gloria_commands::diagnostics_commands::*;
-use soft_gloria_commands::age_commands::*;
-use soft_gloria_commands::agenda_commands::*;
-use soft_gloria_infrastructure::{create_pool, run_migrations, run_accounting_migrations, run_diagnostics_migrations, run_agenda_migrations};
+use soft_mindledger_commands::patient_commands::*;
+use soft_mindledger_commands::accounting_commands::*;
+use soft_mindledger_commands::diagnostics_commands::*;
+use soft_mindledger_commands::age_commands::*;
+use soft_mindledger_commands::agenda_commands::*;
+use soft_mindledger_commands::tenant::*;
+use soft_mindledger_infrastructure::{create_pool_for_tenant, run_migrations, run_accounting_migrations, run_diagnostics_migrations, run_agenda_migrations};
 use std::sync::Arc;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Set TENANT_CONFIG_PATH as a process env var so commands crate can read it at runtime.
+    // build.rs sets this via cargo:rustc-env (compile-time only for mind-ledger crate),
+    // but commands crate can't see cargo:rustc-env from another crate.
+    if let Ok(path) = std::env::var("TENANT_CONFIG_PATH") {
+        // Already set as process env (e.g. from bundle-tenant.py or manual export)
+    } else if let Some(compile_time_path) = option_env!("TENANT_CONFIG_PATH") {
+        std::env::set_var("TENANT_CONFIG_PATH", compile_time_path);
+    }
+
     tauri::Builder::default()
         .setup(|app| {
             let app_handle = app.handle().clone();
-            let data_dir = app.path().app_data_dir().map_err(|e| {
+            
+            // Get tenant config at startup (sync, compiled into binary)
+            let tenant_config = get_tenant_config_cached().map_err(|e| {
+                eprintln!("[MindLedger] Failed to load tenant config: {}", e);
+                e
+            })?;
+            
+            let tenant_id = tenant_config.tenant.id.clone();
+            let keyring_account = tenant_config.crypto.keyringAccount.clone();
+            let db_filename = tenant_config.crypto.dbFileName.clone();
+            
+            // Derive tenant-specific data directory
+            let base_data_dir = app.path().app_data_dir().map_err(|e| {
                 eprintln!("[MindLedger] Failed to get app data dir: {}", e);
                 e
             })?;
+            
+            let data_dir = base_data_dir.join(format!("mind-ledger-{}", tenant_id));
             std::fs::create_dir_all(&data_dir).map_err(|e| {
-                eprintln!("[MindLedger] Failed to create app data dir: {}", e);
+                eprintln!("[MindLedger] Failed to create tenant data dir: {}", e);
                 e
             })?;
-            let db_path = data_dir.join("mind_ledger.db");
             
             tauri::async_runtime::block_on(async move {
-                let db = create_pool(&db_path, &data_dir).map_err(|e| {
-                    eprintln!("[MindLedger] Failed to initialize database: {}", e);
-                    e
-                })?;
+                let db = create_pool_for_tenant(&data_dir, &keyring_account, &db_filename)
+                    .map_err(|e| {
+                        eprintln!("[MindLedger] Failed to initialize database: {}", e);
+                        e
+                    })?;
+                
+                // Run migrations...
                 run_migrations(&db).map_err(|e| {
                     eprintln!("[MindLedger] Failed to run migrations: {}", e);
                     e
@@ -95,6 +121,8 @@ pub fn run() {
             obtener_recordatorios_pendientes,
             procesar_recordatorios_pendientes,
             obtener_kpis_agenda,
+            // Tenant config command
+            get_tenant_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

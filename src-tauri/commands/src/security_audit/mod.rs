@@ -1,4 +1,4 @@
-//! Security audit test suite for MindLedger.
+//! Security audit test suite for MindLdger.
 //!
 //! Covers: IPC injection fuzzing, DOCX parser resilience,
 //! Tauri allowlist compliance, and business logic abuse tests.

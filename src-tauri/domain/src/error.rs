@@ -3,7 +3,7 @@ use thiserror::Error;
 
 use crate::accounting::ContabilidadError;
 
-/// Domain-level errors for MindLedger business logic
+/// Domain-level errors for MindLdger business logic
 #[derive(Debug, Clone, PartialEq, Eq, Error, Serialize, Deserialize)]
 pub enum DomainError {
     #[error("Invalid state transition: from {from} to {to}")]

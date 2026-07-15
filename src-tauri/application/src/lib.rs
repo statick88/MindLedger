@@ -5,4 +5,4 @@
 
 pub mod docx_parser;
 
-pub use soft_gloria_domain::*;
+pub use soft_mindledger_domain::*;

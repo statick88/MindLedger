@@ -1,4 +1,4 @@
-# MindLedger FASE 5 — Release Archive
+# MindLdger FASE 5 — Release Archive
 
 > Artifacts from FASE 5: Release Preparation (2026-07-13)
 

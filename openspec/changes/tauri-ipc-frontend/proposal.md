@@ -2,7 +2,7 @@
 
 ## Intent
 
-Build the Tauri IPC commands layer (backend commands) and complete the React/TypeScript frontend SPA for **MindLedger** (brand: Soft Gloria), a clinical psychology practice management desktop app for Ecuador. FASE 1 (Domain Core, Encrypted Persistence, ETL Documental) is complete with 74/74 tests passing. This change delivers FASE 2: Tauri IPC Commands + Frontend SPA.
+Build the Tauri IPC commands layer (backend commands) and complete the React/TypeScript frontend SPA for **MindLdger** (brand: Soft Gloria), a clinical psychology practice management desktop app for Ecuador. FASE 1 (Domain Core, Encrypted Persistence, ETL Documental) is complete with 74/74 tests passing. This change delivers FASE 2: Tauri IPC Commands + Frontend SPA.
 
 ## Scope
 
@@ -18,7 +18,7 @@ Build the Tauri IPC commands layer (backend commands) and complete the React/Typ
 - **Frontend - ClinicalNotesPage**: Predictive form with real-time age calculation from DOB, diagnosis autocomplete (CIE-10/DSM-5)
 - **Frontend - Search Dropdown**: Translate Rust enums to readable Spanish labels (DocumentType, Gender, AppointmentStatus, NoteType, DiagnosisType)
 - **Frontend - Navigation**: Simple sidebar (no nested menus), 5 items: Dashboard, Pacientes, Turnos, Historia Clínica, Contabilidad, Diagnósticos, Configuración
-- **Brand Compliance**: Update tauri.conf.json productName to "MindLedger", apply color tokens (Primary #0F4C5C, Sage #E5F1EE, Coral #E3645F, Background #F8F9FA, Text #212529)
+- **Brand Compliance**: Update tauri.conf.json productName to "MindLdger", apply color tokens (Primary #0F4C5C, Sage #E5F1EE, Coral #E3645F, Background #F8F9FA, Text #212529)
 - **Infrastructure**: Migrate from sqlx to rusqlite with bundled-sqlcipher for encrypted persistence
 
 ### Out of Scope
@@ -81,7 +81,7 @@ Build the Tauri IPC commands layer (backend commands) and complete the React/Typ
 | `src-tauri/commands/src/lib.rs` | Modified | Re-export new command modules |
 | `src-tauri/infrastructure/src/repositories.rs` | New | rusqlite repositories for Accounting, Diagnostics |
 | `src-tauri/app/src/main.rs` | Modified | Register new commands; rusqlite pool setup |
-| `src-tauri/tauri.conf.json` | Modified | productName → "MindLedger" |
+| `src-tauri/tauri.conf.json` | Modified | productName → "MindLdger" |
 | `src/types/index.ts` | Modified | Add Accounting, Diagnostics, Age types; remove duplicates |
 | `src/api/index.ts` | Modified | Add accountingApi, diagnosticsApi, ageApi |
 | `src/pages/DashboardPage.tsx` | Modified | Real metric cards with Sage Green background |
@@ -133,7 +133,7 @@ Build the Tauri IPC commands layer (backend commands) and complete the React/Typ
 - [ ] ClinicalNotesPage has predictive form: real-time age from DOB, diagnosis autocomplete (CIE-10/DSM-5)
 - [ ] SearchDropdown translates all Rust enums to Spanish labels (DocumentType, Gender, AppointmentStatus, NoteType, DiagnosisType, CategoriaCIE10, CategoriaDSM5)
 - [ ] Sidebar navigation has 7 items (added Contabilidad, Diagnósticos)
-- [ ] tauri.conf.json productName = "MindLedger"
+- [ ] tauri.conf.json productName = "MindLdger"
 - [ ] Brand colors applied: Primary #0F4C5C (sidebar, primary buttons), Sage #E5F1EE (metric cards), Coral #E3645F (cancellation alerts only), Background #F8F9FA, Text #212529
 - [ ] 0 TypeScript errors, 0 Rust clippy warnings
 - [ ] All 74 existing tests + new tests pass (target: >90% coverage on new code)

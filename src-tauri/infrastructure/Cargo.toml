@@ -22,6 +22,7 @@ secrecy = { workspace = true }
 rand = "0.8"
 base64 = "0.22"
 rust_decimal = "1.35"
+tracing = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

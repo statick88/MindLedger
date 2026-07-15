@@ -3,7 +3,7 @@ use anyhow::Result;
 use chrono::NaiveDate;
 use rusqlite::params;
 use serde_json;
-use soft_gloria_domain::{
+use soft_mindledger_domain::{
     diagnostics::{DiagnosticoCIE10, DiagnosticoDSM5, CategoriaCIE10, CategoriaDSM5, MapeoDiagnostico},
     RepositoryError,
 };
@@ -125,7 +125,7 @@ impl SqliteDiagnosticsRepository {
 }
 
 #[async_trait::async_trait]
-impl soft_gloria_domain::DiagnosticsRepository for SqliteDiagnosticsRepository {
+impl soft_mindledger_domain::DiagnosticsRepository for SqliteDiagnosticsRepository {
     async fn search_cie10(&self, query: &str, limit: usize) -> Result<Vec<DiagnosticoCIE10>, RepositoryError> {
         let pool = self.pool.clone();
         let pattern = format!("%{}%", query.to_uppercase());
@@ -307,8 +307,8 @@ impl soft_gloria_domain::DiagnosticsRepository for SqliteDiagnosticsRepository {
 mod tests {
     use super::*;
     use crate::database::create_memory_pool;
-    use soft_gloria_domain::diagnostics::MapeoDiagnostico;
-    use soft_gloria_domain::repositories::DiagnosticsRepository;
+    use soft_mindledger_domain::diagnostics::MapeoDiagnostico;
+    use soft_mindledger_domain::repositories::DiagnosticsRepository;
 
     fn create_test_repo() -> SqliteDiagnosticsRepository {
         let pool = create_memory_pool().unwrap();

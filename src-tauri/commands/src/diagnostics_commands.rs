@@ -1,9 +1,9 @@
 use crate::error::{AppError, AppResult};
-use soft_gloria_domain::{
+use soft_mindledger_domain::{
     diagnostics::{DiagnosticoCIE10, DiagnosticoDSM5, MapeoDiagnostico},
     repositories::DiagnosticsRepository,
 };
-use soft_gloria_infrastructure::SqliteDiagnosticsRepository;
+use soft_mindledger_infrastructure::SqliteDiagnosticsRepository;
 use tauri::command;
 use uuid::Uuid;
 use chrono::NaiveDate;
@@ -83,7 +83,7 @@ impl From<MapeoDiagnostico> for MapeoDiagnosticoResponse {
 
 // ── Inner functions (testable without Tauri State) ──
 
-pub async fn search_cie10_impl(pool: &soft_gloria_infrastructure::DbPool, query: &str, limit: usize) -> AppResult<Vec<DiagnosticoCIE10Response>> {
+pub async fn search_cie10_impl(pool: &soft_mindledger_infrastructure::DbPool, query: &str, limit: usize) -> AppResult<Vec<DiagnosticoCIE10Response>> {
     let repo = SqliteDiagnosticsRepository::new(pool.clone());
     let limit = limit.min(100);
 
@@ -93,7 +93,7 @@ pub async fn search_cie10_impl(pool: &soft_gloria_infrastructure::DbPool, query:
     Ok(results.into_iter().map(Into::into).collect())
 }
 
-pub async fn search_dsm5_impl(pool: &soft_gloria_infrastructure::DbPool, query: &str, limit: usize) -> AppResult<Vec<DiagnosticoDSM5Response>> {
+pub async fn search_dsm5_impl(pool: &soft_mindledger_infrastructure::DbPool, query: &str, limit: usize) -> AppResult<Vec<DiagnosticoDSM5Response>> {
     let repo = SqliteDiagnosticsRepository::new(pool.clone());
     let limit = limit.min(100);
 
@@ -103,7 +103,7 @@ pub async fn search_dsm5_impl(pool: &soft_gloria_infrastructure::DbPool, query: 
     Ok(results.into_iter().map(Into::into).collect())
 }
 
-pub async fn get_cie10_by_codigo_impl(pool: &soft_gloria_infrastructure::DbPool, codigo: &str) -> AppResult<Option<DiagnosticoCIE10Response>> {
+pub async fn get_cie10_by_codigo_impl(pool: &soft_mindledger_infrastructure::DbPool, codigo: &str) -> AppResult<Option<DiagnosticoCIE10Response>> {
     let repo = SqliteDiagnosticsRepository::new(pool.clone());
 
     let result = repo.get_cie10_by_codigo(codigo).await
@@ -112,7 +112,7 @@ pub async fn get_cie10_by_codigo_impl(pool: &soft_gloria_infrastructure::DbPool,
     Ok(result.map(Into::into))
 }
 
-pub async fn get_dsm5_by_codigo_impl(pool: &soft_gloria_infrastructure::DbPool, codigo: &str) -> AppResult<Option<DiagnosticoDSM5Response>> {
+pub async fn get_dsm5_by_codigo_impl(pool: &soft_mindledger_infrastructure::DbPool, codigo: &str) -> AppResult<Option<DiagnosticoDSM5Response>> {
     let repo = SqliteDiagnosticsRepository::new(pool.clone());
 
     let result = repo.get_dsm5_by_codigo(codigo).await
@@ -121,7 +121,7 @@ pub async fn get_dsm5_by_codigo_impl(pool: &soft_gloria_infrastructure::DbPool, 
     Ok(result.map(Into::into))
 }
 
-pub async fn create_mapeo_impl(pool: &soft_gloria_infrastructure::DbPool, request: CreateMapeoRequest) -> AppResult<MapeoDiagnosticoResponse> {
+pub async fn create_mapeo_impl(pool: &soft_mindledger_infrastructure::DbPool, request: CreateMapeoRequest) -> AppResult<MapeoDiagnosticoResponse> {
     let repo = SqliteDiagnosticsRepository::new(pool.clone());
 
     let paciente_id = Uuid::parse_str(&request.paciente_id)
@@ -146,7 +146,7 @@ pub async fn create_mapeo_impl(pool: &soft_gloria_infrastructure::DbPool, reques
     Ok(mapeo.into())
 }
 
-pub async fn list_mapeos_impl(pool: &soft_gloria_infrastructure::DbPool, paciente_id: &str) -> AppResult<Vec<MapeoDiagnosticoResponse>> {
+pub async fn list_mapeos_impl(pool: &soft_mindledger_infrastructure::DbPool, paciente_id: &str) -> AppResult<Vec<MapeoDiagnosticoResponse>> {
     let repo = SqliteDiagnosticsRepository::new(pool.clone());
 
     let paciente_id = Uuid::parse_str(paciente_id)
@@ -159,7 +159,7 @@ pub async fn list_mapeos_impl(pool: &soft_gloria_infrastructure::DbPool, pacient
 }
 
 pub async fn update_mapeo_impl(
-    pool: &soft_gloria_infrastructure::DbPool,
+    pool: &soft_mindledger_infrastructure::DbPool,
     id: &str,
     paciente_id: &str,
     diagnostico_id: Option<String>,
@@ -202,7 +202,7 @@ pub async fn update_mapeo_impl(
     Ok(mapeo.into())
 }
 
-pub async fn delete_mapeo_impl(pool: &soft_gloria_infrastructure::DbPool, id: &str) -> AppResult<bool> {
+pub async fn delete_mapeo_impl(pool: &soft_mindledger_infrastructure::DbPool, id: &str) -> AppResult<bool> {
     let repo = SqliteDiagnosticsRepository::new(pool.clone());
 
     let mapeo_id = Uuid::parse_str(id)
@@ -218,7 +218,7 @@ pub async fn delete_mapeo_impl(pool: &soft_gloria_infrastructure::DbPool, id: &s
 
 #[command]
 pub async fn search_cie10(
-    db: tauri::State<'_, Arc<soft_gloria_infrastructure::DbPool>>,
+    db: tauri::State<'_, Arc<soft_mindledger_infrastructure::DbPool>>,
     query: String,
     limit: Option<usize>,
 ) -> AppResult<Vec<DiagnosticoCIE10Response>> {
@@ -227,7 +227,7 @@ pub async fn search_cie10(
 
 #[command]
 pub async fn search_dsm5(
-    db: tauri::State<'_, Arc<soft_gloria_infrastructure::DbPool>>,
+    db: tauri::State<'_, Arc<soft_mindledger_infrastructure::DbPool>>,
     query: String,
     limit: Option<usize>,
 ) -> AppResult<Vec<DiagnosticoDSM5Response>> {
@@ -236,7 +236,7 @@ pub async fn search_dsm5(
 
 #[command]
 pub async fn get_cie10_by_codigo(
-    db: tauri::State<'_, Arc<soft_gloria_infrastructure::DbPool>>,
+    db: tauri::State<'_, Arc<soft_mindledger_infrastructure::DbPool>>,
     codigo: String,
 ) -> AppResult<Option<DiagnosticoCIE10Response>> {
     get_cie10_by_codigo_impl(&db, &codigo).await
@@ -244,7 +244,7 @@ pub async fn get_cie10_by_codigo(
 
 #[command]
 pub async fn get_dsm5_by_codigo(
-    db: tauri::State<'_, Arc<soft_gloria_infrastructure::DbPool>>,
+    db: tauri::State<'_, Arc<soft_mindledger_infrastructure::DbPool>>,
     codigo: String,
 ) -> AppResult<Option<DiagnosticoDSM5Response>> {
     get_dsm5_by_codigo_impl(&db, &codigo).await
@@ -252,7 +252,7 @@ pub async fn get_dsm5_by_codigo(
 
 #[command]
 pub async fn create_mapeo(
-    db: tauri::State<'_, Arc<soft_gloria_infrastructure::DbPool>>,
+    db: tauri::State<'_, Arc<soft_mindledger_infrastructure::DbPool>>,
     request: CreateMapeoRequest,
 ) -> AppResult<MapeoDiagnosticoResponse> {
     create_mapeo_impl(&db, request).await
@@ -260,7 +260,7 @@ pub async fn create_mapeo(
 
 #[command]
 pub async fn list_mapeos(
-    db: tauri::State<'_, Arc<soft_gloria_infrastructure::DbPool>>,
+    db: tauri::State<'_, Arc<soft_mindledger_infrastructure::DbPool>>,
     paciente_id: String,
 ) -> AppResult<Vec<MapeoDiagnosticoResponse>> {
     list_mapeos_impl(&db, &paciente_id).await
@@ -268,7 +268,7 @@ pub async fn list_mapeos(
 
 #[command]
 pub async fn update_mapeo(
-    db: tauri::State<'_, Arc<soft_gloria_infrastructure::DbPool>>,
+    db: tauri::State<'_, Arc<soft_mindledger_infrastructure::DbPool>>,
     id: String,
     paciente_id: String,
     diagnostico_id: Option<String>,
@@ -281,7 +281,7 @@ pub async fn update_mapeo(
 
 #[command]
 pub async fn delete_mapeo(
-    db: tauri::State<'_, Arc<soft_gloria_infrastructure::DbPool>>,
+    db: tauri::State<'_, Arc<soft_mindledger_infrastructure::DbPool>>,
     id: String,
 ) -> AppResult<bool> {
     delete_mapeo_impl(&db, &id).await
@@ -292,12 +292,12 @@ pub async fn delete_mapeo(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soft_gloria_infrastructure::create_memory_pool;
-    use soft_gloria_domain::diagnostics::MapeoDiagnostico;
-    use soft_gloria_domain::repositories::DiagnosticsRepository;
+    use soft_mindledger_infrastructure::create_memory_pool;
+    use soft_mindledger_domain::diagnostics::MapeoDiagnostico;
+    use soft_mindledger_domain::repositories::DiagnosticsRepository;
     use uuid::Uuid;
 
-    fn create_test_pool() -> soft_gloria_infrastructure::DbPool {
+    fn create_test_pool() -> soft_mindledger_infrastructure::DbPool {
         let pool = create_memory_pool().unwrap();
         let conn = pool.lock().unwrap();
         conn.execute_batch(
@@ -332,7 +332,7 @@ mod tests {
         pool
     }
 
-    fn seed_test_data(pool: &soft_gloria_infrastructure::DbPool) {
+    fn seed_test_data(pool: &soft_mindledger_infrastructure::DbPool) {
         let conn = pool.lock().unwrap();
 
         // Seed CIE-10

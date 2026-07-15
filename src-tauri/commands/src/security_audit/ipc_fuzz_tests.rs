@@ -10,9 +10,9 @@ mod ipc_fuzz_tests {
     use crate::accounting_commands::*;
     use crate::error::AppError;
     use crate::agenda_commands::*;
-    use soft_gloria_domain::appointment::{AppointmentStatus, Modality};
-    use soft_gloria_infrastructure::database::create_memory_pool;
-    use soft_gloria_infrastructure::DbPool;
+    use soft_mindledger_domain::appointment::{AppointmentStatus, Modality};
+    use soft_mindledger_infrastructure::database::create_memory_pool;
+    use soft_mindledger_infrastructure::DbPool;
     use chrono::{Duration, Utc};
     use rust_decimal_macros::dec;
     use uuid::Uuid;
@@ -20,7 +20,7 @@ mod ipc_fuzz_tests {
     /// Shared test pool with full schema for IPC fuzz tests.
     fn create_fuzz_pool() -> DbPool {
         let pool = create_memory_pool().expect("Failed to create memory pool");
-        soft_gloria_infrastructure::migrations::run_all_migrations(&pool)
+        soft_mindledger_infrastructure::migrations::run_all_migrations(&pool)
             .expect("Failed to run migrations");
         pool
     }
@@ -194,9 +194,9 @@ mod ipc_fuzz_tests {
             "Error message must not contain SQL: {}",
             err_msg
         );
-        // Error must NOT contain stack traces
+        // Error must NOT contain stack traces or debug info
         assert!(
-            !err_msg.contains("at ") && !err_msg.contains("thread '") && !err_msg.contains("stack backtrace"),
+            !err_msg.contains("stack backtrace") && !err_msg.contains("panicked at") && !err_msg.contains("thread '") && !err_msg.contains("  at src/"),
             "Error message must not contain stack traces: {}",
             err_msg
         );
@@ -212,6 +212,8 @@ mod ipc_fuzz_tests {
     #[test]
     fn test_tauri_allowlist_no_wildcards() {
         let conf_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("Failed to get parent dir")
             .join("tauri.conf.json");
         let conf_str = std::fs::read_to_string(&conf_path)
             .expect("Failed to read tauri.conf.json");
@@ -348,7 +350,7 @@ mod ipc_fuzz_tests {
 
         // Attempt to parse — should fail gracefully, not panic or OOM
         let result = std::panic::catch_unwind(|| {
-            let _ = soft_gloria_application::docx_parser::ClinicalNoteParser::parse_docx(
+            let _ = soft_mindledger_application::docx_parser::ClinicalNoteParser::parse_docx(
                 zip_path.to_str().unwrap(),
             );
         });

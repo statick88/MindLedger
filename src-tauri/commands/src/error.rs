@@ -27,48 +27,48 @@ impl From<anyhow::Error> for AppError {
     }
 }
 
-impl From<soft_gloria_domain::RepositoryError> for AppError {
-    fn from(err: soft_gloria_domain::RepositoryError) -> Self {
+impl From<soft_mindledger_domain::RepositoryError> for AppError {
+    fn from(err: soft_mindledger_domain::RepositoryError) -> Self {
         match err {
-            soft_gloria_domain::RepositoryError::NotFound(msg) => AppError::NotFound(msg),
-            soft_gloria_domain::RepositoryError::Constraint(msg) => AppError::Conflict(msg),
+            soft_mindledger_domain::RepositoryError::NotFound(msg) => AppError::NotFound(msg),
+            soft_mindledger_domain::RepositoryError::Constraint(msg) => AppError::Conflict(msg),
             _ => AppError::Database(err.to_string()),
         }
     }
 }
 
-impl From<soft_gloria_domain::DocumentNumberError> for AppError {
-    fn from(err: soft_gloria_domain::DocumentNumberError) -> Self {
+impl From<soft_mindledger_domain::DocumentNumberError> for AppError {
+    fn from(err: soft_mindledger_domain::DocumentNumberError) -> Self {
         AppError::Validation(err.to_string())
     }
 }
 
-impl From<soft_gloria_domain::FullNameError> for AppError {
-    fn from(err: soft_gloria_domain::FullNameError) -> Self {
+impl From<soft_mindledger_domain::FullNameError> for AppError {
+    fn from(err: soft_mindledger_domain::FullNameError) -> Self {
         AppError::Validation(err.to_string())
     }
 }
 
-impl From<soft_gloria_domain::EmailError> for AppError {
-    fn from(err: soft_gloria_domain::EmailError) -> Self {
+impl From<soft_mindledger_domain::EmailError> for AppError {
+    fn from(err: soft_mindledger_domain::EmailError) -> Self {
         AppError::Validation(err.to_string())
     }
 }
 
-impl From<soft_gloria_domain::PhoneNumberError> for AppError {
-    fn from(err: soft_gloria_domain::PhoneNumberError) -> Self {
+impl From<soft_mindledger_domain::PhoneNumberError> for AppError {
+    fn from(err: soft_mindledger_domain::PhoneNumberError) -> Self {
         AppError::Validation(err.to_string())
     }
 }
 
-impl From<soft_gloria_domain::AddressError> for AppError {
-    fn from(err: soft_gloria_domain::AddressError) -> Self {
+impl From<soft_mindledger_domain::AddressError> for AppError {
+    fn from(err: soft_mindledger_domain::AddressError) -> Self {
         AppError::Validation(err.to_string())
     }
 }
 
-impl From<soft_gloria_domain::EmergencyContactError> for AppError {
-    fn from(err: soft_gloria_domain::EmergencyContactError) -> Self {
+impl From<soft_mindledger_domain::EmergencyContactError> for AppError {
+    fn from(err: soft_mindledger_domain::EmergencyContactError) -> Self {
         AppError::Validation(err.to_string())
     }
 }
@@ -85,14 +85,14 @@ impl From<chrono::ParseError> for AppError {
     }
 }
 
-impl From<soft_gloria_domain::ContabilidadError> for AppError {
-    fn from(err: soft_gloria_domain::ContabilidadError) -> Self {
+impl From<soft_mindledger_domain::ContabilidadError> for AppError {
+    fn from(err: soft_mindledger_domain::ContabilidadError) -> Self {
         AppError::Accounting(err.to_string())
     }
 }
 
-impl From<soft_gloria_domain::DomainError> for AppError {
-    fn from(err: soft_gloria_domain::DomainError) -> Self {
+impl From<soft_mindledger_domain::DomainError> for AppError {
+    fn from(err: soft_mindledger_domain::DomainError) -> Self {
         AppError::Validation(err.to_string())
     }
 }

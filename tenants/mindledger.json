@@ -1,0 +1,17 @@
+{
+  "tenant_id": "mindledger",
+  "tenant_name": "MindLedger",
+  "clinical_role": "Clinical Practice Management",
+  "bundle_id": "com.mindldger.desktop",
+  "app_data_dir_name": "mind-ledger",
+  "keyring_id": "sqlcipher-key-mindledger",
+  "theme": {
+    "primary": "#1A5F60",
+    "background_sage": "#E5F1EE",
+    "accent_coral": "#E3645F"
+  },
+  "assets": {
+    "icon_source": "assets/tenants/mindledger/icon.png",
+    "logo_source": "assets/tenants/mindledger/logo.png"
+  }
+}

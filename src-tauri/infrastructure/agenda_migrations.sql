@@ -17,17 +17,20 @@ PRAGMA foreign_keys = ON;
 -- ALTER TABLE appointments ADD COLUMN status TEXT NOT NULL DEFAULT 'Programada' CHECK (status IN ('Programada','Realizada','Reagendada','Cancelada'));
 
 -- Add fee_cents for session pricing
-ALTER TABLE appointments ADD COLUMN fee_cents INTEGER NOT NULL DEFAULT 0;
+-- ALTER TABLE appointments ADD COLUMN fee_cents INTEGER NOT NULL DEFAULT 0;
+
+-- Add modality for appointment type (virtual/presencial)
+-- ALTER TABLE appointments ADD COLUMN modality TEXT NOT NULL DEFAULT 'Presencial';
 
 -- Add reminder tracking columns
-ALTER TABLE appointments ADD COLUMN reminder_sent INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE appointments ADD COLUMN reminder_external_id TEXT;
-ALTER TABLE appointments ADD COLUMN reagendada_from_id TEXT REFERENCES appointments(id);
-ALTER TABLE appointments ADD COLUMN external_calendar_id TEXT;
-ALTER TABLE appointments ADD COLUMN calendar_provider TEXT;
+-- ALTER TABLE appointments ADD COLUMN reminder_sent INTEGER NOT NULL DEFAULT 0;
+-- ALTER TABLE appointments ADD COLUMN reminder_external_id TEXT;
+-- ALTER TABLE appointments ADD COLUMN reagendada_from_id TEXT REFERENCES appointments(id);
+-- ALTER TABLE appointments ADD COLUMN external_calendar_id TEXT;
+-- ALTER TABLE appointments ADD COLUMN calendar_provider TEXT;
 
 -- Add professional_id for multi-therapist support
-ALTER TABLE appointments ADD COLUMN professional_id TEXT NOT NULL DEFAULT '' REFERENCES patients(id);
+-- ALTER TABLE appointments ADD COLUMN professional_id TEXT NOT NULL DEFAULT '' REFERENCES patients(id);
 
 -- ============================================================================
 -- STEP 2: Create new tables

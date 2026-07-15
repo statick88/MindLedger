@@ -2,11 +2,11 @@ use crate::error::{AppError, AppResult};
 use chrono::NaiveDate;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use soft_gloria_domain::{
+use soft_mindledger_domain::{
     accounting::{AsientoContable, BalanceGeneral, EstadoResultados, LineaAsiento},
     repositories::{AccountingRepository, Pagination},
 };
-use soft_gloria_infrastructure::{DbPool, SqliteAccountingRepository};
+use soft_mindledger_infrastructure::{DbPool, SqliteAccountingRepository};
 use std::sync::Arc;
 use tauri::command;
 use uuid::Uuid;
@@ -326,11 +326,11 @@ pub async fn generate_estado_resultados(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soft_gloria_infrastructure::create_memory_pool;
+    use soft_mindledger_infrastructure::create_memory_pool;
     use chrono::NaiveDate;
     use rust_decimal_macros::dec;
-    use soft_gloria_domain::accounting::{AsientoContable, LineaAsiento};
-    use soft_gloria_domain::repositories::AccountingRepository;
+    use soft_mindledger_domain::accounting::{AsientoContable, LineaAsiento};
+    use soft_mindledger_domain::repositories::AccountingRepository;
 
     fn create_test_pool() -> DbPool {
         let pool = create_memory_pool().unwrap();

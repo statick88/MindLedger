@@ -4,7 +4,7 @@
 `tauri-ipc-frontend`
 
 ## Overview
-This spec defines the Tauri IPC commands layer and React/TypeScript frontend SPA for **MindLedger**, a clinical psychology practice management desktop application for Ecuador. FASE 1 (Domain Core, Encrypted Persistence, ETL Documental) is complete with 74/74 tests passing. This change delivers FASE 2.
+This spec defines the Tauri IPC commands layer and React/TypeScript frontend SPA for **MindLdger**, a clinical psychology practice management desktop application for Ecuador. FASE 1 (Domain Core, Encrypted Persistence, ETL Documental) is complete with 74/74 tests passing. This change delivers FASE 2.
 
 ---
 
@@ -110,7 +110,7 @@ Backend Rust functions exposed as Tauri v2 commands (`#[tauri::command]`) that h
 Frontend SPA Pages
 
 ### Description
-React/TypeScript pages for the MindLedger SPA, built with Vite + Tailwind CSS. Four main pages replace hardcoded stubs with real data from IPC commands, plus navigation updates.
+React/TypeScript pages for the MindLdger SPA, built with Vite + Tailwind CSS. Four main pages replace hardcoded stubs with real data from IPC commands, plus navigation updates.
 
 ### Invariants Preserved
 - **I-01**: Existing patient data preserved — no migration, only reads
@@ -178,7 +178,7 @@ React/TypeScript pages for the MindLedger SPA, built with Vite + Tailwind CSS. F
 Shared UI Components
 
 ### Description
-Reusable, accessible React components that enforce MindLedger brand tokens and translate Rust domain enums to Spanish labels. Components are pure presentational (no IPC logic) and live in `src/components/`.
+Reusable, accessible React components that enforce MindLdger brand tokens and translate Rust domain enums to Spanish labels. Components are pure presentational (no IPC logic) and live in `src/components/`.
 
 ### Invariants Preserved
 - **I-03**: Public interfaces stable — component props are TypeScript interfaces
@@ -245,10 +245,10 @@ Reusable, accessible React components that enforce MindLedger brand tokens and t
 `brand-integration`
 
 ### Capability Name
-MindLedger Brand Integration
+MindLdger Brand Integration
 
 ### Description
-Applies MindLedger visual identity across the entire Tauri + React application. Configures Tailwind CSS with brand color tokens, updates `tauri.conf.json` product name, and enforces accessibility standards.
+Applies MindLdger visual identity across the entire Tauri + React application. Configures Tailwind CSS with brand color tokens, updates `tauri.conf.json` product name, and enforces accessibility standards.
 
 ### Invariants Preserved
 - **I-03**: Public interfaces stable — brand tokens are CSS custom properties
@@ -306,7 +306,7 @@ Applies MindLedger visual identity across the entire Tauri + React application. 
    ```
 3. **Component Application**: Use `bg-primary`, `bg-sage`, `text-coral`, `bg-background`, `text-text` in components
 4. **Coral Restriction**: ESLint rule `no-restricted-color-coral` — only allowed in `AlertCard` + net loss contexts
-5. **tauri.conf.json**: Update `"productName": "MindLedger"`, `"identifier": "com.softgloria.mindledger"`
+5. **tauri.conf.json**: Update `"productName": "MindLdger"`, `"identifier": "com.softgloria.mindledger"`
 6. **Accessibility**: WCAG 2.1 AA — contrast ratios verified (Primary/Text = 7.1:1, Sage/Text = 4.8:1, Coral/Text = 4.5:1)
 
 ### Output
@@ -314,14 +314,14 @@ Applies MindLedger visual identity across the entire Tauri + React application. 
 |----------|---------|--------------|
 | `src/index.css` | CSS custom properties + base styles (reset, focus-visible) | Visual regression test |
 | `tailwind.config.js` | Extended theme with brand colors, fonts | `pnpm build` compiles |
-| `tauri.conf.json` | `productName: "MindLedger"` | Tauri window title shows "MindLedger" |
+| `tauri.conf.json` | `productName: "MindLdger"` | Tauri window title shows "MindLdger" |
 | Components | All use brand tokens via Tailwind classes | Storybook/Visual test |
 | Accessibility | Focus rings (`focus-visible:ring-2 focus-visible:ring-primary`), ARIA labels | axe-core CI + manual test |
 
 ### Acceptance Criteria
 - [ ] **Colors**: Primary #0F4C5C used for sidebar, primary buttons, focus rings; Sage #E5F1EE for metric cards, table headers; Coral #E3645F ONLY for cancellation alerts / net loss warnings; Background #F8F9FA for page bg; Text #212529 for all body text
 - [ ] **Typography**: Inter font loads (Google Fonts or local); fallback stack works offline
-- [ ] **tauri.conf.json**: `productName = "MindLedger"`; window title shows "MindLedger" on macOS/Windows
+- [ ] **tauri.conf.json**: `productName = "MindLdger"`; window title shows "MindLdger" on macOS/Windows
 - [ ] **Contrast**: All text/background combos meet WCAG 2.1 AA (4.5:1 normal, 3:1 large)
 - [ ] **Focus States**: Visible focus rings on all interactive elements (Primary #0F4C5C)
 - [ ] **Coral Restriction**: ESLint rule passes; no Coral usage outside `AlertCard` net loss context

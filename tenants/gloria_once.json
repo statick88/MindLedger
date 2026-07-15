@@ -1,0 +1,17 @@
+{
+  "tenant_id": "gloria-once",
+  "tenant_name": "Psic. Gloria Once",
+  "clinical_role": "Neuropsicóloga Clínica",
+  "bundle_id": "com.mindldger.gloriaonce.desktop",
+  "app_data_dir_name": "mind-ledger-gloria-once",
+  "keyring_id": "sqlcipher-key-gloria-once",
+  "theme": {
+    "primary": "#1A5F60",
+    "background_sage": "#E5F1EE",
+    "accent_coral": "#E3645F"
+  },
+  "assets": {
+    "icon_source": "assets/tenants/gloria_once/icon.png",
+    "logo_source": "assets/tenants/gloria_once/logo.png"
+  }
+}

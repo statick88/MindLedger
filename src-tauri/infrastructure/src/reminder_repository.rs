@@ -1,5 +1,5 @@
 use crate::database::DbPool;
-use soft_gloria_domain::{
+use soft_mindledger_domain::{
     Reminder, ReminderId, AppointmentId, PatientId, ReminderChannel, ReminderTemplate,
     ReminderRepository,
     RepositoryError,
@@ -214,7 +214,7 @@ impl ReminderRepository for SqliteReminderRepository {
 mod tests {
     use super::*;
     use crate::database::create_memory_pool;
-    use soft_gloria_domain::{ReminderId, AppointmentId, PatientId, ReminderChannel, ReminderTemplate};
+    use soft_mindledger_domain::{ReminderId, AppointmentId, PatientId, ReminderChannel, ReminderTemplate};
     use chrono::{Utc, Duration};
 
     fn create_test_repo() -> SqliteReminderRepository {

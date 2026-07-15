@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use keyring::Entry;
 use rand::Rng;
 use std::path::Path;
+use tracing::warn;
 use zeroize::Zeroizing;
 
 #[cfg(unix)]
@@ -10,12 +11,14 @@ use std::os::unix::fs::PermissionsExt;
 const KEY_LENGTH: usize = 32;
 const FALLBACK_KEY_FILE: &str = "mind-ledger.key";
 
+/// Manages SQLCipher encryption keys via OS keyring with file-based fallback.
 pub struct SqlCipherKeyManager {
     entry: Option<Entry>,
     fallback_path: Option<std::path::PathBuf>,
 }
 
 impl SqlCipherKeyManager {
+    /// Create a key manager using only the OS keyring (no file fallback).
     pub fn new(service_name: &str, account_name: &str) -> Result<Self> {
         let entry = Entry::new(service_name, account_name)
             .context("Failed to create keyring entry")?;
@@ -32,14 +35,16 @@ impl SqlCipherKeyManager {
         let entry = Entry::new(service_name, account_name).ok();
         let fallback_path = Some(data_dir.join(FALLBACK_KEY_FILE));
         if entry.is_none() {
-            eprintln!(
-                "[MindLdger] WARNING: keyring unavailable (service={}), using file-based key fallback",
+            warn!(
+                "[MindLedger] keyring unavailable (service={}), using file-based key fallback",
                 service_name
             );
         }
         Self { entry, fallback_path }
     }
 
+    /// Retrieve the existing encryption key, or generate and store a new one.
+    /// Tries keyring first; falls back to file-based storage if keyring is unavailable.
     pub fn get_or_create_key(&self) -> Result<String> {
         // 1. Try keyring first
         if let Some(ref entry) = self.entry {
@@ -51,8 +56,8 @@ impl SqlCipherKeyManager {
             match entry.set_password(&key) {
                 Ok(()) => return Ok(key),
                 Err(e) => {
-                    eprintln!(
-                        "[MindLdger] WARNING: keyring set_password failed: {}. Falling back to file key.",
+                    warn!(
+                        "[MindLedger] keyring set_password failed: {}. Falling back to file key.",
                         e
                     );
                 }
@@ -66,8 +71,8 @@ impl SqlCipherKeyManager {
                 if key.len() == KEY_LENGTH * 2 && key.chars().all(|c| c.is_ascii_hexdigit()) {
                     return Ok(key);
                 }
-                eprintln!(
-                    "[MindLdger] WARNING: fallback key file is invalid, regenerating"
+                warn!(
+                    "[MindLedger] fallback key file is invalid, regenerating"
                 );
             }
             let key = Self::generate_hex_key();
@@ -84,8 +89,8 @@ impl SqlCipherKeyManager {
                     std::fs::Permissions::from_mode(0o600),
                 ).context("Failed to set key file permissions")?;
             }
-            eprintln!(
-                "[MindLdger] INFO: wrote fallback key to {}",
+            warn!(
+                "[MindLedger] wrote fallback key to {}",
                 fallback_path.display()
             );
             return Ok(key);
@@ -94,6 +99,7 @@ impl SqlCipherKeyManager {
         anyhow::bail!("No keyring and no fallback path — cannot obtain encryption key")
     }
 
+    /// Securely delete the stored encryption key from all backends (keyring + file).
     pub fn delete_key(&self) -> Result<()> {
         if let Some(ref entry) = self.entry {
             let _ = entry.delete_credential();
@@ -105,7 +111,6 @@ impl SqlCipherKeyManager {
     }
 
     fn generate_hex_key() -> String {
-        use rand::Rng;
         let mut rng = rand::rngs::OsRng;
         let key_bytes: Zeroizing<Vec<u8>> = Zeroizing::new((0..KEY_LENGTH).map(|_| rng.gen()).collect());
         let hex: Zeroizing<String> = Zeroizing::new(

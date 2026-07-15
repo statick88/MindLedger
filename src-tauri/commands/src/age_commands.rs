@@ -1,5 +1,5 @@
 use crate::error::{AppError, AppResult};
-use soft_gloria_domain::{Age, AgeBreakdown};
+use soft_mindledger_domain::{Age, AgeBreakdown};
 use tauri::command;
 use chrono::NaiveDate;
 
