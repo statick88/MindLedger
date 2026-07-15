@@ -57,10 +57,7 @@
         "installMode": "both"
       }
     },
-    "resources": [
-      "resources/openssl/libcrypto-3-x64.dll",
-      "resources/openssl/libssl-3-x64.dll"
-    ]
+    "resources": []
   },
   "plugins": {
     "sql": {
