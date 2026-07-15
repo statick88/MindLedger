@@ -1,33 +1,31 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "MindLedger",
-  "version": "1.0.0",
-  "identifier": "com.mindldger.desktop",
+  "app": {
+    "security": {
+      "csp": "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; object-src 'none'; frame-src 'none'; connect-src 'self'; base-uri 'self'; form-action 'self'"
+    },
+    "windows": [
+      {
+        "center": true,
+        "height": 900,
+        "minHeight": 768,
+        "minWidth": 1024,
+        "resizable": true,
+        "title": "Gloria Once",
+        "width": 1400
+      }
+    ]
+  },
   "build": {
-    "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
+    "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
     "frontendDist": "app/dist"
   },
-  "app": {
-    "windows": [
-      {
-        "title": "Psic. Gloria Once",
-        "width": 1400,
-        "height": 900,
-        "minWidth": 1024,
-        "minHeight": 768,
-        "center": true,
-        "resizable": true
-      }
-    ],
-    "security": {
-      "csp": "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'; object-src 'none'; frame-src 'none'; connect-src 'self'; base-uri 'self'; form-action 'self'"
-    }
-  },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "category": "Medical",
+    "copyright": "Copyright © 2026 Diego Medardo Saavedra García",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -35,10 +33,6 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "category": "Medical",
-    "shortDescription": "Clinical psychology practice management",
-    "longDescription": "Psic. Gloria Once — Neuropsicóloga Clínica. Secure, offline-first practice management system.",
-    "copyright": "Copyright © 2026 Diego Medardo Saavedra García",
     "linux": {
       "deb": {
         "depends": [
@@ -48,20 +42,26 @@
         ]
       }
     },
+    "longDescription": "Psic. Gloria Once — Neuropsicóloga Clínica. Secure, offline-first practice management system.",
     "macOS": {
       "minimumSystemVersion": "10.15"
     },
+    "resources": [],
+    "shortDescription": "Clinical psychology practice management",
+    "targets": "all",
     "windows": {
       "nsis": {
-        "installerIcon": "icons/icon.ico",
-        "installMode": "both"
+        "installMode": "both",
+        "installerIcon": "icons/icon.ico"
       }
-    },
-    "resources": []
+    }
   },
+  "identifier": "com.mindledger.once.desktop",
   "plugins": {
     "sql": {
       "preload": "sqlite:mind_ledger.db"
     }
-  }
+  },
+  "productName": "Gloria Once",
+  "version": "1.0.0"
 }
