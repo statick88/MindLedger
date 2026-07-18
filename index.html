@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindLedger — Documentación Técnica v1.0.0</title>
+  <style>
+    :root {
+      --primary: #1A5F60;
+      --primary-light: #477f7f;
+      --accent: #E3645F;
+      --bg: #F8F9FA;
+      --fg: #212529;
+      --card: #FFFFFF;
+      --border: #DEE2E6;
+      --muted: #6B7280;
+      --success: #28a745;
+      --warn: #ffc107;
+      --danger: #dc3545;
+      --code-bg: #1a1d21;
+      --code-fg: #e5e7eb;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: white;
+      padding: 4rem 0 3rem;
+      text-align: center;
+    }
+    .hero h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .hero .subtitle { font-size: 1.15rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+    .hero .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 999px;
+      padding: 0.3rem 1rem;
+      font-size: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    /* Nav */
+    nav {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      overflow-x: auto;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 0;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+    nav a {
+      display: block;
+      padding: 0.85rem 1.1rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    nav a:hover, nav a.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    /* Sections */
+    section { padding: 3rem 0; }
+    section + section { border-top: 1px solid var(--border); }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+    .section-lead {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Cards */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: box-shadow 0.2s;
+    }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card p { font-size: 0.9rem; color: var(--muted); }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; margin: 1rem 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th {
+      background: var(--primary);
+      color: white;
+      padding: 0.7rem 1rem;
+      text-align: left;
+      font-weight: 600;
+    }
+    td {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    tr:nth-child(even) { background: #f8f9fa; }
+
+    /* Code */
+    pre {
+      background: var(--code-bg);
+      color: var(--code-fg);
+      border-radius: 8px;
+      padding: 1.2rem;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      margin: 1rem 0;
+    }
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+    p code, li code {
+      background: #e9ecef;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+      color: var(--primary);
+    }
+
+    /* Callouts */
+    .callout {
+      border-left: 4px solid var(--primary);
+      background: #e8f4f4;
+      padding: 1rem 1.25rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .callout.warn { border-left-color: var(--warn); background: #fff8e1; }
+    .callout.danger { border-left-color: var(--danger); background: #ffeef0; }
+    .callout strong { display: block; margin-bottom: 0.25rem; }
+
+    /* Checklists */
+    .checklist { list-style: none; padding: 0; }
+    .checklist li {
+      padding: 0.5rem 0;
+      padding-left: 1.8rem;
+      position: relative;
+      font-size: 0.9rem;
+    }
+    .checklist li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    /* Architecture diagram */
+    .arch-diagram {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      font-family: monospace;
+      font-size: 0.78rem;
+      line-height: 1.4;
+      overflow-x: auto;
+      white-space: pre;
+      margin: 1.5rem 0;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--code-bg);
+      color: var(--code-fg);
+      padding: 2rem 0;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 1.8rem; }
+      .card-grid { grid-template-columns: 1fr; }
+      nav ul { padding: 0 0.5rem; }
+      nav a { padding: 0.75rem 0.8rem; font-size: 0.82rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="container">
+    <h1>MindLedger</h1>
+    <p class="subtitle">Sistema de Gestión Clínica y Contable para Psicólogos Clínicos en Ecuador. Cifrado total, cumplimiento LOPD.</p>
+    <span class="badge">v1.0.0-gloria-once · Windows · SQLCipher AES-256</span>
+  </div>
+</div>
+
+<!-- Navigation -->
+<nav>
+  <ul>
+    <li><a href="#overview">Resumen</a></li>
+    <li><a href="#features">Funcionalidades</a></li>
+    <li><a href="#architecture">Arquitectura</a></li>
+    <li><a href="#security">Seguridad</a></li>
+    <li><a href="#installation">Instalación</a></li>
+    <li><a href="#tenant">Tenant</a></li>
+    <li><a href="#technical">Técnico</a></li>
+    <li><a href="#compliance">Cumplimiento</a></li>
+  </ul>
+</nav>
+
+<!-- 1. Overview -->
+<section id="overview">
+  <div class="container">
+    <h2 class="section-title">Resumen Ejecutivo</h2>
+    <p class="section-lead">MindLedger es una aplicación de escritorio que centraliza la gestión clínica, contable y de agenda de un consultorio de psicología, con cifrado de extremo a extremo y cumplimiento de la Ley Orgánica de Protección de Datos Personales de Ecuador.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3>🔒 Cifrado Total</h3>
+        <p>Base de datos SQLCipher con AES-256. La clave de cifrado se almacena en el Keyring nativo del sistema operativo, nunca en disco plano.</p>
+      </div>
+      <div class="card">
+        <h3>📊 Contabilidad Integrada</h3>
+        <p>Plan Contable Ecuatoriano con partida doble. Balance General y Estado de Resultados en tiempo real. Invariante: Activos = Pasivos + Patrimonio.</p>
+      </div>
+      <div class="card">
+        <h3>📅 Agenda Inteligente</h3>
+        <p>Gestión de citas con recordatorios automáticos, reagendamiento y cancelación. KPIs de productividad del consultorio.</p>
+      </div>
+      <div class="card">
+        <h3>🏥 Diagnósticos Clínicos</h3>
+        <p>Catálogos CIE-10 y DSM-5 integrados. Mapeo automático entre sistemas. Búsqueda por código o descripción.</p>
+      </div>
+      <div class="card">
+        <h3>📝 Notas Clínicas</h3>
+        <p>Registro seguro de sesiones clínicas vinculadas a pacientes y citas. Historial completo y exportable.</p>
+      </div>
+      <div class="card">
+        <h3>🏷️ White-Label</h3>
+        <p>Un solo binario, múltiples clientes. Cada clínica tiene su BD, su clave y su branding. Sin tocar código.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Features -->
+<section id="features">
+  <div class="container">
+    <h2 class="section-title">Funcionalidades</h2>
+    <p class="section-lead">Cada módulo diseñado para el flujo de trabajo real de un psicólogo clínico en Ecuador.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Módulo</th><th>Capacidades</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Pacientes</strong></td>
+            <td>CRUD completo, cédula/RUC ecuatoriano, búsqueda, contactos de emergencia, alergias, condiciones crónicas</td>
+            <td>✅ Producción</td>
+          </tr>
+          <tr>
+            <td><strong>Contabilidad</strong></td>
+            <td>Asientos contables (partida doble), Balance General, Estado de Resultados, plan contable EC</td>
+            <td>✅ Producción</td>
+          </tr>
+          <tr>
+            <td><strong>Agenda</strong></td>
+            <td>Crear/reagendar/cancelar citas, recordatorios pendientes, KPIs de productividad</td>
+            <td>✅ Producción</td>
+          </tr>
+          <tr>
+            <td><strong>Diagnósticos</strong></td>
+            <td>CIE-10, DSM-5, mapeo entre sistemas, búsqueda por código/descripción</td>
+            <td>✅ Producción</td>
+          </tr>
+          <tr>
+            <td><strong>Notas Clínicas</strong></td>
+            <td>Notas por sesión, vinculación paciente-cita, historial cronológico</td>
+            <td>✅ Producción</td>
+          </tr>
+          <tr>
+            <td><strong>Edad</strong></td>
+            <td>Cálculo preciso de edad, desglose años/meses/días, edad en fecha específica</td>
+            <td>✅ Producción</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Architecture -->
+<section id="architecture">
+  <div class="container">
+    <h2 class="section-title">Arquitectura</h2>
+    <p class="section-lead">Clean Architecture en 4 capas. Dominio puro sin dependencias de infraestructura. Testable sin runtime.</p>
+
+    <div class="arch-diagram">
+┌─────────────────────────────────────────────────────────────────┐
+│                     PRESENTATION (React/TypeScript)              │
+│  Pages · Components · Hooks · Tauri IPC Client                  │
+├─────────────────────────────────────────────────────────────────┤
+│                     APPLICATION (Tauri Commands)                 │
+│  Command Handlers · DTOs · Validation · Use Cases               │
+├─────────────────────────────────────────────────────────────────┤
+│                     DOMAIN (Pure Rust)                           │
+│  Entities · Value Objects · Repository Traits · Invariants       │
+├─────────────────────────────────────────────────────────────────┤
+│                     INFRASTRUCTURE (Rust + SQLite)               │
+│  SQLCipher Pool · Keyring Manager · Migrations · Repo Impls     │
+└─────────────────────────────────────────────────────────────────┘</div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Capa</th><th>Responsabilidad</th><th>Tecnología</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Presentation</td><td>UI, routing, estado reactivo, invoke IPC</td><td>React 18 + TypeScript + Vite + Tailwind</td></tr>
+          <tr><td>Application</td><td>Command handlers, validación DTO, orquestación</td><td>Rust + Tauri v2</td></tr>
+          <tr><td>Domain</td><td>Entidades, Value Objects, Traits de repositorio</td><td>Rust puro (sin dependencias externas)</td></tr>
+          <tr><td>Infrastructure</td><td>SQLCipher, keyring, migraciones, implementaciones</td><td>rusqlite + keyring + zeroize</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <strong>Regla arquitectónica</strong>
+      El dominio NUNCA depende de infraestructura, commands ni Tauri. Es Rust puro, testeable sin runtime. Cualquier violación es un error de build.
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">Workspace Cargo</h3>
+    <pre><code>[workspace]
+resolver = "2"
+members = ["domain", "application", "infrastructure", "commands"]
+exclude = ["app"]
+
+# Grafo de dependencias:
+# app (bin) → commands → domain (pure)
+#                       → infrastructure → domain
+#                       → application → domain + infrastructure</code></pre>
+  </div>
+</section>
+
+<!-- 4. Security -->
+<section id="security">
+  <div class="container">
+    <h2 class="section-title">Seguridad</h2>
+    <p class="section-lead">Cifrado de extremo a extremo. Claves nunca en disco plano. Cumplimiento LOPD Ecuador.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3>🔐 SQLCipher AES-256</h3>
+        <p>Base de datos cifrada con PRAGMA key. Header del archivo es binario aleatorio — sin la clave, los datos son inaccesibles.</p>
+      </div>
+      <div class="card">
+        <h3>🔑 Keyring Nativo</h3>
+        <p>Clave de 256-bit generada por CSPRNG del OS. Almacenada en Keychain (macOS), Credential Manager (Windows) o Secret Service (Linux).</p>
+      </div>
+      <div class="card">
+        <h3>🛡️ Zeroize</h3>
+        <p>Claves en memoria se limpian automáticamente al salir del scope. Sin datos sensibles en swap o dumps de memoria.</p>
+      </div>
+      <div class="card">
+        <h3>📋 CSP Estricto</h3>
+        <p>Content Security Policy sin 'unsafe-inline' ni 'unsafe-eval'. Solo carga recursos del mismo origen.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">Verificación de Cifrado</h3>
+    <pre><code># Verificar que la DB está cifrada (header debe ser basura binaria):
+xxd mind_ledger_once.db | head -4
+# Resultado: bytes aleatorios, NO "SQLite format 3"
+
+# Verificar con clave incorrecta (debe fallar):
+sqlite3 mind_ledger_once.db "PRAGMA key='wrong'; SELECT 1;"
+# Resultado: "file is not a database"
+
+# Verificar keyring (Windows):
+# Credential Manager → "sqlcipher-key-once" bajo "mind-ledger"</code></pre>
+
+    <div class="table-wrap" style="margin-top: 1.5rem;">
+      <table>
+        <thead>
+          <tr><th>Control</th><th>Implementación</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Cifrado en reposo</td><td>SQLCipher AES-256 bundled + PRAGMA key</td><td>✅</td></tr>
+          <tr><td>Gestión de claves</td><td>Keyring nativo + fallback file (0o600) + Zeroize</td><td>✅</td></tr>
+          <tr><td>Integridad referencial</td><td>PRAGMA foreign_keys=ON obligatorio</td><td>✅</td></tr>
+          <tr><td>Aislamiento tenant</td><td>1 BD por instalación — sin multi-tenancy lógico</td><td>✅</td></tr>
+          <tr><td>Auditoría</td><td>created_at / updated_at en todas las tablas</td><td>✅</td></tr>
+          <tr><td>Borrado seguro</td><td>DELETE + VACUUM (SQLCipher sobrescribe páginas)</td><td>✅</td></tr>
+          <tr><td>PE Hardening</td><td>ASLR + DEP + High Entropy VA</td><td>✅</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Installation -->
+<section id="installation">
+  <div class="container">
+    <h2 class="section-title">Instalación</h2>
+    <p class="section-lead">Instalación en 3 pasos. La app crea automáticamente su carpeta de datos y clave de cifrado en la primera ejecución.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3>1️⃣ Ejecutar Instalador</h3>
+        <p>Doble clic en <code>Gloria Once_1.0.0_x64-setup.exe</code>. Aceptar la licencia y elegir carpeta de instalación.</p>
+      </div>
+      <div class="card">
+        <h3>2️⃣ Primera Ejecución</h3>
+        <p>La app crea automáticamente: <code>%APPDATA%\com.mindledger.once.desktop\mind-ledger-once\</code> con la BD cifrada.</p>
+      </div>
+      <div class="card">
+        <h3>3️⃣ Listo</h3>
+        <p>La ventana muestra "Gloria Once" como título. La BD se crea con las migraciones y catálogos CIE-10/DSM-5 pre-cargados.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">Requisitos del Sistema</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Componente</th><th>Requisito</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Sistema Operativo</td><td>Windows 10/11 (64-bit)</td></tr>
+          <tr><td>RAM</td><td>4 GB mínimo, 8 GB recomendado</td></tr>
+          <tr><td>Disco</td><td>50 MB para la app + espacio para datos</td></tr>
+          <tr><td>Permisos</td><td>Escritura en %APPDATA% (no requiere admin)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">Ubicación de Datos</h3>
+    <pre><code>%APPDATA%\com.mindledger.once.desktop\
+  └── mind-ledger-once\
+      ├── mind_ledger_once.db        ← Base de datos cifrada (SQLCipher)
+      ├── mind_ledger_once.db-shm    ← SQLite shared memory
+      ├── mind_ledger_once.db-wal    ← Write-Ahead Log
+      └── mind-ledger.key            ← Clave de fallback (si keyring no disponible)</code></pre>
+  </div>
+</section>
+
+<!-- 6. Tenant -->
+<section id="tenant">
+  <div class="container">
+    <h2 class="section-title">Configuración del Tenant</h2>
+    <p class="section-lead">Cada cliente (tenant) tiene su configuración aislada. Un solo binario sirve a múltiples clínicas.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Campo</th><th>Valor (Gloria Once)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Tenant ID</td><td><code>once</code></td></tr>
+          <tr><td>Nombre Comercial</td><td>Gloria Once</td></tr>
+          <tr><td>Rol Clínico</td><td>Neuropsicóloga Clínica</td></tr>
+          <tr><td>Bundle ID</td><td><code>com.mindledger.once.desktop</code></td></tr>
+          <tr><td>Keyring Account</td><td><code>sqlcipher-key-once</code></td></tr>
+          <tr><td>DB Filename</td><td><code>mind_ledger_once.db</code></td></tr>
+          <tr><td>Color Primario</td><td><span style="display:inline-block;width:14px;height:14px;background:#1A5F60;border-radius:3px;vertical-align:middle"></span> #1A5F60</td></tr>
+          <tr><td>Color Acento</td><td><span style="display:inline-block;width:14px;height:14px;background:#E3645F;border-radius:3px;vertical-align:middle"></span> #E3645F</td></tr>
+          <tr><td>Features</td><td>Notes ✓ · Accounting ✓ · Agenda ✓ · Diagnostics ✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <strong>White-Label: ¿Cómo funciona?</strong>
+      El mismo ejecutable MindLedger.exe se distribuye a cada cliente. La configuración del tenant se inyecta en tiempo de compilación via <code>build.rs</code>. Cada tenant obtiene su propia BD cifrada con una clave única. No hay cruce de datos posible.
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">Agregar un Nuevo Tenant</h3>
+    <pre><code># 1. Crear configuración del tenant
+cat > tenant-configs/nuevo-tenant.json &lt;&lt;EOF
+{
+  "tenant": {
+    "id": "nuevo-tenant",
+    "commercialName": "Dr. Pérez",
+    "clinicalRole": "Psicólogo Clínico"
+  },
+  "crypto": {
+    "keyringService": "mind-ledger",
+    "keyringAccount": "sqlcipher-key-nuevo-tenant",
+    "dbFileName": "mind_ledger_nuevo_tenant.db"
+  },
+  "brand": { ... },
+  "features": { ... }
+}
+EOF
+
+# 2. Configurar .env
+echo "TENANT_CONFIG=tenant-configs/nuevo-tenant.json" > src-tauri/.env
+
+# 3. Compilar
+cargo tauri build</code></pre>
+  </div>
+</section>
+
+<!-- 7. Technical -->
+<section id="technical">
+  <div class="container">
+    <h2 class="section-title">Detalles Técnicos</h2>
+    <p class="section-lead">Stack tecnológico, dependencias y especificaciones de build.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3>⚙️ Backend</h3>
+        <p>Rust 1.80+ · Tauri v2 · rusqlite + SQLCipher bundled · keyring 3.x · zeroize 1.x · argon2 0.5</p>
+      </div>
+      <div class="card">
+        <h3>🎨 Frontend</h3>
+        <p>React 18 · TypeScript · Vite · Tailwind CSS · TanStack Query v5 · Zustand · shadcn/ui + Radix</p>
+      </div>
+      <div class="card">
+        <h3>📦 Build</h3>
+        <p>LTO: thin · codegen-units: 1 · strip: true · panic: abort · NSIS + MSI installers</p>
+      </div>
+      <div class="card">
+        <h3>🧪 Testing</h3>
+        <p>124 tests (61 domain · 19 infra · 22 commands · 5 docx · 17 E2E). 0 warnings en build release.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">Dependencias Críticas</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Dependencia</th><th>Versión</th><th>Propósito</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>tauri</code></td><td>2.x</td><td>Runtime de la app de escritorio</td></tr>
+          <tr><td><code>rusqlite</code></td><td>0.31</td><td>SQLite con bundled-sqlcipher</td></tr>
+          <tr><td><code>keyring</code></td><td>3.x</td><td>Almacenamiento seguro nativo</td></tr>
+          <tr><td><code>serde</code></td><td>1.0</td><td>Serialización/deserialización JSON</td></tr>
+          <tr><td><code>zeroize</code></td><td>1.x</td><td>Limpieza segura de memoria</td></tr>
+          <tr><td><code>argon2</code></td><td>0.5</td><td>Derivación de claves (opcional)</td></tr>
+          <tr><td><code>react</code></td><td>18.x</td><td>UI framework</td></tr>
+          <tr><td><code>@tanstack/react-query</code></td><td>5.x</td><td>Server state management</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">Build Profile</h3>
+    <pre><code># src-tauri/Cargo.toml
+[profile.release]
+opt-level = 3
+lto = "thin"        # ⚠️ FAT LTO corrompe SQLCipher C FFI
+codegen-units = 1
+strip = true
+panic = "abort"
+
+# CI: GitHub Actions
+# - Ubuntu: Rust build + Tauri build (deb)
+# - Windows: Rust build + Tauri build (NSIS + MSI)
+# - Frontend: pnpm install + TypeScript check + Vitest</code></pre>
+
+    <div class="callout warn">
+      <strong>⚠️ LTO: thin, NUNCA fat</strong>
+      Fat LTO corrompe la tabla de símbolos del C FFI de SQLCipher bundled. El PRAGMA key falla silenciosamente y la BD queda inaccesible. Esto fue descubierto y documentado en el release v1.0.0.
+    </div>
+  </div>
+</section>
+
+<!-- 8. Compliance -->
+<section id="compliance">
+  <div class="container">
+    <h2 class="section-title">Cumplimiento Normativo</h2>
+    <p class="section-lead">Diseñado para cumplir con la Ley Orgánica de Protección de Datos Personales de Ecuador (LOPD).</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Requisito LOPD</th><th>Implementación en MindLedger</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Cifrado de datos sensibles</td><td>SQLCipher AES-256 con clave por tenant en Keyring nativo</td></tr>
+          <tr><td>Control de acceso</td><td>Cada BD es independiente. Sin acceso cruzado entre tenants.</td></tr>
+          <tr><td>Auditoría</td><td>Timestamps created_at/updated_at en todas las tablas</td></tr>
+          <tr><td>Derecho de supresión</td><td>DELETE + VACUUM sobrescribe páginas cifradas</td></tr>
+          <tr><td>Minimización de datos</td><td>Solo se almacenan datos necesarios para la práctica clínica</td></tr>
+          <tr><td>Retención de datos</td><td>Configurable por tenant (default: 7 años para historial clínico)</td></tr>
+          <tr><td>Offline-first</td><td>Sin dependencia de servidores externos. Datos nunca salen del equipo.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <strong>Dato clave para el cliente</strong>
+      MindLedger es una app de escritorio que funciona 100% offline. Los datos del paciente NUNCA salen del equipo. No hay servidores, no hay nube, no hay suscripciones. El psicólogo tiene control total sobre sus datos.
+    </div>
+  </div>
+</section>
+
+<!-- Checklist -->
+<section id="checklist">
+  <div class="container">
+    <h2 class="section-title">Checklist de Entrega</h2>
+    <p class="section-lead">Verificaciones completadas antes de la entrega al cliente.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3>✅ Build & Compilación</h3>
+        <ul class="checklist">
+          <li>Cargo build sin errores (warnings menores)</li>
+          <li>Frontend build (TypeScript + Vite) exitoso</li>
+          <li>CI/CD pipeline verde en ambas plataformas</li>
+          <li>Release profile: lto=thin, strip=true</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>✅ Seguridad</h3>
+        <ul class="checklist">
+          <li>DB cifrada (header binario, no SQLite plaintext)</li>
+          <li>Keyring nativo funcional (Credential Manager)</li>
+          <li>Zeroize activo en claves en memoria</li>
+          <li>CSP intacto (sin unsafe-inline/eval)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>✅ Tenant Gloria Once</h3>
+        <ul class="checklist">
+          <li>Identifier: com.mindledger.once.desktop</li>
+          <li>Window title: "Gloria Once"</li>
+          <li>DB: mind_ledger_once.db</li>
+          <li>Features: Notes, Accounting, Agenda, Diagnostics</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>✅ Funcionalidad</h3>
+        <ul class="checklist">
+          <li>App ejecuta sin errores</li>
+          <li>DB se crea en ubicación correcta</li>
+          <li>Migraciones se ejecutan</li>
+          <li>124 tests pasan</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <p>MindLedger v1.0.0-gloria-once · <a href="https://github.com/statick88/MindLedger">GitHub</a> · Diego Medardo Saavedra García (Statick)</p>
+    <p style="margin-top: 0.5rem; opacity: 0.6;">Generado con cognitive-doc-design · Julio 2026</p>
+  </div>
+</footer>
+
+<script>
+// Smooth scroll + active nav
+document.querySelectorAll('nav a').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    const id = link.getAttribute('href').slice(1);
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+    link.classList.add('active');
+  });
+});
+
+// Active section on scroll
+const sections = document.querySelectorAll('section[id]');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('nav a').forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id);
+      });
+    }
+  });
+}, { threshold: 0.3 });
+sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
