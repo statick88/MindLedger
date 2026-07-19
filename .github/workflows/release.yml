@@ -187,22 +187,21 @@ jobs:
       - name: Install system dependencies
         run: |
           choco install -y webview2-runtime
-          # Install OpenSSL for the correct architecture
+          # Dynamic triplet: provides both import libs and DLLs for bundling
           if ("${{ matrix.arch }}" -eq "x64") {
-            vcpkg install openssl:x64-windows-static-md
+            vcpkg install openssl:x64-windows
           } else {
-            vcpkg install openssl:arm64-windows-static-md
+            vcpkg install openssl:arm64-windows
           }
         shell: pwsh
 
       - name: Set OpenSSL env
         run: |
           if ("${{ matrix.arch }}" -eq "x64") {
-            echo "OPENSSL_DIR=$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows-static-md" >> $env:GITHUB_ENV
+            echo "OPENSSL_DIR=$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows" >> $env:GITHUB_ENV
           } else {
-            echo "OPENSSL_DIR=$env:VCPKG_INSTALLATION_ROOT\installed\arm64-windows-static-md" >> $env:GITHUB_ENV
+            echo "OPENSSL_DIR=$env:VCPKG_INSTALLATION_ROOT\installed\arm64-windows" >> $env:GITHUB_ENV
           }
-          echo "OPENSSL_STATIC=1" >> $env:GITHUB_ENV
         shell: pwsh
 
       - name: Cache cargo
