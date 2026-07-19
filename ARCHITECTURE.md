@@ -1,4 +1,4 @@
-# MindLdger — Manual de Arquitectura de Software
+# MindLedger — Manual de Arquitectura de Software
 
 > **Versión:** 1.0.0  
 > **Fecha:** 2026-07-13  
@@ -10,7 +10,7 @@
 
 ## 1. Visión General del Sistema
 
-MindLdger es un **Sistema de Gestión Clínica y Contable Multi-Tenant** diseñado para psicólogos clínicos en Ecuador (cumplimiento LOPD). Arquitectura **Clean Architecture** con separación estricta en 4 capas, ejecutándose como aplicación **Tauri v2 (Rust + React/TypeScript)** con base de datos **SQLCipher** cifrada y llaves en **Keychain/Keyring nativo**.
+MindLedger es un **Sistema de Gestión Clínica y Contable Multi-Tenant** diseñado para psicólogos clínicos en Ecuador (cumplimiento LOPD). Arquitectura **Clean Architecture** con separación estricta en 4 capas, ejecutándose como aplicación **Tauri v2 (Rust + React/TypeScript)** con base de datos **SQLCipher** cifrada y llaves en **Keychain/Keyring nativo**.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -261,7 +261,7 @@ fn test_balance_general_invariant() {
 
 ### 3.3 Aislamiento Criptográfico por Tenant
 
-Cada instancia de MindLdger (cada clínica) tiene:
+Cada instancia de MindLedger (cada clínica) tiene:
 - **Base de datos independiente**: `mind_ledger.db` en `$APPDATA/mind-ledger/`
 - **Clave de cifrado única**: 256-bit generada via `rand::rngs::OsRng` (CSPRNG del OS)
 - **Almacenamiento de clave**: 
