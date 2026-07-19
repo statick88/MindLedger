@@ -77,8 +77,16 @@ fn main() {
     tauri_build::build()
 }
 
-/// Copy OpenSSL DLLs from MinGW to resources/ and return their relative paths for bundling
+/// Copy OpenSSL DLLs from MinGW/vcpkg to resources/ and return their relative paths for bundling.
+/// Detects target architecture to use correct DLL names (x64 vs arm64).
 fn bundle_openssl_dlls(manifest_path: &Path) -> Vec<String> {
+    let target = std::env::var("TARGET").unwrap_or_default();
+    let arch_suffix = if target.contains("aarch64") || target.contains("arm64") {
+        "arm64"
+    } else {
+        "x64"
+    };
+
     let openssl_base = std::env::var("OPENSSL_DIR")
         .map(|p| Path::new(&p).join("bin"))
         .unwrap_or_else(|_| {
@@ -91,7 +99,11 @@ fn bundle_openssl_dlls(manifest_path: &Path) -> Vec<String> {
     let _ = fs::create_dir_all(&resources_dir);
 
     let mut resources = vec![];
-    for dll_name in &["libcrypto-3-x64.dll", "libssl-3-x64.dll"] {
+    let dll_names = [
+        format!("libcrypto-3-{}.dll", arch_suffix),
+        format!("libssl-3-{}.dll", arch_suffix),
+    ];
+    for dll_name in &dll_names {
         let src = openssl_base.join(dll_name);
         if src.exists() {
             let dst = resources_dir.join(dll_name);

@@ -224,13 +224,12 @@ jobs:
   # TAURI APP BUILD (Multi-platform)
   # =========================================================================
   tauri-build:
-    name: Tauri Build (${{ matrix.os }})
+    name: Tauri Build (${{ matrix.os }}/${{ matrix.target }})
     needs: [rust-build-test, frontend-build-test]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
