@@ -40,5 +40,9 @@ coverage/
 # Build artifacts
 audit-output/
 
+# OpenSSL DLLs (from MinGW, large binaries - copied by build.rs)
+src-tauri/resources/openssl/*.dll
+src-tauri/resources/openssl/.gitkeep
+
 # CodeGraph index
 .codegraph/

@@ -61,13 +61,94 @@ fn main() {
         let tenant_id = config["tenant"]["id"].as_str().unwrap_or("default");
         let commercial_name = config["tenant"]["commercialName"].as_str().unwrap_or("MindLedger");
 
-        template_tauri_conf(tenant_id, commercial_name);
+        // Bundle runtime DLLs on Windows targets (OpenSSL + WebView2)
+        let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+        let resources = if target_os == "windows" {
+            let mut r = bundle_openssl_dlls(manifest_path);
+            r.extend(bundle_webview2_loader(manifest_path));
+            r
+        } else {
+            vec![]
+        };
+
+        template_tauri_conf(tenant_id, commercial_name, &resources);
     }
 
     tauri_build::build()
 }
 
-fn template_tauri_conf(tenant_id: &str, commercial_name: &str) {
+/// Copy OpenSSL DLLs from MinGW to resources/ and return their relative paths for bundling
+fn bundle_openssl_dlls(manifest_path: &Path) -> Vec<String> {
+    let openssl_base = std::env::var("OPENSSL_DIR")
+        .map(|p| Path::new(&p).join("bin"))
+        .unwrap_or_else(|_| {
+            // Fallback: try user's scoop MinGW
+            let home = std::env::var("USERPROFILE").unwrap_or_default();
+            Path::new(&home).join("scoop/apps/mingw/current/opt/bin")
+        });
+
+    let resources_dir = manifest_path.join("resources/openssl");
+    let _ = fs::create_dir_all(&resources_dir);
+
+    let mut resources = vec![];
+    for dll_name in &["libcrypto-3-x64.dll", "libssl-3-x64.dll"] {
+        let src = openssl_base.join(dll_name);
+        if src.exists() {
+            let dst = resources_dir.join(dll_name);
+            let _ = fs::copy(&src, &dst);
+            resources.push(format!("resources/openssl/{}", dll_name));
+            println!("cargo:warning=Bundled OpenSSL DLL: {}", dll_name);
+        } else {
+            println!("cargo:warning=OpenSSL DLL not found: {}", src.display());
+        }
+    }
+    resources
+}
+
+/// Copy WebView2Loader.dll from cargo build output to resources/ for NSIS bundling.
+/// Tauri v2 with x86_64-pc-windows-gnu doesn't always include this automatically.
+/// We prefer a pre-existing copy in resources/webview2/ (manually placed before build)
+/// because build.rs runs BEFORE webview2-com-sys compiles, so target/release/ may not
+/// have it yet on clean builds.
+fn bundle_webview2_loader(manifest_path: &Path) -> Vec<String> {
+    let resources_dir = manifest_path.join("resources/webview2");
+    let _ = fs::create_dir_all(&resources_dir);
+    let dst = resources_dir.join("WebView2Loader.dll");
+
+    // If already in resources (pre-copied before build), use it directly
+    if dst.exists() {
+        println!("cargo:warning=Bundled WebView2Loader.dll (pre-existing): {}", dst.display());
+        return vec!["resources/webview2/WebView2Loader.dll".to_string()];
+    }
+
+    // Try to copy from target/release/ (works on incremental builds where DLL already exists)
+    let src = manifest_path.join("../target/release/WebView2Loader.dll");
+    if src.exists() {
+        fs::copy(&src, &dst).expect("Failed to copy WebView2Loader.dll");
+        println!("cargo:warning=Bundled WebView2Loader.dll: {}", src.display());
+        return vec!["resources/webview2/WebView2Loader.dll".to_string()];
+    }
+
+    // Fallback: search build output directories
+    let build_base = manifest_path.join("../target/release/build");
+    if let Ok(entries) = fs::read_dir(&build_base) {
+        for entry in entries.flatten() {
+            for arch in &["x64", "x86", "arm64"] {
+                let candidate = entry.path().join("out").join(arch).join("WebView2Loader.dll");
+                if candidate.exists() {
+                    fs::copy(&candidate, &dst).expect("Failed to copy WebView2Loader.dll");
+                    println!("cargo:warning=Bundled WebView2Loader.dll (fallback): {}", candidate.display());
+                    return vec!["resources/webview2/WebView2Loader.dll".to_string()];
+                }
+            }
+        }
+    }
+
+    println!("cargo:warning=WebView2Loader.dll not found - app will require WebView2 Runtime installed");
+    vec![]
+}
+
+fn template_tauri_conf(tenant_id: &str, commercial_name: &str, extra_resources: &[String]) {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
     let tauri_conf_path = Path::new(&manifest_dir).join("tauri.conf.json");
     let content = fs::read_to_string(&tauri_conf_path).expect("Failed to read tauri.conf.json");
@@ -76,8 +157,14 @@ fn template_tauri_conf(tenant_id: &str, commercial_name: &str) {
     let mut conf: serde_json::Value = serde_json::from_str(&content).expect("Invalid tauri.conf.json");
     
     conf["identifier"] = serde_json::Value::String(format!("com.mindledger.{}.desktop", tenant_id));
-    conf["productName"] = serde_json::Value::String(commercial_name.to_string());
+    // Product name is always "MindLedger"; window title uses tenant branding
+    conf["productName"] = serde_json::Value::String("MindLedger".to_string());
     conf["app"]["windows"][0]["title"] = serde_json::Value::String(commercial_name.to_string());
+
+    // Always set resources from scratch (avoids duplicate accumulation across builds)
+    conf["bundle"]["resources"] = serde_json::Value::Array(
+        extra_resources.iter().map(|r| serde_json::Value::String(r.clone())).collect()
+    );
     
     // Write back (tauri-build reads this)
     let new_content = serde_json::to_string_pretty(&conf).expect("Failed to serialize tauri.conf.json");

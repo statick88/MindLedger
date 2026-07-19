@@ -46,12 +46,20 @@
     "macOS": {
       "minimumSystemVersion": "10.15"
     },
-    "resources": [],
+    "resources": [
+      "resources/openssl/libcrypto-3-x64.dll",
+      "resources/openssl/libssl-3-x64.dll",
+      "resources/webview2/WebView2Loader.dll"
+    ],
     "shortDescription": "Clinical psychology practice management",
-    "targets": "all",
+    "targets": [
+      "nsis"
+    ],
     "windows": {
       "nsis": {
+        "displayLanguageSelector": false,
         "installMode": "both",
+        "installerHooks": "nsis-hooks/installer-hooks.nsh",
         "installerIcon": "icons/icon.ico"
       }
     }
@@ -62,6 +70,6 @@
       "preload": "sqlite:mind_ledger.db"
     }
   },
-  "productName": "Gloria Once",
+  "productName": "MindLedger",
   "version": "1.0.0"
 }
