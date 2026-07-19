@@ -46,11 +46,7 @@
     "macOS": {
       "minimumSystemVersion": "10.15"
     },
-    "resources": [
-      "resources/openssl/libcrypto-3-x64.dll",
-      "resources/openssl/libssl-3-x64.dll",
-      "resources/webview2/WebView2Loader.dll"
-    ],
+    "resources": [],
     "shortDescription": "Clinical psychology practice management",
     "targets": [
       "nsis"

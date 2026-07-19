@@ -79,6 +79,7 @@ fn main() {
 
 /// Copy OpenSSL DLLs from MinGW/vcpkg to resources/ and return their relative paths for bundling.
 /// Detects target architecture to use correct DLL names (x64 vs arm64).
+/// Scans the OpenSSL bin directory for any libcrypto/libssl DLLs.
 fn bundle_openssl_dlls(manifest_path: &Path) -> Vec<String> {
     let target = std::env::var("TARGET").unwrap_or_default();
     let arch_suffix = if target.contains("aarch64") || target.contains("arm64") {
@@ -99,19 +100,51 @@ fn bundle_openssl_dlls(manifest_path: &Path) -> Vec<String> {
     let _ = fs::create_dir_all(&resources_dir);
 
     let mut resources = vec![];
-    let dll_names = [
+
+    // Build priority list: arch-specific first, then generic
+    let crypto_candidates = [
         format!("libcrypto-3-{}.dll", arch_suffix),
-        format!("libssl-3-{}.dll", arch_suffix),
+        "libcrypto-3.dll".to_string(),
+        "libcrypto.dll".to_string(),
     ];
-    for dll_name in &dll_names {
-        let src = openssl_base.join(dll_name);
-        if src.exists() {
-            let dst = resources_dir.join(dll_name);
-            let _ = fs::copy(&src, &dst);
-            resources.push(format!("resources/openssl/{}", dll_name));
-            println!("cargo:warning=Bundled OpenSSL DLL: {}", dll_name);
-        } else {
-            println!("cargo:warning=OpenSSL DLL not found: {}", src.display());
+    let ssl_candidates = [
+        format!("libssl-3-{}.dll", arch_suffix),
+        "libssl-3.dll".to_string(),
+        "libssl.dll".to_string(),
+    ];
+
+    for dll_candidates in [&crypto_candidates, &ssl_candidates] {
+        let mut found = false;
+        let prefix = if dll_candidates[0].contains("crypto") { "libcrypto" } else { "libssl" };
+        for dll_name in dll_candidates {
+            let src = openssl_base.join(dll_name);
+            if src.exists() {
+                let dst = resources_dir.join(dll_name);
+                let _ = fs::copy(&src, &dst);
+                resources.push(format!("resources/openssl/{}", dll_name));
+                println!("cargo:warning=Bundled OpenSSL DLL: {}", dll_name);
+                found = true;
+                break;
+            }
+        }
+        if !found {
+            // Last resort: scan directory for any matching DLL
+            if let Ok(entries) = fs::read_dir(&openssl_base) {
+                for entry in entries.flatten() {
+                    let name = entry.file_name().to_string_lossy().to_string();
+                    if name.starts_with(prefix) && name.ends_with(".dll") {
+                        let dst = resources_dir.join(&name);
+                        let _ = fs::copy(entry.path(), &dst);
+                        resources.push(format!("resources/openssl/{}", name));
+                        println!("cargo:warning=Bundled OpenSSL DLL (discovered): {}", name);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if !found {
+                println!("cargo:warning=No OpenSSL {} DLL found in {}", prefix, openssl_base.display());
+            }
         }
     }
     resources
