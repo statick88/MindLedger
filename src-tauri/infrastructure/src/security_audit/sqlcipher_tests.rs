@@ -275,7 +275,7 @@ mod sqlcipher_tests {
 
         // Content should be the same hex key
         let trimmed = content.trim();
-        assert_eq!(trimmed, key, "Key file content should match returned key");
+        assert_eq!(trimmed, &*key, "Key file content should match returned key");
 
         // Verify it's 64 hex chars
         assert_eq!(trimmed.len(), 64, "Key file content should be 64 hex chars");
