@@ -72,7 +72,7 @@ fn main() {
             vec![]
         };
 
-        template_tauri_conf(tenant_id, commercial_name, &resources, &out_dir);
+        template_tauri_conf(tenant_id, commercial_name, &resources, Path::new(&out_dir));
     }
 
     tauri_build::build()
