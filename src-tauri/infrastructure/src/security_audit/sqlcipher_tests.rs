@@ -27,7 +27,7 @@ mod sqlcipher_tests {
     fn test_cold_dump_no_plaintext_leakage() {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("test_cold_dump.db");
-        let key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        let key = "a1b2c3d4e5f6071829384a5b6c7d8e9f0a1b2c3d4e5f6071829384a5b6c7d8e9";
 
         // Create encrypted database with known PHI
         let pool = create_pool_with_key(&db_path, key).expect("Failed to create pool");
@@ -90,7 +90,7 @@ mod sqlcipher_tests {
     fn test_cold_dump_hexdump_no_readable_sequences() {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("test_hexdump.db");
-        let key = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
+        let key = "a1b2c3d4e5f6071829384a5b6c7d8e9f0a1b2c3d4e5f6071829384a5b6c7d8e9";
 
         let pool = create_pool_with_key(&db_path, key).expect("Failed to create pool");
         {
@@ -346,8 +346,8 @@ mod sqlcipher_tests {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("valid_key.db");
 
-        // Valid 64-char hex key
-        let valid_key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        // Valid 64-char hex key (non-repeating to pass entropy validation)
+        let valid_key = "a1b2c3d4e5f6071829384a5b6c7d8e9f0a1b2c3d4e5f6071829384a5b6c7d8e9";
 
         let result = create_pool_with_key(&db_path, valid_key);
 
@@ -396,7 +396,7 @@ mod sqlcipher_tests {
     fn test_connection_pool_wal_mode_and_foreign_keys() {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("security_pragmas.db");
-        let key = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
+        let key = "a1b2c3d4e5f6071829384a5b6c7d8e9f0a1b2c3d4e5f6071829384a5b6c7d8e9";
 
         let pool = create_pool_with_key(&db_path, key).expect("Failed to create pool");
 

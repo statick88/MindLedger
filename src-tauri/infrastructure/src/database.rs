@@ -189,7 +189,7 @@ mod tests {
     fn test_create_pool_with_key() {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("test.db");
-        let key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        let key = "a1b2c3d4e5f6071829384a5b6c7d8e9f0a1b2c3d4e5f6071829384a5b6c7d8e9";
         
         let pool = create_pool_with_key(&db_path, key);
         assert!(pool.is_ok());
