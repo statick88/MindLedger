@@ -3,7 +3,6 @@ use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use thiserror::Error;
-use uuid::Uuid;
 
 use crate::error::DomainError;
 use crate::identifiers::{AppointmentId, PatientId, ReminderId};

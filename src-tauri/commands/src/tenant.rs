@@ -109,7 +109,7 @@ fn load_tenant_config() -> Result<TenantConfig, String> {
     // to OUT_DIR/tenant-config.json and sets TENANT_CONFIG_PATH via cargo:rustc-env.
     // But cargo:rustc-env is crate-scoped — commands crate can't see it.
     // So we also set the process env var from main.rs before this is called.
-    let config = if let Ok(config_path) = std::env::var("TENANT_CONFIG_PATH") {
+    let config: TenantConfig = if let Ok(config_path) = std::env::var("TENANT_CONFIG_PATH") {
         if let Ok(config_str) = std::fs::read_to_string(&config_path) {
             serde_json::from_str(&config_str)
                 .map_err(|e| format!("Failed to parse tenant config: {}", e))?

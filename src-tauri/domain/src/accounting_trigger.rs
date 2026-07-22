@@ -1,7 +1,6 @@
 use chrono::NaiveDate;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::error::DomainError;
 use crate::identifiers::{AppointmentId, PatientId, TherapistId};
@@ -56,7 +55,7 @@ impl AccountingTrigger {
     /// # Returns
     /// Balanced `AsientoContable` ready for persistence
     pub fn build_session_asiento(
-        appointment_id: AppointmentId,
+        _appointment_id: AppointmentId,
         patient: &PatientAccountingData,
         therapist: &TherapistAccountingData,
         date: NaiveDate,

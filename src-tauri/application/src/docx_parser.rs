@@ -8,6 +8,7 @@ const MAX_DOCX_FILE_SIZE: u64 = 10 * 1024 * 1024;
 
 /// Maximum allowed uncompressed content size (50 MB).
 /// Protects against zip bombs where compressed ratio is extreme.
+#[allow(dead_code)]
 const MAX_UNCOMPRESSED_SIZE: usize = 50 * 1024 * 1024;
 
 #[derive(Debug, Clone)]

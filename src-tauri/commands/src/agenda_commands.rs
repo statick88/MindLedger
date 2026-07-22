@@ -1,10 +1,10 @@
 use crate::error::{AppError, AppResult};
+use crate::patient_commands::PaginatedResponse;
 use chrono::{DateTime, Duration, NaiveDate, Utc};
-use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use soft_mindledger_domain::{
     appointment::{
-        Appointment, AppointmentStatus, Modality, DateTimeRange,
+        AppointmentStatus, Modality, DateTimeRange,
     },
     calendar_provider::DateRange,
     identifiers::{AppointmentId, PatientId, TherapistId},
@@ -113,15 +113,6 @@ impl From<soft_mindledger_domain::appointment::Appointment> for AppointmentRespo
             updated_at: a.updated_at.to_rfc3339(),
         }
     }
-}
-
-#[derive(Serialize, Debug)]
-pub struct PaginatedResponse<T> {
-    pub items: Vec<T>,
-    pub total: u64,
-    pub page: u64,
-    pub page_size: u64,
-    pub total_pages: u64,
 }
 
 #[derive(Serialize, Debug)]
@@ -395,7 +386,7 @@ pub async fn reagendar_cita_impl(
     let new_range = DateTimeRange::new(new_start, new_end)
         .map_err(|e| AppError::Validation(e.to_string()))?;
     
-    let mut appointment = repo.get_by_id(AppointmentId(Uuid::parse_str(&id)?)).await?
+    let mut appointment = repo.get_by_id(appointment_id).await?
         .ok_or_else(|| AppError::NotFound("Appointment not found".to_string()))?;
     
     // Check overlapping for new time (excluding self)
@@ -492,7 +483,7 @@ pub async fn obtener_citas_paciente_impl(
     let page = query.page.unwrap_or(0);
     let page_size = query.page_size.unwrap_or(20).min(100);
     
-    let mut filter = AppointmentFilter {
+    let filter = AppointmentFilter {
         patient_id: Some(patient_id),
         date_range: range,
         status: query.status,
