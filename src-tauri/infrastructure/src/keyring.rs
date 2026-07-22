@@ -45,15 +45,16 @@ impl SqlCipherKeyManager {
 
     /// Retrieve the existing encryption key, or generate and store a new one.
     /// Tries keyring first; falls back to file-based storage if keyring is unavailable.
-    pub fn get_or_create_key(&self) -> Result<String> {
+    /// Returns Zeroizing<String> to ensure key material is zeroized on drop.
+    pub fn get_or_create_key(&self) -> Result<Zeroizing<String>> {
         // 1. Try keyring first
         if let Some(ref entry) = self.entry {
             if let Ok(key) = entry.get_password() {
-                return Ok(key);
+                return Ok(Zeroizing::new(key));
             }
             // Keyring has no key yet — try to create one
             let key = Self::generate_hex_key();
-            match entry.set_password(&key) {
+            match entry.set_password(key.expose_secret()) {
                 Ok(()) => return Ok(key),
                 Err(e) => {
                     warn!(
@@ -69,7 +70,7 @@ impl SqlCipherKeyManager {
             if let Ok(content) = std::fs::read_to_string(fallback_path) {
                 let key = content.trim().to_string();
                 if key.len() == KEY_LENGTH * 2 && key.chars().all(|c| c.is_ascii_hexdigit()) {
-                    return Ok(key);
+                    return Ok(Zeroizing::new(key));
                 }
                 warn!(
                     "[MindLedger] fallback key file is invalid, regenerating"
@@ -79,7 +80,7 @@ impl SqlCipherKeyManager {
             if let Some(parent) = fallback_path.parent() {
                 let _ = std::fs::create_dir_all(parent);
             }
-            std::fs::write(fallback_path, &key)
+            std::fs::write(fallback_path, key.expose_secret())
                 .context("Failed to write fallback key file")?;
             // Set file permissions to owner-only read/write (0o600) on Unix
             #[cfg(unix)]
@@ -110,16 +111,14 @@ impl SqlCipherKeyManager {
         Ok(())
     }
 
-    fn generate_hex_key() -> String {
+    fn generate_hex_key() -> Zeroizing<String> {
         let mut rng = rand::rngs::OsRng;
         let key_bytes: Zeroizing<Vec<u8>> = Zeroizing::new((0..KEY_LENGTH).map(|_| rng.gen()).collect());
         let hex: Zeroizing<String> = Zeroizing::new(
             key_bytes.iter().map(|b| format!("{:02x}", b)).collect(),
         );
-        // NOTE: The returned String is NOT zeroized on drop. Callers requiring
-        // zeroization should wrap the result in Zeroizing<String>. The intermediate
-        // key material (key_bytes, hex) IS zeroized via the Zeroizing wrapper.
-        hex.to_string()
+        // Both key_bytes and hex are Zeroizing, so they will be zeroized on drop
+        hex
     }
 
     /// Test-visible wrapper for `generate_hex_key`.
@@ -127,7 +126,7 @@ impl SqlCipherKeyManager {
     /// without exposing the private method in production builds.
     #[cfg(test)]
     pub fn generate_hex_key_for_test() -> String {
-        Self::generate_hex_key()
+        Self::generate_hex_key().expose_secret().clone()
     }
 }
 

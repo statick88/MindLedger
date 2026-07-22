@@ -75,19 +75,25 @@ jobs:
       - name: Install system dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          # Install OpenSSL via vcpkg (required by openssl-sys crate)
-          vcpkg install openssl:x64-windows-static
+          # Dynamic triplet: produces both import libs (for linking) and DLLs (for bundling)
+          if ("${{ matrix.target }}" -eq "aarch64-pc-windows-msvc") {
+            vcpkg install openssl:arm64-windows
+          } else {
+            vcpkg install openssl:x64-windows
+          }
         shell: pwsh
 
       - name: Set OpenSSL env (Windows)
         if: runner.os == 'Windows'
         run: |
-          $opensslRoot = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows-static"
+          if ("${{ matrix.target }}" -eq "aarch64-pc-windows-msvc") {
+            $opensslRoot = "$env:VCPKG_INSTALLATION_ROOT\installed\arm64-windows"
+          } else {
+            $opensslRoot = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          }
           echo "OPENSSL_DIR=$opensslRoot" >> $env:GITHUB_ENV
-          echo "OPENSSL_STATIC=1" >> $env:GITHUB_ENV
           echo "OPENSSL_LIB_DIR=$opensslRoot\lib" >> $env:GITHUB_ENV
           echo "OPENSSL_INCLUDE_DIR=$opensslRoot\include" >> $env:GITHUB_ENV
-          # Ensure Windows system libs (crypt32, user32) are on the linker path
           echo "RUSTFLAGS=-C link-arg=crypt32.lib -C link-arg=user32.lib -C link-arg=advapi32.lib -C link-arg=gdi32.lib" >> $env:GITHUB_ENV
         shell: pwsh
 
@@ -317,7 +323,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Tauri app
-        run: pnpm tauri build --debug --target ${{ matrix.target }}
+        run: pnpm tauri build --target ${{ matrix.target }}
 
       - name: Upload Tauri artifacts
         uses: actions/upload-artifact@v4

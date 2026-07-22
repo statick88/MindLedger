@@ -418,6 +418,80 @@ impl AppointmentRepository for SqliteAppointmentRepository {
             Ok(appointments)
         }).await.map_err(|e| RepositoryError::Database(format!("Task join error: {}", e)))?
     }
+
+    async fn finalize_with_accounting(
+        &self,
+        appointment: &Appointment,
+        asiento_json: String,
+        notes: Option<String>,
+    ) -> Result<(), RepositoryError> {
+        let pool = self.pool.clone();
+        let appointment = appointment.clone();
+        tokio::task::spawn_blocking(move || {
+            let conn = pool.lock().map_err(|e| RepositoryError::Database(format!("Lock poisoned: {}", e)))?;
+            let tx = conn.unchecked_transaction()
+                .map_err(|e| RepositoryError::Database(format!("Failed to begin transaction: {}", e)))?;
+
+            // 1. UPDATE appointment status to Realizada
+            let status_str = "Realizada";
+            let modality_str = match appointment.modality {
+                soft_mindledger_domain::appointment::Modality::Presencial => "Presencial",
+                soft_mindledger_domain::appointment::Modality::Virtual => "Virtual",
+                soft_mindledger_domain::appointment::Modality::Hibrida => "Hibrida",
+            };
+            let scheduled_date = appointment.time_range.start.format("%Y-%m-%d").to_string();
+            let scheduled_time = appointment.time_range.start.format("%H:%M").to_string();
+            let duration_minutes = (appointment.time_range.end - appointment.time_range.start).num_minutes();
+            let reminder_sent = if appointment.reminder_sent { 1 } else { 0 };
+            let now = Utc::now().to_rfc3339();
+
+            let affected = tx.execute(
+                "UPDATE appointments SET
+                    status = ?1, scheduled_date = ?2, scheduled_time = ?3,
+                    duration_minutes = ?4, modality = ?5, fee_cents = ?6, notes = ?7,
+                    reminder_sent = ?8, reminder_external_id = ?9, reagendada_from_id = ?10,
+                    external_calendar_id = ?11, calendar_provider = ?12,
+                    updated_at = ?13
+                WHERE id = ?14",
+                params![
+                    status_str,
+                    scheduled_date,
+                    scheduled_time,
+                    duration_minutes,
+                    modality_str,
+                    appointment.fee_cents,
+                    notes,
+                    reminder_sent,
+                    appointment.reminder_external_id,
+                    appointment.reagendada_from_id.map(|id| id.to_string()),
+                    appointment.external_calendar_id,
+                    appointment.calendar_provider,
+                    now,
+                    appointment.id.to_string(),
+                ],
+            ).map_err(|e| RepositoryError::Database(format!("Failed to update appointment: {}", e)))?;
+
+            if affected == 0 {
+                tx.rollback().ok();
+                return Err(RepositoryError::NotFound(format!("Appointment not found: {}", appointment.id)));
+            }
+
+            // 2. INSERT accounting entry (pre-serialized JSON)
+            let asiento_id = uuid::Uuid::new_v4().to_string();
+            let asiento_fecha = appointment.time_range.start.format("%Y-%m-%d").to_string();
+            tx.execute(
+                "INSERT INTO asientos_contables (id, fecha, descripcion, lineas, created_at)
+                 VALUES (?1, ?2, ?3, ?4, datetime('now'))",
+                params![asiento_id, asiento_fecha, "Sesión completada", asiento_json],
+            ).map_err(|e| RepositoryError::Database(format!("Failed to insert accounting entry: {}", e)))?;
+
+            // 3. COMMIT
+            tx.commit()
+                .map_err(|e| RepositoryError::Database(format!("Failed to commit transaction: {}", e)))?;
+
+            Ok(())
+        }).await.map_err(|e| RepositoryError::Database(format!("Task join error: {}", e)))?
+    }
 }
 
 #[cfg(test)]

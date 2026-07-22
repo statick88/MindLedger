@@ -106,6 +106,16 @@ pub trait AppointmentRepository: Send + Sync {
     async fn find_overlapping(&self, therapist_id: TherapistId, range: DateRange) -> Result<Vec<Appointment>, RepositoryError>;
     async fn find_by_patient(&self, patient_id: PatientId, range: Option<DateRange>) -> Result<Vec<Appointment>, RepositoryError>;
     async fn find_reminders_due(&self, now: DateTime<Utc>) -> Result<Vec<Appointment>, RepositoryError>;
+
+    /// Atomically finalize an appointment and create its accounting entry.
+    /// Both operations succeed or both fail (single SQLite transaction).
+    /// `asiento_json` is the pre-serialized JSON of the AsientoContable.
+    async fn finalize_with_accounting(
+        &self,
+        appointment: &Appointment,
+        asiento_json: String,
+        notes: Option<String>,
+    ) -> Result<(), RepositoryError>;
 }
 
 #[derive(Debug, Clone, Default)]

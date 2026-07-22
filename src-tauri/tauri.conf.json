@@ -54,9 +54,13 @@
     "windows": {
       "nsis": {
         "displayLanguageSelector": false,
-        "installMode": "both",
+        "installMode": "currentUser",
         "installerHooks": "nsis-hooks/installer-hooks.nsh",
-        "installerIcon": "icons/icon.ico"
+        "installerIcon": "icons/icon.ico",
+        "uninstallerIcon": "icons/icon.ico",
+        "headerImage": "icons/icon.ico",
+        "sidebarImage": "icons/icon.ico",
+        "compression": "lzma"
       }
     }
   },

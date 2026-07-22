@@ -12,6 +12,67 @@ const DEFAULT_SERVICE_NAME: &str = "mind-ledger";
 const DEFAULT_ACCOUNT_NAME: &str = "sqlcipher-key";
 const DEFAULT_DB_FILENAME: &str = "mind_ledger.db";
 
+/// Key entropy validation error
+#[derive(Debug, thiserror::Error)]
+pub enum KeyEntropyError {
+    #[error("Key entropy too low: {0:.2} bits/char (minimum 3.5)")]
+    LowEntropy(f64),
+    #[error("Key contains repeating pattern: {0}")]
+    RepeatingPattern(String),
+    #[error("Key is all zeros or all same character")]
+    AllSameChar,
+}
+
+/// Validate SQLCipher key entropy to reject weak keys.
+/// Returns Ok(()) if key passes entropy checks, Err(KeyEntropyError) otherwise.
+pub fn validate_key_entropy(key: &str) -> Result<(), KeyEntropyError> {
+    // Check for all same character (e.g., all zeros, all 'a's)
+    if key.chars().all(|c| c == key.chars().next().unwrap()) {
+        return Err(KeyEntropyError::AllSameChar);
+    }
+
+    // Check for repeating pattern (e.g., "0123456789abcdef" repeated)
+    // Find smallest repeating unit
+    for pattern_len in 1..=key.len() / 2 {
+        if key.len() % pattern_len == 0 {
+            let pattern = &key[..pattern_len];
+            let mut is_repeating = true;
+            for chunk in key.as_bytes().chunks(pattern_len) {
+                if chunk != pattern.as_bytes() {
+                    is_repeating = false;
+                    break;
+                }
+            }
+            if is_repeating {
+                return Err(KeyEntropyError::RepeatingPattern(pattern.to_string()));
+            }
+        }
+    }
+
+    // Calculate Shannon entropy
+    let mut freq = [0u32; 16]; // hex digits 0-9, a-f
+    for c in key.chars() {
+        if let Some(digit) = c.to_digit(16) {
+            freq[digit as usize] += 1;
+        }
+    }
+    let len = key.len() as f64;
+    let mut entropy = 0.0;
+    for &count in &freq {
+        if count > 0 {
+            let p = count as f64 / len;
+            entropy -= p * p.log2();
+        }
+    }
+
+    // Minimum 3.5 bits/char for 64-char hex key (max is 4.0 for uniform)
+    if entropy < 3.5 {
+        return Err(KeyEntropyError::LowEntropy(entropy));
+    }
+
+    Ok(())
+}
+
 /// Create a connection pool with tenant-specific configuration.
 /// Uses tenant-specific keyring account and database filename for isolation.
 pub fn create_pool_for_tenant(
@@ -43,7 +104,7 @@ pub fn create_pool(_database_path: &Path, data_dir: &Path) -> Result<DbPool> {
 }
 
 /// Open (or create) an encrypted SQLCipher database with the given hex key.
-/// Validates key format (64 hex chars) before executing PRAGMA to prevent injection.
+/// Validates key format (64 hex chars) and entropy before executing PRAGMA to prevent injection and weak keys.
 pub fn create_pool_with_key(database_path: &Path, key: &str) -> Result<DbPool> {
     // Security: validate key format before passing to SQLCipher.
     // Keys must be exactly KEY_LENGTH*2 hex characters (64 chars for 32-byte key).
@@ -59,6 +120,9 @@ pub fn create_pool_with_key(database_path: &Path, key: &str) -> Result<DbPool> {
     if !key.chars().all(|c| c.is_ascii_hexdigit()) {
         anyhow::bail!("Invalid encryption key: must contain only hex characters (0-9, a-f)");
     }
+
+    // Security: validate key entropy (reject weak keys)
+    validate_key_entropy(key)?;
 
     let conn = if database_path.to_string_lossy() == ":memory:" {
         Connection::open_in_memory()

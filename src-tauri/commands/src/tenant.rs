@@ -58,6 +58,30 @@ pub struct CryptoConfig {
     pub dbFileName: String,
 }
 
+impl CryptoConfig {
+    /// Validate crypto configuration fields at runtime.
+    /// Returns Err with descriptive message if any field is empty or whitespace-only.
+    pub fn validate(&self) -> Result<(), String> {
+        if self.keyringService.trim().is_empty() {
+            return Err("CryptoConfig.keyringService must not be empty".to_string());
+        }
+        if self.keyringAccount.trim().is_empty() {
+            return Err("CryptoConfig.keyringAccount must not be empty".to_string());
+        }
+        if self.dbFileName.trim().is_empty() {
+            return Err("CryptoConfig.dbFileName must not be empty".to_string());
+        }
+        // dbFileName must end with .db extension
+        if !self.dbFileName.ends_with(".db") {
+            return Err(format!(
+                "CryptoConfig.dbFileName must end with .db extension, got: {}",
+                self.dbFileName
+            ));
+        }
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeatureFlags {
     pub clinicalNotes: bool,
@@ -69,6 +93,15 @@ pub struct FeatureFlags {
 /// Global cached tenant config (loaded once at startup)
 static TENANT_CONFIG: OnceLock<Result<TenantConfig, String>> = OnceLock::new();
 
+impl TenantConfig {
+    /// Validate all configuration sections at runtime.
+    /// Crypto config is critical — invalid values cause hard failure.
+    pub fn validate(&self) -> Result<(), String> {
+        self.crypto.validate()
+            .map_err(|e| format!("Tenant config validation failed: {}", e))
+    }
+}
+
 /// Load tenant config from embedded file (set by build.rs via TENANT_CONFIG_PATH)
 /// Falls back to default.json for tests and backward compatibility.
 fn load_tenant_config() -> Result<TenantConfig, String> {
@@ -76,15 +109,23 @@ fn load_tenant_config() -> Result<TenantConfig, String> {
     // to OUT_DIR/tenant-config.json and sets TENANT_CONFIG_PATH via cargo:rustc-env.
     // But cargo:rustc-env is crate-scoped — commands crate can't see it.
     // So we also set the process env var from main.rs before this is called.
-    if let Ok(config_path) = std::env::var("TENANT_CONFIG_PATH") {
+    let config = if let Ok(config_path) = std::env::var("TENANT_CONFIG_PATH") {
         if let Ok(config_str) = std::fs::read_to_string(&config_path) {
-            return serde_json::from_str(&config_str).map_err(|e| format!("Failed to parse tenant config: {}", e));
+            serde_json::from_str(&config_str)
+                .map_err(|e| format!("Failed to parse tenant config: {}", e))?
+        } else {
+            return Err(format!("Failed to read tenant config at: {}", config_path));
         }
-    }
-    
-    // Fallback: compile-time default config (for tests and backward compatibility)
-    const DEFAULT_CONFIG: &str = include_str!("../../../tenant-configs/default.json");
-    serde_json::from_str(DEFAULT_CONFIG).map_err(|e| format!("Default config parse error: {}", e))
+    } else {
+        // Fallback: compile-time default config (for tests and backward compatibility)
+        const DEFAULT_CONFIG: &str = include_str!("../../../tenant-configs/default.json");
+        serde_json::from_str(DEFAULT_CONFIG)
+            .map_err(|e| format!("Default config parse error: {}", e))?
+    };
+
+    // Runtime validation — fail fast on invalid crypto config
+    config.validate()?;
+    Ok(config)
 }
 
 /// Get or initialize the cached tenant config
