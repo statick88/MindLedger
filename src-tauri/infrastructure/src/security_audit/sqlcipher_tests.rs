@@ -481,8 +481,8 @@ mod sqlcipher_tests {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("wrong_key_test.db");
 
-        let correct_key = "aaaa00000000000000000000000000000000000000000000000000000000aaaa";
-        let wrong_key =   "bbbb00000000000000000000000000000000000000000000000000000000bbbb";
+        let correct_key = "a1b2c3d4e5f6071829384a5b6c7d8e9f0a1b2c3d4e5f6071829384a5b6c7d8e9f";
+        let wrong_key   = "f9e8d7c6b5a49876543210f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d1";
 
         // Create database with correct key
         let pool = create_pool_with_key(&db_path, correct_key).expect("Failed to create pool");
