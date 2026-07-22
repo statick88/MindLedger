@@ -54,7 +54,7 @@ impl SqlCipherKeyManager {
             }
             // Keyring has no key yet — try to create one
             let key = Self::generate_hex_key();
-            match entry.set_password(key.expose_secret()) {
+            match entry.set_password(&*key) {
                 Ok(()) => return Ok(key),
                 Err(e) => {
                     warn!(
@@ -80,7 +80,7 @@ impl SqlCipherKeyManager {
             if let Some(parent) = fallback_path.parent() {
                 let _ = std::fs::create_dir_all(parent);
             }
-            std::fs::write(fallback_path, key.expose_secret())
+            std::fs::write(fallback_path, &*key)
                 .context("Failed to write fallback key file")?;
             // Set file permissions to owner-only read/write (0o600) on Unix
             #[cfg(unix)]
@@ -126,7 +126,7 @@ impl SqlCipherKeyManager {
     /// without exposing the private method in production builds.
     #[cfg(test)]
     pub fn generate_hex_key_for_test() -> String {
-        Self::generate_hex_key().expose_secret().clone()
+        Self::generate_hex_key().to_string()
     }
 }
 
