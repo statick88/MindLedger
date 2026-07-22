@@ -220,8 +220,10 @@ fn template_tauri_conf(tenant_id: &str, commercial_name: &str, extra_resources: 
     let new_content = serde_json::to_string_pretty(&conf).expect("Failed to serialize tauri.conf.json");
     fs::write(&generated_path, new_content).expect("Failed to write generated tauri.conf.json");
     
-    // Tell tauri-build to use our generated config
-    println!("cargo:rustc-env=TAURI_CONFIG={}", generated_path.display());
+    // Tell tauri-build to use our generated config (inline JSON content, not a path)
+    let generated_content = fs::read_to_string(&generated_path)
+        .expect("Failed to read generated tauri.conf.json");
+    println!("cargo:rustc-env=TAURI_CONFIG={}", generated_content);
 }
 
 /// Generate a Rust module with embedded tenant config for compile-time inclusion
