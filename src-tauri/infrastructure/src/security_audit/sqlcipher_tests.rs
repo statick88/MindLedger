@@ -427,8 +427,8 @@ mod sqlcipher_tests {
     fn test_tenant_isolation_different_keys() {
         let dir = tempdir().unwrap();
 
-        let key_a = "aaaa00000000000000000000000000000000000000000000000000000000aaaa";
-        let key_b = "bbbb00000000000000000000000000000000000000000000000000000000bbbb";
+        let key_a = "a1b2c3d4e5f6071829384a5b6c7d8e9f0a1b2c3d4e5f6071829384a5b6c7d8e9";
+        let key_b = "f9e8d7c6b5a49876543210f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d2";
 
         let db_a = dir.path().join("tenant_a.db");
         let db_b = dir.path().join("tenant_b.db");
@@ -481,7 +481,7 @@ mod sqlcipher_tests {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("wrong_key_test.db");
 
-        let correct_key = "a1b2c3d4e5f6071829384a5b6c7d8e9f0a1b2c3d4e5f6071829384a5b6c7d8e9f";
+        let correct_key = "a1b2c3d4e5f6071829384a5b6c7d8e9f0a1b2c3d4e5f6071829384a5b6c7d8e9";
         let wrong_key   = "f9e8d7c6b5a49876543210f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d1";
 
         // Create database with correct key
