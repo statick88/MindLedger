@@ -232,7 +232,7 @@
   <div class="container">
     <h1>MindLedger</h1>
     <p class="subtitle">Sistema de Gestión Clínica y Contable para Psicólogos Clínicos en Ecuador. Cifrado total, cumplimiento LOPD.</p>
-    <span class="badge">v1.0.0-gloria-once · Windows · SQLCipher AES-256</span>
+    <span class="badge">v1.0.0 · Windows · Linux · SQLCipher AES-256</span>
   </div>
 </div>
 
@@ -255,6 +255,11 @@
   <div class="container">
     <h2 class="section-title">Resumen Ejecutivo</h2>
     <p class="section-lead">MindLedger es una aplicación de escritorio que centraliza la gestión clínica, contable y de agenda de un consultorio de psicología, con cifrado de extremo a extremo y cumplimiento de la Ley Orgánica de Protección de Datos Personales de Ecuador.</p>
+
+    <div class="callout" style="margin-bottom: 1.5rem;">
+      <strong>📦 Descarga oficial</strong>
+      <a href="https://github.com/statick88/MindLedger/releases/tag/v1.0.0">https://github.com/statick88/MindLedger/releases/tag/v1.0.0</a>
+    </div>
 
     <div class="card-grid">
       <div class="card">
@@ -451,7 +456,7 @@ sqlite3 mind_ledger_once.db "PRAGMA key='wrong'; SELECT 1;"
     <div class="card-grid">
       <div class="card">
         <h3>1️⃣ Ejecutar Instalador</h3>
-        <p>Doble clic en <code>Gloria Once_1.0.0_x64-setup.exe</code>. Aceptar la licencia y elegir carpeta de instalación.</p>
+        <p>Doble clic en <code>MindLedger_1.0.0_x64-setup.exe</code>. Aceptar la licencia y elegir carpeta de instalación.</p>
       </div>
       <div class="card">
         <h3>2️⃣ Primera Ejecución</h3>
@@ -463,6 +468,18 @@ sqlite3 mind_ledger_once.db "PRAGMA key='wrong'; SELECT 1;"
       </div>
     </div>
 
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">Linux</h3>
+    <div class="card-grid">
+      <div class="card">
+        <h3>🐧 Debian / Ubuntu (.deb)</h3>
+        <pre><code>sudo dpkg -i MindLedger_1.0.0_amd64.deb</code></pre>
+      </div>
+      <div class="card">
+        <h3>🐧 AppImage (universal)</h3>
+        <pre><code>chmod +x MindLedger_1.0.0_amd64.AppImage && ./MindLedger_1.0.0_amd64.AppImage</code></pre>
+      </div>
+    </div>
+
     <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">Requisitos del Sistema</h3>
     <div class="table-wrap">
       <table>
@@ -470,17 +487,26 @@ sqlite3 mind_ledger_once.db "PRAGMA key='wrong'; SELECT 1;"
           <tr><th>Componente</th><th>Requisito</th></tr>
         </thead>
         <tbody>
-          <tr><td>Sistema Operativo</td><td>Windows 10/11 (64-bit)</td></tr>
+          <tr><td>Sistema Operativo</td><td>Windows 10/11 (64-bit) · Ubuntu 20.04+ / Debian 11+ / Fedora 36+</td></tr>
           <tr><td>RAM</td><td>4 GB mínimo, 8 GB recomendado</td></tr>
           <tr><td>Disco</td><td>50 MB para la app + espacio para datos</td></tr>
-          <tr><td>Permisos</td><td>Escritura en %APPDATA% (no requiere admin)</td></tr>
+          <tr><td>Permisos</td><td>Escritura en %APPDATA% (Windows) o ~/.local/share/ (Linux). No requiere admin.</td></tr>
         </tbody>
       </table>
     </div>
 
     <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">Ubicación de Datos</h3>
-    <pre><code>%APPDATA%\com.mindledger.once.desktop\
+    <pre><code># Windows:
+%APPDATA%\com.mindledger.once.desktop\
   └── mind-ledger-once\
+      ├── mind_ledger_once.db        ← Base de datos cifrada (SQLCipher)
+      ├── mind_ledger_once.db-shm    ← SQLite shared memory
+      ├── mind_ledger_once.db-wal    ← Write-Ahead Log
+      └── mind-ledger.key            ← Clave de fallback (si keyring no disponible)
+
+# Linux:
+~/.local/share/com.mindledger.once.desktop/
+  └── mind-ledger-once/
       ├── mind_ledger_once.db        ← Base de datos cifrada (SQLCipher)
       ├── mind_ledger_once.db-shm    ← SQLite shared memory
       ├── mind_ledger_once.db-wal    ← Write-Ahead Log
@@ -687,11 +713,63 @@ panic = "abort"
   </div>
 </section>
 
+<!-- CI/CD -->
+<section id="cicd">
+  <div class="container">
+    <h2 class="section-title">CI/CD</h2>
+    <p class="section-lead">Pipeline de integración continua y flujo de releases automatizado.</p>
+
+    <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Jobs de CI</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Job</th><th>Plataforma</th><th>Descripción</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Frontend</td><td>Ubuntu</td><td>pnpm install · TypeScript check · Vitest</td></tr>
+          <tr><td>Rust Ubuntu</td><td>Ubuntu</td><td>cargo build --release + cargo test</td></tr>
+          <tr><td>Rust Windows</td><td>Windows</td><td>cargo build --release + cargo test</td></tr>
+          <tr><td>Tauri Ubuntu</td><td>Ubuntu</td><td>Tauri build (.deb)</td></tr>
+          <tr><td>Tauri Windows x64</td><td>Windows</td><td>Tauri build (NSIS + MSI)</td></tr>
+          <tr><td>Tauri Windows ARM64</td><td>Windows</td><td>Tauri build cross-compilation (ARM64)</td></tr>
+          <tr><td>Code Review</td><td>Ubuntu</td><td>Clippy · rustfmt · TypeScript lint</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">Release Workflow</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Plataforma</th><th>Artefactos</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>macOS</td><td>Universal binary (ARM64 + x64)</td></tr>
+          <tr><td>Linux</td><td>.deb (Debian/Ubuntu) · .AppImage (universal)</td></tr>
+          <tr><td>Windows</td><td>x64 (NSIS + MSI) · ARM64 (NSIS)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; font-size: 1.1rem;">Verificación de Integridad</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Artefacto</th><th>SHA-256</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>MindLedger_1.0.0_x64-setup.exe</td><td><code>69C66673D58746C5E282111D60E9B6B6B33D372491C358D7FFC94690C88258C1</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 <!-- Footer -->
 <footer>
   <div class="container">
-    <p>MindLedger v1.0.0-gloria-once · <a href="https://github.com/statick88/MindLedger">GitHub</a> · Diego Medardo Saavedra García (Statick)</p>
-    <p style="margin-top: 0.5rem; opacity: 0.6;">Generado con cognitive-doc-design · Julio 2026</p>
+    <p>MindLedger v1.0.0 · <a href="https://github.com/statick88/MindLedger">GitHub</a> · Diego Medardo Saavedra García (Statick)</p>
+    <p style="margin-top: 0.5rem; opacity: 0.6;">Generado con cognitive-doc-design · Agosto 2026</p>
   </div>
 </footer>
 
