@@ -198,10 +198,14 @@ jobs:
       - name: Set OpenSSL env
         run: |
           if ("${{ matrix.arch }}" -eq "x64") {
-            echo "OPENSSL_DIR=$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows" >> $env:GITHUB_ENV
+            $opensslRoot = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
           } else {
-            echo "OPENSSL_DIR=$env:VCPKG_INSTALLATION_ROOT\installed\arm64-windows" >> $env:GITHUB_ENV
+            $opensslRoot = "$env:VCPKG_INSTALLATION_ROOT\installed\arm64-windows"
           }
+          echo "OPENSSL_DIR=$opensslRoot" >> $env:GITHUB_ENV
+          echo "OPENSSL_LIB_DIR=$opensslRoot\lib" >> $env:GITHUB_ENV
+          echo "OPENSSL_INCLUDE_DIR=$opensslRoot\include" >> $env:GITHUB_ENV
+          echo "RUSTFLAGS=-C link-arg=crypt32.lib -C link-arg=user32.lib -C link-arg=advapi32.lib -C link-arg=gdi32.lib" >> $env:GITHUB_ENV
         shell: pwsh
 
       - name: Cache cargo
