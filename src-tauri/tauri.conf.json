@@ -49,7 +49,9 @@
     "resources": [],
     "shortDescription": "Clinical psychology practice management",
     "targets": [
-      "nsis"
+      "nsis",
+      "deb",
+      "appimage"
     ],
     "windows": {
       "nsis": {
