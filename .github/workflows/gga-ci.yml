@@ -349,7 +349,7 @@ jobs:
           fetch-depth: 0
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.ref_name }}
           name: "MindLedger Release v${{ github.ref_name }}"
