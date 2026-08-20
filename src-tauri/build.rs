@@ -48,8 +48,12 @@ fn main() {
         // Emit env var for runtime access to the config file path
         println!("cargo:rustc-env=TENANT_CONFIG_PATH={}", dest_path.display());
 
-        // Also embed the config JSON content as an env var so any crate can read it at compile time
-        println!("cargo:rustc-env=TENANT_CONFIG_JSON={}", config_str);
+        // Also embed the config JSON content as an env var so any crate can read it at compile time.
+        // MUST use compact JSON (no newlines) — cargo:rustc-env reads line-by-line and
+        // newlines in the value would truncate the embedded content.
+        let compact_json = serde_json::to_string(&config)
+            .expect("Failed to compact tenant config JSON for env var");
+        println!("cargo:rustc-env=TENANT_CONFIG_JSON={}", compact_json);
 
         // Copy the tenant config to a fixed location that all workspace crates can include_str! from
         let shared_dest = manifest_path.join("tenant-config-embedded.json");

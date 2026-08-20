@@ -102,28 +102,39 @@ impl TenantConfig {
     }
 }
 
-/// Load tenant config from embedded file (set by build.rs via TENANT_CONFIG_PATH)
-/// Falls back to default.json for tests and backward compatibility.
+/// Load tenant config with a 3-tier fallback strategy:
+///   1. File at TENANT_CONFIG_PATH (works in dev and when file is shipped with installer)
+///   2. Embedded JSON content via TENANT_CONFIG_JSON env var (works in release builds
+///      where the path points to a non-existent CI build directory)
+///   3. Compile-time default.json (backward compat for tests)
 fn load_tenant_config() -> Result<TenantConfig, String> {
-    // At compile time, build.rs (mind-ledger crate) copies the active tenant config
-    // to OUT_DIR/tenant-config.json and sets TENANT_CONFIG_PATH via cargo:rustc-env.
-    // But cargo:rustc-env is crate-scoped — commands crate can't see it.
-    // So we also set the process env var from main.rs before this is called.
-    let config: TenantConfig = if let Ok(config_path) = std::env::var("TENANT_CONFIG_PATH") {
+    // Tier 1: Try reading from TENANT_CONFIG_PATH file
+    // This works when the file actually exists (dev machine, or shipped alongside binary)
+    if let Ok(config_path) = std::env::var("TENANT_CONFIG_PATH") {
         if let Ok(config_str) = std::fs::read_to_string(&config_path) {
-            serde_json::from_str(&config_str)
-                .map_err(|e| format!("Failed to parse tenant config: {}", e))?
-        } else {
-            return Err(format!("Failed to read tenant config at: {}", config_path));
+            let config: TenantConfig = serde_json::from_str(&config_str)
+                .map_err(|e| format!("Failed to parse tenant config: {}", e))?;
+            config.validate()?;
+            return Ok(config);
         }
-    } else {
-        // Fallback: compile-time default config (for tests and backward compatibility)
-        const DEFAULT_CONFIG: &str = include_str!("../../../tenant-configs/default.json");
-        serde_json::from_str(DEFAULT_CONFIG)
-            .map_err(|e| format!("Default config parse error: {}", e))?
-    };
+        // File not found or unreadable — fall through to embedded content
+    }
 
-    // Runtime validation — fail fast on invalid crypto config
+    // Tier 2: Embedded config content (propagated from build.rs via main.rs)
+    // This is the ACTIVE tenant config JSON embedded at compile time.
+    // Works even when TENANT_CONFIG_PATH points to a non-existent file
+    // (e.g. release builds where path references CI build machine filesystem).
+    if let Ok(config_str) = std::env::var("TENANT_CONFIG_JSON") {
+        let config: TenantConfig = serde_json::from_str(&config_str)
+            .map_err(|e| format!("Failed to parse embedded tenant config: {}", e))?;
+        config.validate()?;
+        return Ok(config);
+    }
+
+    // Tier 3: Compile-time default config (tests, backward compatibility)
+    const DEFAULT_CONFIG: &str = include_str!("../../../tenant-configs/default.json");
+    let config: TenantConfig = serde_json::from_str(DEFAULT_CONFIG)
+        .map_err(|e| format!("Default config parse error: {}", e))?;
     config.validate()?;
     Ok(config)
 }

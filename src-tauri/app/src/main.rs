@@ -28,6 +28,15 @@ pub fn run() {
         std::env::set_var("TENANT_CONFIG_PATH", compile_time_path);
     }
 
+    // Propagate the embedded tenant config CONTENT (not just the path) so the commands
+    // crate can fall back to it when the path points to a non-existent file (e.g. in
+    // release builds where the path references the CI build machine's filesystem).
+    if let Some(config_json) = option_env!("TENANT_CONFIG_JSON") {
+        if std::env::var("TENANT_CONFIG_JSON").is_err() {
+            std::env::set_var("TENANT_CONFIG_JSON", config_json);
+        }
+    }
+
     tauri::Builder::default()
         .setup(|app| {
             let app_handle = app.handle().clone();
