@@ -1,187 +1,168 @@
 ﻿; ============================================================================
 ; MindLedger NSIS Installer Hooks
 ; ============================================================================
-; Custom NSIS hooks for Tauri v2 bundler:
-;   - Post-install: copy runtime DLLs (OpenSSL + WebView2) to $INSTDIR root
-;   - Uninstall: clean up runtime DLLs
-;
-; Tauri v2 resource bundling behavior:
-;   Resources listed in bundle.resources are installed to $INSTDIR\resources\
-;   preserving subdirectory structure. However, the exact layout depends on
-;   how Tauri resolves the paths. This script searches multiple locations
-;   to handle both preserved and flattened structures.
+; Post-install: copy runtime DLLs (OpenSSL + WebView2) to $INSTDIR root.
+; Searches 3 locations: subdirectory, flat, and any nested subdirectory.
 ; ============================================================================
 
 !include "LogicLib.nsh"
 
-; ============================================================================
-; POST-INSTALL HOOK - Runs after standard file installation
-; ============================================================================
+!macro NSIS_HOOK_PREINSTALL
+  DetailPrint "MindLedger: Preparando instalacion..."
+!macroend
+
 !macro NSIS_HOOK_POSTINSTALL
   DetailPrint "MindLedger: Instalando librerias de runtime..."
 
-  ; --- WebView2Loader.dll ---
-  ; Search in subdirectory first, then flattened
-  IfFileExists "$INSTDIR\resources\webview2\WebView2Loader.dll" 0 _try_webview2_flat
+  ; === WebView2Loader.dll ===
+  IfFileExists "$INSTDIR\resources\webview2\WebView2Loader.dll" 0 _wv2_flat
     CopyFiles /SILENT "$INSTDIR\resources\webview2\WebView2Loader.dll" "$INSTDIR"
-    DetailPrint "  WebView2Loader.dll (from webview2\)"
-    Goto _done_webview2
-  _try_webview2_flat:
-  IfFileExists "$INSTDIR\resources\WebView2Loader.dll" 0 _done_webview2
+    DetailPrint "  WebView2Loader.dll (webview2\)"
+    Goto _wv2_done
+  _wv2_flat:
+  IfFileExists "$INSTDIR\resources\WebView2Loader.dll" 0 _wv2_done
     CopyFiles /SILENT "$INSTDIR\resources\WebView2Loader.dll" "$INSTDIR"
     DetailPrint "  WebView2Loader.dll (flat)"
-  _done_webview2:
+  _wv2_done:
 
-  ; --- OpenSSL: libcrypto-3-*.dll ---
-  ; Strategy: search $INSTDIR\resources\openssl\ first, then $INSTDIR\resources\,
-  ; then any subdirectory of $INSTDIR\resources\ as last resort.
-  DetailPrint "  Buscando libcrypto..."
-
-  ; Location 1: $INSTDIR\resources\openssl\ (preserved structure)
-  IfFileExists "$INSTDIR\resources\openssl\libcrypto-3-*.dll" 0 _try_crypto_flat
-    FindFirst $R0 $R1 "$INSTDIR\resources\openssl\libcrypto-3-*.dll"
-    StrCmp $R1 "" _try_crypto_flat
-  _loop_crypto_sub:
-    CopyFiles /SILENT "$INSTDIR\resources\openssl\$R1" "$INSTDIR"
-    DetailPrint "  $R1 (from resources\openssl\)"
-    FindNext $R0 $R1
-    StrCmp $R1 "" _done_crypto
-    Goto _loop_crypto_sub
-  FindClose $R0
-  Goto _done_crypto
-
-  ; Location 2: $INSTDIR\resources\ (flattened)
-  _try_crypto_flat:
-  IfFileExists "$INSTDIR\resources\libcrypto-3-*.dll" 0 _try_crypto_deep
-    FindFirst $R0 $R1 "$INSTDIR\resources\libcrypto-3-*.dll"
-    StrCmp $R1 "" _try_crypto_deep
-  _loop_crypto_flat:
-    CopyFiles /SILENT "$INSTDIR\resources\$R1" "$INSTDIR"
-    DetailPrint "  $R1 (flat from resources\)"
-    FindNext $R0 $R1
-    StrCmp $R1 "" _done_crypto
-    Goto _loop_crypto_flat
-  FindClose $R0
-  Goto _done_crypto
-
-  ; Location 3: any subdirectory of $INSTDIR\resources\ (last resort)
-  _try_crypto_deep:
-  FindFirst $R0 $R1 "$INSTDIR\resources\*\libcrypto-3-*.dll"
-  StrCmp $R1 "" _done_crypto
-  _loop_crypto_deep:
-    CopyFiles /SILENT "$INSTDIR\resources\$R1" "$INSTDIR"
-    DetailPrint "  $R1 (from resources\*\)"
-    FindNext $R0 $R1
-    StrCmp $R1 "" _done_crypto
-    Goto _loop_crypto_deep
-  FindClose $R0
-
-  _done_crypto:
-
-  ; --- OpenSSL: libssl-3-*.dll ---
-  DetailPrint "  Buscando libssl..."
-
+  ; === OpenSSL: libcrypto-3-*.dll (3-location search) ===
   ; Location 1: $INSTDIR\resources\openssl\
-  IfFileExists "$INSTDIR\resources\openssl\libssl-3-*.dll" 0 _try_ssl_flat
-    FindFirst $R0 $R1 "$INSTDIR\resources\openssl\libssl-3-*.dll"
-    StrCmp $R1 "" _try_ssl_flat
-  _loop_ssl_sub:
+  IfFileExists "$INSTDIR\resources\openssl\libcrypto-3-*.dll" 0 _crypto_flat
+    FindFirst $R0 $R1 "$INSTDIR\resources\openssl\libcrypto-3-*.dll"
+    StrCmp $R1 "" _crypto_flat
+  _crypto_sub_lp:
     CopyFiles /SILENT "$INSTDIR\resources\openssl\$R1" "$INSTDIR"
-    DetailPrint "  $R1 (from resources\openssl\)"
+    DetailPrint "  $R1 (resources\openssl\)"
     FindNext $R0 $R1
-    StrCmp $R1 "" _done_ssl
-    Goto _loop_ssl_sub
-  FindClose $R0
-  Goto _done_ssl
+    StrCmp $R1 "" _crypto_sub_dn
+    Goto _crypto_sub_lp
+  _crypto_sub_dn:
+    FindClose $R0
+    Goto _crypto_done
 
-  ; Location 2: $INSTDIR\resources\ (flattened)
-  _try_ssl_flat:
-  IfFileExists "$INSTDIR\resources\libssl-3-*.dll" 0 _try_ssl_deep
+  ; Location 2: $INSTDIR\resources\ (flat)
+  _crypto_flat:
+  IfFileExists "$INSTDIR\resources\libcrypto-3-*.dll" 0 _crypto_deep
+    FindFirst $R0 $R1 "$INSTDIR\resources\libcrypto-3-*.dll"
+    StrCmp $R1 "" _crypto_deep
+  _crypto_flat_lp:
+    CopyFiles /SILENT "$INSTDIR\resources\$R1" "$INSTDIR"
+    DetailPrint "  $R1 (resources\ flat)"
+    FindNext $R0 $R1
+    StrCmp $R1 "" _crypto_flat_dn
+    Goto _crypto_flat_lp
+  _crypto_flat_dn:
+    FindClose $R0
+    Goto _crypto_done
+
+  ; Location 3: $INSTDIR\resources\*\ (any nested subdirectory)
+  _crypto_deep:
+  FindFirst $R0 $R1 "$INSTDIR\resources\*\libcrypto-3-*.dll"
+  StrCmp $R1 "" _crypto_done
+  _crypto_deep_lp:
+    CopyFiles /SILENT "$INSTDIR\resources\$R1" "$INSTDIR"
+    DetailPrint "  $R1 (resources\*\ deep)"
+    FindNext $R0 $R1
+    StrCmp $R1 "" _crypto_deep_dn
+    Goto _crypto_deep_lp
+  _crypto_deep_dn:
+    FindClose $R0
+  _crypto_done:
+
+  ; === OpenSSL: libssl-3-*.dll (3-location search) ===
+  ; Location 1: $INSTDIR\resources\openssl\
+  IfFileExists "$INSTDIR\resources\openssl\libssl-3-*.dll" 0 _ssl_flat
+    FindFirst $R0 $R1 "$INSTDIR\resources\openssl\libssl-3-*.dll"
+    StrCmp $R1 "" _ssl_flat
+  _ssl_sub_lp:
+    CopyFiles /SILENT "$INSTDIR\resources\openssl\$R1" "$INSTDIR"
+    DetailPrint "  $R1 (resources\openssl\)"
+    FindNext $R0 $R1
+    StrCmp $R1 "" _ssl_sub_dn
+    Goto _ssl_sub_lp
+  _ssl_sub_dn:
+    FindClose $R0
+    Goto _ssl_done
+
+  ; Location 2: $INSTDIR\resources\ (flat)
+  _ssl_flat:
+  IfFileExists "$INSTDIR\resources\libssl-3-*.dll" 0 _ssl_deep
     FindFirst $R0 $R1 "$INSTDIR\resources\libssl-3-*.dll"
-    StrCmp $R1 "" _try_ssl_deep
-  _loop_ssl_flat:
+    StrCmp $R1 "" _ssl_deep
+  _ssl_flat_lp:
     CopyFiles /SILENT "$INSTDIR\resources\$R1" "$INSTDIR"
-    DetailPrint "  $R1 (flat from resources\)"
+    DetailPrint "  $R1 (resources\ flat)"
     FindNext $R0 $R1
-    StrCmp $R1 "" _done_ssl
-    Goto _loop_ssl_flat
-  FindClose $R0
-  Goto _done_ssl
+    StrCmp $R1 "" _ssl_flat_dn
+    Goto _ssl_flat_lp
+  _ssl_flat_dn:
+    FindClose $R0
+    Goto _ssl_done
 
-  ; Location 3: any subdirectory of $INSTDIR\resources\
-  _try_ssl_deep:
+  ; Location 3: $INSTDIR\resources\*\ (any nested subdirectory)
+  _ssl_deep:
   FindFirst $R0 $R1 "$INSTDIR\resources\*\libssl-3-*.dll"
-  StrCmp $R1 "" _done_ssl
-  _loop_ssl_deep:
+  StrCmp $R1 "" _ssl_done
+  _ssl_deep_lp:
     CopyFiles /SILENT "$INSTDIR\resources\$R1" "$INSTDIR"
-    DetailPrint "  $R1 (from resources\*\)"
+    DetailPrint "  $R1 (resources\*\ deep)"
     FindNext $R0 $R1
-    StrCmp $R1 "" _done_ssl
-    Goto _loop_ssl_deep
-  FindClose $R0
+    StrCmp $R1 "" _ssl_deep_dn
+    Goto _ssl_deep_lp
+  _ssl_deep_dn:
+    FindClose $R0
+  _ssl_done:
 
-  _done_ssl:
-
-  ; --- Final verification ---
+  ; === Verification ===
   DetailPrint "Verificando librerias de runtime..."
-  IfFileExists "$INSTDIR\libcrypto-3-x64.dll" 0 _verify_no_crypto
+  IfFileExists "$INSTDIR\libcrypto-3-x64.dll" 0 _v_no_crypto
     DetailPrint "  OK: libcrypto-3-x64.dll"
-    Goto _check_ssl
-  _verify_no_crypto:
-  IfFileExists "$INSTDIR\libcrypto-3-arm64.dll" 0 _verify_warn
+    Goto _v_check_ssl
+  _v_no_crypto:
+  IfFileExists "$INSTDIR\libcrypto-3-arm64.dll" 0 _v_warn
     DetailPrint "  OK: libcrypto-3-arm64.dll"
-    Goto _check_ssl
-  _verify_warn:
-    DetailPrint "  ADVERTENCIA: libcrypto no encontrado - la aplicacion puede fallar"
+    Goto _v_check_ssl
+  _v_warn:
+    DetailPrint "  ADVERTENCIA: libcrypto no encontrado"
 
-  _check_ssl:
-  IfFileExists "$INSTDIR\libssl-3-x64.dll" 0 _check_ssl_arm
+  _v_check_ssl:
+  IfFileExists "$INSTDIR\libssl-3-x64.dll" 0 _v_check_ssl_arm
     DetailPrint "  OK: libssl-3-x64.dll"
-    Goto _verify_done
-  _check_ssl_arm:
-  IfFileExists "$INSTDIR\libssl-3-arm64.dll" 0 _verify_done
+    Goto _v_done
+  _v_check_ssl_arm:
+  IfFileExists "$INSTDIR\libssl-3-arm64.dll" 0 _v_done
     DetailPrint "  OK: libssl-3-arm64.dll"
+  _v_done:
 
-  _verify_done:
   DetailPrint "MindLedger: Librerias de runtime instaladas."
 !macroend
 
-; ============================================================================
-; UNINSTALL HOOKS
-; ============================================================================
 !macro NSIS_HOOK_UNINSTALL_PRE
   DetailPrint "Desinstalando MindLedger..."
 !macroend
 
 !macro NSIS_HOOK_UNINSTALL_POST
   DetailPrint "Limpiando librerias de runtime..."
-
-  ; WebView2Loader.dll
-  IfFileExists "$INSTDIR\WebView2Loader.dll" 0 _skip_webview2
+  IfFileExists "$INSTDIR\WebView2Loader.dll" 0 _u_wv2
     Delete "$INSTDIR\WebView2Loader.dll"
-  _skip_webview2:
-
-  ; libcrypto-3-*.dll
+  _u_wv2:
   FindFirst $R0 $R1 "$INSTDIR\libcrypto-3-*.dll"
-  StrCmp $R1 "" _done_crypto_uninst
-  _loop_crypto_uninst:
+  StrCmp $R1 "" _u_crypto_dn
+  _u_crypto_lp:
     Delete "$INSTDIR\$R1"
     FindNext $R0 $R1
-    StrCmp $R1 "" _done_crypto_uninst
-    Goto _loop_crypto_uninst
-  _done_crypto_uninst:
+    StrCmp $R1 "" _u_crypto_dn
+    Goto _u_crypto_lp
+  _u_crypto_dn:
   FindClose $R0
-
-  ; libssl-3-*.dll
   FindFirst $R0 $R1 "$INSTDIR\libssl-3-*.dll"
-  StrCmp $R1 "" _done_ssl_uninst
-  _loop_ssl_uninst:
+  StrCmp $R1 "" _u_ssl_dn
+  _u_ssl_lp:
     Delete "$INSTDIR\$R1"
     FindNext $R0 $R1
-    StrCmp $R1 "" _done_ssl_uninst
-    Goto _loop_ssl_uninst
-  _done_ssl_uninst:
+    StrCmp $R1 "" _u_ssl_dn
+    Goto _u_ssl_lp
+  _u_ssl_dn:
   FindClose $R0
-
   DetailPrint "MindLedger desinstalado."
 !macroend
