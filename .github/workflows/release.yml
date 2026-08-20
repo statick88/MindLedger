@@ -231,6 +231,34 @@ jobs:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
+      - name: Verify bundled DLLs in build output
+        run: |
+          $target = "${{ matrix.target }}"
+          $nsisDir = "src-tauri/target/$target/release/bundle/nsis"
+          $resourcesDir = "src-tauri/target/$target/release/bundle/nsis/MindLedger_1.0.0_${{ matrix.arch }}_resources"
+          
+          Write-Host "=== NSIS bundle directory ==="
+          Get-ChildItem $nsisDir -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { "  $($_.FullName) ($($_.Length) bytes)" }
+          
+          Write-Host ""
+          Write-Host "=== Checking for OpenSSL DLLs in build resources ==="
+          $dlls = Get-ChildItem "src-tauri/target/$target/release" -Filter "*.dll" -ErrorAction SilentlyContinue
+          $dlls | ForEach-Object { "  $($_.Name) ($($_.Length) bytes)" }
+          
+          Write-Host ""
+          Write-Host "=== Checking resources/openssl in source tree ==="
+          Get-ChildItem "src-tauri/resources/openssl" -ErrorAction SilentlyContinue | ForEach-Object { "  $($_.Name) ($($_.Length) bytes)" }
+          
+          # Verify the NSIS installer exists
+          $exe = Get-ChildItem $nsisDir -Filter "*.exe" -ErrorAction SilentlyContinue
+          if ($exe) {
+            Write-Host ""
+            Write-Host "=== NSIS installer: $($exe.Name) ($($exe.Length) bytes) ==="
+          } else {
+            Write-Host "ERROR: No NSIS installer found!"
+          }
+        shell: pwsh
+
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
