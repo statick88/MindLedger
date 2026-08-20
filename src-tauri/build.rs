@@ -219,5 +219,10 @@ fn template_tauri_conf(tenant_id: &str, commercial_name: &str, extra_resources: 
     
     // Tell tauri-build to use our generated config (compact inline JSON, no newlines)
     let compact_json = serde_json::to_string(&conf).expect("Failed to serialize compact tauri.conf.json");
+    // BOTH are needed:
+    // 1. env::set_var — for tauri_build::build() which reads the process env during build.rs execution
+    // 2. cargo:rustc-env — for the compiled binary which reads TAURI_CONFIG at runtime
+    // cargo:rustc-env alone does NOT affect the build script process — it only sets env for rustc.
+    env::set_var("TAURI_CONFIG", &compact_json);
     println!("cargo:rustc-env=TAURI_CONFIG={}", compact_json);
 }
