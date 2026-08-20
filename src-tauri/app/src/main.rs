@@ -43,8 +43,7 @@ pub fn run() {
             
             // Get tenant config at startup (sync, compiled into binary)
             let tenant_config = get_tenant_config_cached().map_err(|e| {
-                #[cfg(debug_assertions)]
-                eprintln!("[MindLedger] Failed to load tenant config: {}", e);
+                eprintln!("[MindLedger] CRITICAL: Failed to load tenant config: {}", e);
                 e
             })?;
             
@@ -54,15 +53,13 @@ pub fn run() {
             
             // Derive tenant-specific data directory
             let base_data_dir = app.path().app_data_dir().map_err(|e| {
-                #[cfg(debug_assertions)]
-                eprintln!("[MindLedger] Failed to get app data dir: {}", e);
+                eprintln!("[MindLedger] CRITICAL: Failed to get app data dir: {}", e);
                 e
             })?;
             
             let data_dir = base_data_dir.join(format!("mind-ledger-{}", tenant_id));
             std::fs::create_dir_all(&data_dir).map_err(|e| {
-                #[cfg(debug_assertions)]
-                eprintln!("[MindLedger] Failed to create tenant data dir: {}", e);
+                eprintln!("[MindLedger] CRITICAL: Failed to create tenant data dir '{}': {}", data_dir.display(), e);
                 e
             })?;
             
@@ -74,16 +71,14 @@ pub fn run() {
                 // Initialize database pool (creates DB file, generates/retrieves encryption key)
                 let db = create_pool_for_tenant(&data_dir, &keyring_account, &db_filename)
                     .map_err(|e| {
-                        #[cfg(debug_assertions)]
-                        eprintln!("[MindLedger] Failed to initialize database: {}", e);
+                        eprintln!("[MindLedger] CRITICAL: Failed to initialize database: {}", e);
                         e
                     })?;
                 
                 // Run all migrations (idempotent - safe to run on every startup)
                 // Uses run_all_migrations which executes all schema migrations in order
                 run_all_migrations(&db).map_err(|e| {
-                    #[cfg(debug_assertions)]
-                    eprintln!("[MindLedger] Failed to run migrations: {}", e);
+                    eprintln!("[MindLedger] CRITICAL: Failed to run migrations: {}", e);
                     e
                 })?;
                 
@@ -91,21 +86,18 @@ pub fn run() {
                 if is_first_run {
                     std::fs::write(&first_run_marker, "initialized")
                         .map_err(|e| {
-                            #[cfg(debug_assertions)]
                             eprintln!("[MindLedger] Warning: failed to write first-run marker: {}", e);
                             e
                         })
-                        .ok(); // Non-critical, log only in debug
+                        .ok(); // Non-critical, log only
                     
-                    #[cfg(debug_assertions)]
                     eprintln!("[MindLedger] First-run bootstrap completed: DB deployed, keys generated, migrations applied");
                 }
                 
                 app_handle.manage(Arc::new(db));
                 Ok::<(), Box<dyn std::error::Error>>(())
             }).unwrap_or_else(|e| {
-                #[cfg(debug_assertions)]
-                eprintln!("[MindLedger] Critical error during setup: {}", e);
+                eprintln!("[MindLedger] CRITICAL: Setup failed (DB/migrations): {}", e);
             });
             
             Ok(())

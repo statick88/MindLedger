@@ -2,6 +2,7 @@ use crate::error::{AppError, AppResult};
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
 use tauri::command;
+use tracing::warn;
 
 /// Tenant configuration loaded at compile time from tenant-configs/*.json
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -118,6 +119,10 @@ fn load_tenant_config() -> Result<TenantConfig, String> {
             return Ok(config);
         }
         // File not found or unreadable — fall through to embedded content
+        warn!(
+            "[MindLedger] Config file not readable at '{}', falling back to embedded content",
+            config_path
+        );
     }
 
     // Tier 2: Embedded config content (propagated from build.rs via main.rs)
