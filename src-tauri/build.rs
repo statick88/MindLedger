@@ -55,10 +55,6 @@ fn main() {
             .expect("Failed to compact tenant config JSON for env var");
         println!("cargo:rustc-env=TENANT_CONFIG_JSON={}", compact_json);
 
-        // Copy the tenant config to a fixed location that all workspace crates can include_str! from
-        let shared_dest = manifest_path.join("tenant-config-embedded.json");
-        fs::write(&shared_dest, &config_str).expect("Failed to write shared tenant config");
-
         // Template tauri.conf.json with tenant-specific values
         let tenant_id = config["tenant"]["id"].as_str().unwrap_or("default");
         let commercial_name = config["tenant"]["commercialName"].as_str().unwrap_or("MindLedger");

@@ -96,7 +96,11 @@ static TENANT_CONFIG: OnceLock<Result<TenantConfig, String>> = OnceLock::new();
 impl TenantConfig {
     /// Validate all configuration sections at runtime.
     /// Crypto config is critical — invalid values cause hard failure.
+    /// Tenant ID is critical — empty ID creates invalid data directory path.
     pub fn validate(&self) -> Result<(), String> {
+        if self.tenant.id.trim().is_empty() {
+            return Err("TenantConfig.tenant.id must not be empty".to_string());
+        }
         self.crypto.validate()
             .map_err(|e| format!("Tenant config validation failed: {}", e))
     }
@@ -113,8 +117,9 @@ fn load_tenant_config() -> Result<TenantConfig, String> {
     if let Ok(config_path) = std::env::var("TENANT_CONFIG_PATH") {
         if let Ok(config_str) = std::fs::read_to_string(&config_path) {
             let config: TenantConfig = serde_json::from_str(&config_str)
-                .map_err(|e| format!("Failed to parse tenant config: {}", e))?;
-            config.validate()?;
+                .map_err(|e| format!("Tier 1: failed to parse tenant config from '{}': {}", config_path, e))?;
+            config.validate()
+                .map_err(|e| format!("Tier 1: tenant config validation failed: {}", e))?;
             return Ok(config);
         }
         // File not found or unreadable — fall through to embedded content
@@ -130,16 +135,18 @@ fn load_tenant_config() -> Result<TenantConfig, String> {
     // (e.g. release builds where path references CI build machine filesystem).
     if let Ok(config_str) = std::env::var("TENANT_CONFIG_JSON") {
         let config: TenantConfig = serde_json::from_str(&config_str)
-            .map_err(|e| format!("Failed to parse embedded tenant config: {}", e))?;
-        config.validate()?;
+            .map_err(|e| format!("Tier 2: failed to parse embedded tenant config: {}", e))?;
+        config.validate()
+            .map_err(|e| format!("Tier 2: tenant config validation failed: {}", e))?;
         return Ok(config);
     }
 
     // Tier 3: Compile-time default config (tests, backward compatibility)
     const DEFAULT_CONFIG: &str = include_str!("../../../tenant-configs/default.json");
     let config: TenantConfig = serde_json::from_str(DEFAULT_CONFIG)
-        .map_err(|e| format!("Default config parse error: {}", e))?;
-    config.validate()?;
+        .map_err(|e| format!("Tier 3: default config parse error: {}", e))?;
+    config.validate()
+        .map_err(|e| format!("Tier 3: default config validation failed: {}", e))?;
     Ok(config)
 }
 
