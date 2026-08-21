@@ -222,7 +222,7 @@ fn template_tauri_conf(tenant_id: &str, commercial_name: &str, extra_resources: 
     // may not propagate correctly across re-runs).
     // We use a temp marker so we can distinguish our modification from manual edits.
     let our_marker = "// TAURI_CONFIG_PATCH_BY_BUILD_RS";
-    let our_content = format!("{}\n{}", our_marker, new_content);
+    let our_content = format!("{}\n{}", our_marker, new_content.clone());
     fs::write(&tauri_conf_path, &our_content).expect("Failed to write patched tauri.conf.json");
     
     // Tell tauri-build to use our generated config (compact inline JSON, no newlines)
