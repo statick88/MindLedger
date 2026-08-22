@@ -215,22 +215,14 @@ fn template_tauri_conf(tenant_id: &str, commercial_name: &str, extra_resources: 
     // Write to OUT_DIR (build artifact) — tauri_build::build() reads from here
     let generated_path = out_dir.join("tauri.conf.json");
     let new_content = serde_json::to_string_pretty(&conf).expect("Failed to serialize tauri.conf.json");
-    fs::write(&generated_path, new_content).expect("Failed to write generated tauri.conf.json");
-    
-    // ALSO write directly to source tauri.conf.json so tauri-build::build() reads
-    // it immediately without relying on TAURI_CONFIG env var (which cargo caching
-    // may not propagate correctly across re-runs).
-    // We use a temp marker so we can distinguish our modification from manual edits.
-    let our_marker = "// TAURI_CONFIG_PATCH_BY_BUILD_RS";
-    let our_content = format!("{}\n{}", our_marker, new_content.clone());
-    fs::write(&tauri_conf_path, &our_content).expect("Failed to write patched tauri.conf.json");
-    
-    // Tell tauri-build to use our generated config (compact inline JSON, no newlines)
-    // Also set via env::set_var for the compiled binary runtime access
+    fs::write(&generated_path, &new_content).expect("Failed to write generated tauri.conf.json");
+
+    // Write compact (no-newlines) version to source tauri.conf.json so tauri_build::build()
+    // picks it up via its normal file-reading path. cargo:rustc-env alone is insufficient
+    // because it only sets env vars for the *compiler*, not for the build script process.
+    fs::write(&tauri_conf_path, &new_content).expect("Failed to write patched tauri.conf.json");
+
+    // Tell the compiled binary which config to use at runtime
     let compact_json = serde_json::to_string(&conf).expect("Failed to serialize compact tauri.conf.json");
-    // 1. env::set_var — for tauri_build::build() during build.rs execution
-    // 2. cargo:rustc-env — for the compiled binary which reads TAURI_CONFIG at runtime
-    // Both needed because cargo caching may not propagate env::set_var across re-runs.
-    env::set_var("TAURI_CONFIG", &compact_json);
     println!("cargo:rustc-env=TAURI_CONFIG={}", compact_json);
 }
