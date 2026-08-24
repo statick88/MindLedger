@@ -54,6 +54,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          workspaces: src-tauri
 
       - name: Install system dependencies (Ubuntu)
         if: runner.os == 'Linux'
@@ -172,7 +173,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: app/dist/
+          path: src-tauri/app/dist/
           retention-days: 7
 
   # =========================================================================
@@ -319,6 +320,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          workspaces: src-tauri
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
