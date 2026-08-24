@@ -220,7 +220,7 @@ jobs:
           pattern: '*'
 
       - name: List artifacts
-          run: find artifacts -type f \( -name "*.AppImage" -o -name "*.deb" -o -name "*.exe" -o -name "*.msi" \) | sort
+        run: find artifacts -type f \( -name "*.AppImage" -o -name "*.deb" -o -name "*.exe" -o -name "*.msi" \) | sort
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
