@@ -13,7 +13,7 @@ on:
       - feat/tauri-ipc-frontend
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   RUST_VERSION: "1.80"
@@ -47,14 +47,13 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          version: ${{ env.RUST_VERSION }}
+          toolchain: ${{ env.RUST_VERSION }}
           targets: ${{ matrix.target }}
 
       - name: Cache Cargo dependencies
         uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
-          working-directory: src-tauri
 
       - name: Install system dependencies (Ubuntu)
         if: runner.os == 'Linux'
@@ -173,7 +172,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: dist/
+          path: app/dist/
           retention-days: 7
 
   # =========================================================================
@@ -259,7 +258,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          version: ${{ env.RUST_VERSION }}
+          toolchain: ${{ env.RUST_VERSION }}
           targets: ${{ matrix.target }}
 
       - name: Setup pnpm
@@ -320,7 +319,6 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
-          working-directory: src-tauri
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
@@ -336,29 +334,6 @@ jobs:
             src-tauri/target/${{ matrix.target }}/release/bundle/**/*
           retention-days: 30
 
-  # =========================================================================
-  # RELEASE (Merge to main)
-  # =========================================================================
-  release:
-    name: Create Release
-    needs: [rust-build-test, frontend-build-test, tauri-build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ github.ref_name }}
-          name: "MindLedger Release v${{ github.ref_name }}"
-          body: |
-            Automated release from main branch.
-            See CHANGELOG.md for details.
-          draft: false
-          prerelease: false
-          generate_release_notes: true
+  # NOTE: Releases are handled exclusively by release.yml (triggered by v* tags).
+  # This CI pipeline validates code quality only — it does NOT create releases.
+  # This avoids creating spurious tags (e.g. vmain) and keeps the release flow clean.
