@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 env:
-  RUST_VERSION: "1.80"
+  RUST_VERSION: "1.85"
   NODE_VERSION: "20"
   PNPM_VERSION: "9"
 
