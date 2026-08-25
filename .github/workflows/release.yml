@@ -173,8 +173,8 @@ jobs:
       - name: Verify bundled DLLs in build output
         run: |
           $target = "${{ matrix.target }}"
+          $arch = "${{ matrix.arch }}"
           $nsisDir = "src-tauri/target/$target/release/bundle/nsis"
-          $resourcesDir = "src-tauri/target/$target/release/bundle/nsis/MindLedger_1.0.0_${{ matrix.arch }}_resources"
           
           Write-Host "=== NSIS bundle directory ==="
           Get-ChildItem $nsisDir -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { "  $($_.FullName) ($($_.Length) bytes)" }
@@ -188,6 +188,34 @@ jobs:
           Write-Host "=== Checking resources/openssl in source tree ==="
           Get-ChildItem "src-tauri/resources/openssl" -ErrorAction SilentlyContinue | ForEach-Object { "  $($_.Name) ($($_.Length) bytes)" }
           
+          # Verify correct-architecture DLLs exist
+          Write-Host ""
+          Write-Host "=== Architecture-specific DLL verification ==="
+          if ($arch -eq "arm64") {
+            $expectedCrypto = "libcrypto-3-arm64.dll"
+            $expectedSsl = "libssl-3-arm64.dll"
+          } else {
+            $expectedCrypto = "libcrypto-3-x64.dll"
+            $expectedSsl = "libssl-3-x64.dll"
+          }
+          
+          $cryptoCheck = Get-ChildItem "src-tauri/resources/openssl" -Filter $expectedCrypto -ErrorAction SilentlyContinue
+          $sslCheck = Get-ChildItem "src-tauri/resources/openssl" -Filter $expectedSsl -ErrorAction SilentlyContinue
+          
+          if ($cryptoCheck) {
+            Write-Host "  [OK] $expectedCrypto found ($($cryptoCheck.Length) bytes)"
+          } else {
+            Write-Host "  [FAIL] $expectedCrypto NOT found in resources/openssl/"
+            exit 1
+          }
+          
+          if ($sslCheck) {
+            Write-Host "  [OK] $expectedSsl found ($($sslCheck.Length) bytes)"
+          } else {
+            Write-Host "  [FAIL] $expectedSsl NOT found in resources/openssl/"
+            exit 1
+          }
+          
           # Verify the NSIS installer exists
           $exe = Get-ChildItem $nsisDir -Filter "*.exe" -ErrorAction SilentlyContinue
           if ($exe) {
@@ -195,6 +223,7 @@ jobs:
             Write-Host "=== NSIS installer: $($exe.Name) ($($exe.Length) bytes) ==="
           } else {
             Write-Host "ERROR: No NSIS installer found!"
+            exit 1
           }
         shell: pwsh
 

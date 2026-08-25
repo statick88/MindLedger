@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
@@ -62,6 +62,8 @@ fn main() {
         // Bundle runtime DLLs on Windows targets (OpenSSL + WebView2)
         let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
         let resources = if target_os == "windows" {
+            // Ensure openssl-sys can find the correct-arch import libs and headers
+            set_openssl_env_vars();
             let mut r = bundle_openssl_dlls(manifest_path);
             r.extend(bundle_webview2_loader(manifest_path));
             r
@@ -72,12 +74,24 @@ fn main() {
         template_tauri_conf(tenant_id, commercial_name, &resources, Path::new(&out_dir));
     }
 
+    // On Windows: patch the NSIS hook in-place with absolute DLL paths.
+    // tauri_build::build() only generates config — the actual NSIS compilation
+    // (makensis) happens AFTER build.rs returns, during the tauri CLI post-build step.
+    // So we must NOT restore the hook here; leave it patched for makensis to find.
+    // The hook is reset by `git checkout` before each clean build.
+    if cfg!(windows) {
+        patch_nsis_hook_in_place(manifest_path);
+    }
+
     tauri_build::build()
 }
 
 /// Copy OpenSSL DLLs from vcpkg to resources/ and return their relative paths for bundling.
 /// Detects target architecture to use correct DLL names (x64 vs arm64).
 /// Uses CARGO_CFG_TARGET_ARCH (set by cargo) for reliable arch detection.
+///
+/// CRITICAL: This function MUST find arch-specific DLLs. Bundling the wrong
+/// architecture (e.g. x64 DLLs in an ARM64 build) causes 0xc000007b crashes.
 fn bundle_openssl_dlls(manifest_path: &Path) -> Vec<String> {
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
     let arch_suffix = if target_arch == "aarch64" {
@@ -85,69 +99,212 @@ fn bundle_openssl_dlls(manifest_path: &Path) -> Vec<String> {
     } else {
         "x64"
     };
+    let vcpkg_triplet = if target_arch == "aarch64" {
+        "arm64-windows"
+    } else {
+        "x64-windows"
+    };
 
-    // Dynamic triplet provides both import libs (.lib) and DLLs (.dll)
-    // vcpkg triplet: x64-windows (dynamic) or arm64-windows (dynamic)
-    let openssl_base = env::var("OPENSSL_DIR")
-        .map(|p| Path::new(&p).join("bin"))
-        .unwrap_or_else(|_| {
-            // Fallback: try user's scoop MinGW
-            let home = env::var("USERPROFILE").unwrap_or_default();
-            Path::new(&home).join("scoop/apps/mingw/current/opt/bin")
-        });
+    println!("cargo:warning=OpenSSL bundle: target_arch={}, arch_suffix={}, triplet={}", target_arch, arch_suffix, vcpkg_triplet);
+
+    // Build ordered search paths: vcpkg first (authoritative), then OPENSSL_DIR, then fallback
+    let home = env::var("USERPROFILE").unwrap_or_default();
+    let vcpkg_root = env::var("VCPKG_INSTALLATION_ROOT").unwrap_or_default();
+
+    let search_paths: Vec<PathBuf> = [
+        // 1. vcpkg installed directory (CI and local with vcpkg)
+        if !vcpkg_root.is_empty() {
+            vec![Path::new(&vcpkg_root).join(format!("installed/{}", vcpkg_triplet)).join("bin")]
+        } else {
+            vec![]
+        },
+        // 2. OPENSSL_DIR env var (explicit override)
+        if let Ok(openssl_dir) = env::var("OPENSSL_DIR") {
+            vec![Path::new(&openssl_dir).join("bin")]
+        } else {
+            vec![]
+        },
+        // 3. Common local installation paths
+        vec![
+            Path::new(&home).join(format!("vcpkg/installed/{}/bin", vcpkg_triplet)),
+            Path::new(&home).join("scoop/apps/mingw/current/opt/bin"),
+            PathBuf::from("C:/Program Files/OpenSSL/bin"),
+            PathBuf::from("C:/Program Files (x86)/OpenSSL/bin"),
+        ],
+    ].concat();
 
     let resources_dir = manifest_path.join("resources/openssl");
     let _ = fs::create_dir_all(&resources_dir);
 
     let mut resources = vec![];
+    let mut missing_dlls: Vec<String> = vec![];
 
-    // Build priority list: arch-specific first, then generic
-    let crypto_candidates = [
-        format!("libcrypto-3-{}.dll", arch_suffix),
-        "libcrypto-3.dll".to_string(),
-        "libcrypto.dll".to_string(),
-    ];
-    let ssl_candidates = [
-        format!("libssl-3-{}.dll", arch_suffix),
-        "libssl-3.dll".to_string(),
-        "libssl.dll".to_string(),
-    ];
+    // Arch-specific DLL names — MUST match exactly
+    let crypto_name = format!("libcrypto-3-{}.dll", arch_suffix);
+    let ssl_name = format!("libssl-3-{}.dll", arch_suffix);
 
-    for dll_candidates in [&crypto_candidates, &ssl_candidates] {
-        let mut found = false;
-        let prefix = if dll_candidates[0].contains("crypto") { "libcrypto" } else { "libssl" };
-        for dll_name in dll_candidates {
-            let src = openssl_base.join(dll_name);
-            if src.exists() {
-                let dst = resources_dir.join(dll_name);
-                let _ = fs::copy(&src, &dst);
-                resources.push(format!("resources/openssl/{}", dll_name));
-                println!("cargo:warning=Bundled OpenSSL DLL: {}", dll_name);
-                found = true;
-                break;
-            }
+    // Find and copy crypto DLL
+    match find_and_copy_dll(&crypto_name, &search_paths, &resources_dir) {
+        Some(relative_path) => {
+            resources.push(relative_path);
+            println!("cargo:warning=Bundled OpenSSL DLL: {}", crypto_name);
         }
-        if !found {
-            // Last resort: scan directory for any matching DLL
-            if let Ok(entries) = fs::read_dir(&openssl_base) {
-                for entry in entries.flatten() {
-                    let name = entry.file_name().to_string_lossy().to_string();
-                    if name.starts_with(prefix) && name.ends_with(".dll") {
-                        let dst = resources_dir.join(&name);
-                        let _ = fs::copy(entry.path(), &dst);
-                        resources.push(format!("resources/openssl/{}", name));
-                        println!("cargo:warning=Bundled OpenSSL DLL (discovered): {}", name);
-                        found = true;
-                        break;
-                    }
-                }
+        None => {
+            missing_dlls.push(crypto_name.clone());
+            println!("cargo:error=CRITICAL: {} not found in any search path", crypto_name);
+            println!("cargo:error=Searched:");
+            for path in &search_paths {
+                println!("cargo:error=  {}", path.display());
             }
-            if !found {
-                println!("cargo:warning=No OpenSSL {} DLL found in {}", prefix, openssl_base.display());
-            }
+            println!("cargo:error=Fix: Set OPENSSL_DIR to vcpkg installed root, or install vcpkg with: vcpkg install openssl:{}", vcpkg_triplet);
         }
     }
+
+    // Find and copy SSL DLL
+    match find_and_copy_dll(&ssl_name, &search_paths, &resources_dir) {
+        Some(relative_path) => {
+            resources.push(relative_path);
+            println!("cargo:warning=Bundled OpenSSL DLL: {}", ssl_name);
+        }
+        None => {
+            missing_dlls.push(ssl_name.clone());
+            println!("cargo:error=CRITICAL: {} not found in any search path", ssl_name);
+        }
+    }
+
+    // FAIL FAST: Do not produce a broken installer with missing or wrong-arch DLLs
+    if !missing_dlls.is_empty() {
+        panic!(
+            "OpenSSL DLL bundling FAILED for target {}. Missing: {}. \
+             Cannot build installer without correct-arch OpenSSL DLLs. \
+             Set OPENSSL_DIR or install vcpkg openssl:{}",
+            target_arch,
+            missing_dlls.join(", "),
+            vcpkg_triplet
+        );
+    }
+
     resources
+}
+
+/// Search for a DLL in ordered search paths, copy to dest, return relative resource path.
+/// Returns None if not found in any path.
+fn find_and_copy_dll(dll_name: &str, search_paths: &[PathBuf], dest_dir: &Path) -> Option<String> {
+    for search_path in search_paths {
+        let candidate = search_path.join(dll_name);
+        if candidate.exists() {
+            let dst = dest_dir.join(dll_name);
+            fs::copy(&candidate, &dst).unwrap_or_else(|e| {
+                panic!("Failed to copy {} to {}: {}", candidate.display(), dst.display(), e);
+            });
+            println!("cargo:warning=Copied {} from {}", dll_name, candidate.display());
+            return Some(format!("resources/openssl/{}", dll_name));
+        }
+    }
+    None
+}
+
+/// Set OPENSSL_LIB_DIR and OPENSSL_INCLUDE_DIR for the openssl-sys crate.
+/// This ensures the Rust compiler finds the correct-arch import libs (.lib) and headers.
+/// Only sets them if not already set by the user/CI.
+fn set_openssl_env_vars() {
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
+    let vcpkg_triplet = if target_arch == "aarch64" {
+        "arm64-windows"
+    } else {
+        "x64-windows"
+    };
+
+    // If OPENSSL_LIB_DIR is already set, respect it
+    if env::var("OPENSSL_LIB_DIR").is_ok() {
+        return;
+    }
+
+    // Try vcpkg installed directory
+    let vcpkg_root = env::var("VCPKG_INSTALLATION_ROOT").unwrap_or_default();
+    let installed_dir = Path::new(&vcpkg_root).join("installed").join(vcpkg_triplet);
+
+    if installed_dir.exists() {
+        let lib_dir = installed_dir.join("lib");
+        let include_dir = installed_dir.join("include");
+        if lib_dir.exists() {
+            env::set_var("OPENSSL_LIB_DIR", lib_dir.to_str().unwrap_or_default());
+            println!("cargo:warning=Set OPENSSL_LIB_DIR={}", lib_dir.display());
+        }
+        if include_dir.exists() {
+            env::set_var("OPENSSL_INCLUDE_DIR", include_dir.to_str().unwrap_or_default());
+            println!("cargo:warning=Set OPENSSL_INCLUDE_DIR={}", include_dir.display());
+        }
+    }
+}
+
+/// Patch the NSIS hook file in-place with absolute DLL paths before tauri_build runs.
+///
+/// The NSIS compiler (makensis) runs from a temp directory, so relative paths in
+/// `installer-hooks.nsh` don't resolve. This function replaces the
+/// `!include "dll-paths.nsh"` directive with inline `!define` statements containing
+/// absolute paths. Returns the original content for restoration after build.
+fn patch_nsis_hook_in_place(manifest_path: &Path) -> Option<String> {
+    let resources_dir = manifest_path.join("resources/openssl");
+    let webview_dir = manifest_path.join("resources/webview2");
+    let hook_path = manifest_path.join("nsis-hooks/installer-hooks.nsh");
+
+    let original = fs::read_to_string(&hook_path).ok()?;
+
+    // Build the !define block with absolute paths
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
+    let arch_suffix = if target_arch == "aarch64" { "arm64" } else { "x64" };
+
+    let mut defines = vec![
+        "; Auto-generated by build.rs - DO NOT EDIT".to_string(),
+        "; Contains absolute paths to DLLs for NSIS File commands.".to_string(),
+        "; Regenerated on every build.".to_string(),
+        "".to_string(),
+    ];
+
+    // OpenSSL libcrypto
+    let crypto_name = format!("libcrypto-3-{}.dll", arch_suffix);
+    let crypto_path = resources_dir.join(&crypto_name);
+    if crypto_path.exists() {
+        let abs = crypto_path.to_str().unwrap_or_default();
+        defines.push(format!("!define NSIS_DLL_CRYPTO \"{}\"", abs));
+        println!("cargo:warning=NSIS DLL path: {} -> {}", crypto_name, abs);
+    } else {
+        println!("cargo:warning=NSIS: {} not found, skipping", crypto_name);
+    }
+
+    // OpenSSL libssl
+    let ssl_name = format!("libssl-3-{}.dll", arch_suffix);
+    let ssl_path = resources_dir.join(&ssl_name);
+    if ssl_path.exists() {
+        let abs = ssl_path.to_str().unwrap_or_default();
+        defines.push(format!("!define NSIS_DLL_SSL \"{}\"", abs));
+    }
+
+    // WebView2Loader.dll
+    let wv2_path = webview_dir.join("WebView2Loader.dll");
+    if wv2_path.exists() {
+        let abs = wv2_path.to_str().unwrap_or_default();
+        defines.push(format!("!define NSIS_DLL_WEBVIEW2 \"{}\"", abs));
+    }
+
+    defines.push("".to_string());
+    let defines_block = defines.join("\n");
+
+    // Replace the include directive with the inlined defines
+    let patched = original.replace(
+        "; Include auto-generated absolute paths to DLLs (written by build.rs)\n!include \"dll-paths.nsh\"",
+        &defines_block,
+    );
+
+    if patched != original {
+        fs::write(&hook_path, &patched).expect("Failed to patch nsis-hooks/installer-hooks.nsh");
+        println!("cargo:warning=Patched NSIS hook with absolute DLL paths");
+        Some(original)
+    } else {
+        println!("cargo:warning=NSIS hook patch marker not found, skipping patch");
+        None
+    }
 }
 
 /// Copy WebView2Loader.dll from pre-staged resources/ to OUT_DIR for NSIS bundling.
