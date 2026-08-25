@@ -46,7 +46,11 @@
     "macOS": {
       "minimumSystemVersion": "10.15"
     },
-    "resources": [],
+    "resources": [
+      "resources/openssl/libcrypto-3-x64.dll",
+      "resources/openssl/libssl-3-x64.dll",
+      "resources/webview2/WebView2Loader.dll"
+    ],
     "shortDescription": "Clinical psychology practice management",
     "targets": [
       "nsis",
@@ -55,14 +59,14 @@
     ],
     "windows": {
       "nsis": {
+        "compression": "lzma",
         "displayLanguageSelector": false,
+        "headerImage": "icons/icon.ico",
         "installMode": "currentUser",
         "installerHooks": "nsis-hooks/installer-hooks.nsh",
         "installerIcon": "icons/icon.ico",
-        "uninstallerIcon": "icons/icon.ico",
-        "headerImage": "icons/icon.ico",
         "sidebarImage": "icons/icon.ico",
-        "compression": "lzma"
+        "uninstallerIcon": "icons/icon.ico"
       }
     }
   },
