@@ -291,11 +291,22 @@ fn patch_nsis_hook_in_place(manifest_path: &Path) -> Option<String> {
     defines.push("".to_string());
     let defines_block = defines.join("\n");
 
-    // Replace the include directive with the inlined defines
-    let patched = original.replace(
-        "; Include auto-generated absolute paths to DLLs (written by build.rs)\n!include \"dll-paths.nsh\"",
-        &defines_block,
-    );
+    // Replace the include directive with the inlined defines.
+    // Try both LF and CRLF line endings since git may checkout with either.
+    let marker_lf = "; Include auto-generated absolute paths to DLLs (written by build.rs)\n!include \"dll-paths.nsh\"";
+    let marker_crlf = "; Include auto-generated absolute paths to DLLs (written by build.rs)\r\n!include \"dll-paths.nsh\"";
+    let patched = if let Some(pos) = original.find(marker_lf) {
+        let mut p = original.clone();
+        p.replace_range(pos..pos + marker_lf.len(), &defines_block);
+        p
+    } else if let Some(pos) = original.find(marker_crlf) {
+        let mut p = original.clone();
+        p.replace_range(pos..pos + marker_crlf.len(), &defines_block);
+        p
+    } else {
+        println!("cargo:warning=NSIS hook patch marker not found, skipping patch");
+        return None;
+    };
 
     if patched != original {
         fs::write(&hook_path, &patched).expect("Failed to patch nsis-hooks/installer-hooks.nsh");
