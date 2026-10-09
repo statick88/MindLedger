@@ -8,7 +8,7 @@ use tauri::command;
 pub struct TenantConfig {
     pub tenant: TenantInfo,
     pub brand: BrandTokens,
-    pub brandDark: BrandTokens,
+    pub brand_dark: BrandTokens,
     pub typography: TypographyConfig,
     pub crypto: CryptoConfig,
     pub features: FeatureFlags,
@@ -17,65 +17,65 @@ pub struct TenantConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TenantInfo {
     pub id: String,
-    pub commercialName: String,
-    pub clinicalRole: String,
-    pub ownerName: String,
-    pub ownerTitle: String,
+    pub commercial_name: String,
+    pub clinical_role: String,
+    pub owner_name: String,
+    pub owner_title: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BrandTokens {
     pub primary: String,
-    pub primaryForeground: String,
+    pub primary_foreground: String,
     pub secondary: String,
-    pub secondaryForeground: String,
+    pub secondary_foreground: String,
     pub accent: String,
-    pub accentForeground: String,
+    pub accent_foreground: String,
     pub background: String,
     pub foreground: String,
     pub muted: String,
-    pub mutedForeground: String,
+    pub muted_foreground: String,
     pub card: String,
-    pub cardForeground: String,
+    pub card_foreground: String,
     pub border: String,
     pub input: String,
     pub ring: String,
     pub destructive: String,
-    pub destructiveForeground: String,
+    pub destructive_foreground: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TypographyConfig {
-    pub fontFamily: String,
-    pub headingWeight: String,
-    pub bodyWeight: String,
+    pub font_family: String,
+    pub heading_weight: String,
+    pub body_weight: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoConfig {
-    pub keyringService: String,
-    pub keyringAccount: String,
-    pub dbFileName: String,
+    pub keyring_service: String,
+    pub keyring_account: String,
+    pub db_file_name: String,
 }
 
 impl CryptoConfig {
     /// Validate crypto configuration fields at runtime.
     /// Returns Err with descriptive message if any field is empty or whitespace-only.
     pub fn validate(&self) -> Result<(), String> {
-        if self.keyringService.trim().is_empty() {
-            return Err("CryptoConfig.keyringService must not be empty".to_string());
+        if self.keyring_service.trim().is_empty() {
+            return Err("CryptoConfig.keyring_service must not be empty".to_string());
         }
-        if self.keyringAccount.trim().is_empty() {
-            return Err("CryptoConfig.keyringAccount must not be empty".to_string());
+        if self.keyring_account.trim().is_empty() {
+            return Err("CryptoConfig.keyring_account must not be empty".to_string());
         }
-        if self.dbFileName.trim().is_empty() {
-            return Err("CryptoConfig.dbFileName must not be empty".to_string());
+        if self.db_file_name.trim().is_empty() {
+            return Err("CryptoConfig.db_file_name must not be empty".to_string());
         }
-        // dbFileName must end with .db extension
-        if !self.dbFileName.ends_with(".db") {
+        // db_file_name must end with .db extension
+        if !self.db_file_name.ends_with(".db") {
             return Err(format!(
-                "CryptoConfig.dbFileName must end with .db extension, got: {}",
-                self.dbFileName
+                "CryptoConfig.db_file_name must end with .db extension, got: {}",
+                self.db_file_name
             ));
         }
         Ok(())
@@ -84,7 +84,7 @@ impl CryptoConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeatureFlags {
-    pub clinicalNotes: bool,
+    pub clinical_notes: bool,
     pub accounting: bool,
     pub agenda: bool,
     pub diagnostics: bool,
@@ -159,21 +159,21 @@ pub fn get_tenant_config_cached() -> Result<&'static TenantConfig, String> {
 /// The frontend uses this to apply branding, typography, and feature flags.
 #[command]
 pub async fn get_tenant_config() -> AppResult<TenantConfig> {
-    get_tenant_config_cached().cloned().map_err(|e| AppError::Validation(e))
+    get_tenant_config_cached().cloned().map_err(AppError::Validation)
 }
 
 /// Helper: get the crypto keyring account name for the current tenant.
 /// Used by infrastructure layer to isolate encryption keys per tenant.
 pub fn get_tenant_keyring_account() -> String {
     get_tenant_config_cached()
-        .map(|c| c.crypto.keyringAccount.clone())
+        .map(|c| c.crypto.keyring_account.clone())
         .unwrap_or_else(|_| "sqlcipher-key".to_string())
 }
 
 /// Helper: get the tenant database filename.
 pub fn get_tenant_db_filename() -> String {
     get_tenant_config_cached()
-        .map(|c| c.crypto.dbFileName.clone())
+        .map(|c| c.crypto.db_file_name.clone())
         .unwrap_or_else(|_| "mind_ledger.db".to_string())
 }
 

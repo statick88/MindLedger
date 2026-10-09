@@ -1,61 +1,61 @@
 {
   "tenant": {
     "id": "once",
-    "commercialName": "Gloria Once",
-    "clinicalRole": "Neuropsicóloga Clínica",
-    "ownerName": "Gloria Once",
-    "ownerTitle": "Neuropsicóloga Clínica"
+    "commercial_name": "Gloria Once",
+    "clinical_role": "Neuropsicóloga Clínica",
+    "owner_name": "Gloria Once",
+    "owner_title": "Neuropsicóloga Clínica"
   },
   "brand": {
     "primary": "#1A5F60",
-    "primaryForeground": "#FFFFFF",
+    "primary_foreground": "#FFFFFF",
     "secondary": "#E5F1EE",
-    "secondaryForeground": "#212529",
+    "secondary_foreground": "#212529",
     "accent": "#E3645F",
-    "accentForeground": "#FFFFFF",
+    "accent_foreground": "#FFFFFF",
     "background": "#F8F9FA",
     "foreground": "#212529",
     "muted": "#F0F2F5",
-    "mutedForeground": "#6B7280",
+    "muted_foreground": "#6B7280",
     "card": "#FFFFFF",
-    "cardForeground": "#212529",
+    "card_foreground": "#212529",
     "border": "#DEE2E6",
     "input": "#DEE2E6",
     "ring": "#1A5F60",
     "destructive": "#DC3545",
-    "destructiveForeground": "#FFFFFF"
+    "destructive_foreground": "#FFFFFF"
   },
-  "brandDark": {
+  "brand_dark": {
     "primary": "#477f7f",
-    "primaryForeground": "#FFFFFF",
+    "primary_foreground": "#FFFFFF",
     "secondary": "#1E3A3A",
-    "secondaryForeground": "#E5F1EE",
+    "secondary_foreground": "#E5F1EE",
     "accent": "#cc5a55",
-    "accentForeground": "#FFFFFF",
+    "accent_foreground": "#FFFFFF",
     "background": "#1A1D21",
     "foreground": "#F0F2F5",
     "muted": "#2A2D31",
-    "mutedForeground": "#9CA3AF",
+    "muted_foreground": "#9CA3AF",
     "card": "#222529",
-    "cardForeground": "#F0F2F5",
+    "card_foreground": "#F0F2F5",
     "border": "#333639",
     "input": "#333639",
     "ring": "#477f7f",
     "destructive": "#B82E2E",
-    "destructiveForeground": "#FFFFFF"
+    "destructive_foreground": "#FFFFFF"
   },
   "typography": {
-    "fontFamily": "'Inter', system-ui, -apple-system, sans-serif",
-    "headingWeight": "700",
-    "bodyWeight": "400"
+    "font_family": "'Inter', system-ui, -apple-system, sans-serif",
+    "heading_weight": "700",
+    "body_weight": "400"
   },
   "crypto": {
-    "keyringService": "mind-ledger",
-    "keyringAccount": "sqlcipher-key-once",
-    "dbFileName": "mind_ledger_once.db"
+    "keyring_service": "mind-ledger",
+    "keyring_account": "sqlcipher-key-once",
+    "db_file_name": "mind_ledger_once.db"
   },
   "features": {
-    "clinicalNotes": true,
+    "clinical_notes": true,
     "accounting": true,
     "agenda": true,
     "diagnostics": true

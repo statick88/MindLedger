@@ -1,6 +1,6 @@
 use crate::database::DbPool;
 use soft_mindledger_domain::{
-    Patient, PatientId, DocumentNumber, Email, PhoneNumber, FullName, Address,
+    Patient, PatientId, DocumentNumber, DocumentType, Email, PhoneNumber, FullName, Address,
     EmergencyContact, PatientFilter, Pagination, RepositoryError,
     PatientRepository,
 };
@@ -22,24 +22,24 @@ impl SqlitePatientRepository {
         let id: String = row.get("id")?;
         let document_number = DocumentNumber::new(
             row.get::<_, String>("document_number")?,
-            row.get::<_, String>("document_type")?.parse().map_err(|e| rusqlite::Error::InvalidParameterName(format!("{}", e)))?,
+            row.get::<_, String>("document_type")?.parse().map_err(|e: <DocumentType as std::str::FromStr>::Err| rusqlite::Error::InvalidParameterName(e.to_string()))?,
             row.get::<_, String>("country_code")?,
-        ).map_err(|e| rusqlite::Error::InvalidParameterName(format!("{}", e)))?;
+        ).map_err(|e| rusqlite::Error::InvalidParameterName(e.to_string()))?;
 
         let full_name = FullName::new(
             row.get::<_, String>("first_name")?,
             row.get::<_, String>("last_name")?,
             row.get::<_, Option<String>>("middle_name")?,
-        ).map_err(|e| rusqlite::Error::InvalidParameterName(format!("{}", e)))?;
+        ).map_err(|e| rusqlite::Error::InvalidParameterName(e.to_string()))?;
 
         let date_of_birth: String = row.get("date_of_birth")?;
         let gender: String = row.get("gender")?;
 
         let email: Option<String> = row.get("email")?;
         let email = email
-            .map(|e| Email::new(e))
+            .map(Email::new)
             .transpose()
-            .map_err(|e| rusqlite::Error::InvalidParameterName(format!("{}", e)))?;
+            .map_err(|e| rusqlite::Error::InvalidParameterName(e.to_string()))?;
 
         let phone_number: Option<String> = row.get("phone_number")?;
         let phone_country_code: Option<String> = row.get("phone_country_code")?;
@@ -48,7 +48,7 @@ impl SqlitePatientRepository {
         let phone = match (phone_number, phone_country_code) {
             (Some(num), Some(cc)) => Some(
                 PhoneNumber::new(num, cc, phone_extension)
-                    .map_err(|e| rusqlite::Error::InvalidParameterName(format!("{}", e)))?,
+                    .map_err(|e| rusqlite::Error::InvalidParameterName(e.to_string()))?,
             ),
             _ => None,
         };
@@ -63,7 +63,7 @@ impl SqlitePatientRepository {
         let address = match (address_street, address_city, address_state, address_postal_code, address_country) {
             (Some(street), Some(city), Some(state), Some(postal), Some(country)) => Some(
                 Address::new(street, city, state, postal, country, address_additional)
-                    .map_err(|e| rusqlite::Error::InvalidParameterName(format!("{}", e)))?,
+                    .map_err(|e| rusqlite::Error::InvalidParameterName(e.to_string()))?,
             ),
             _ => None,
         };
@@ -79,15 +79,15 @@ impl SqlitePatientRepository {
         let emergency_contact = match (ec_first, ec_last, ec_rel, ec_phone, ec_cc) {
             (Some(first), Some(last), Some(rel), Some(phone), Some(cc)) => {
                 let ec_name = FullName::new(first, last, ec_middle)
-                    .map_err(|e| rusqlite::Error::InvalidParameterName(format!("{}", e)))?;
+                    .map_err(|e| rusqlite::Error::InvalidParameterName(e.to_string()))?;
                 let ec_phone = PhoneNumber::new(phone, cc, None)
-                    .map_err(|e| rusqlite::Error::InvalidParameterName(format!("{}", e)))?;
+                    .map_err(|e| rusqlite::Error::InvalidParameterName(e.to_string()))?;
                 let ec_email = ec_email
-                    .map(|e| Email::new(e))
+                    .map(Email::new)
                     .transpose()
-                    .map_err(|e| rusqlite::Error::InvalidParameterName(format!("{}", e)))?;
+                    .map_err(|e| rusqlite::Error::InvalidParameterName(e.to_string()))?;
                 Some(EmergencyContact::new(ec_name, rel, ec_phone, ec_email)
-                    .map_err(|e| rusqlite::Error::InvalidParameterName(format!("{}", e)))?)
+                    .map_err(|e| rusqlite::Error::InvalidParameterName(e.to_string()))?)
             }
             _ => None,
         };
@@ -275,7 +275,7 @@ impl PatientRepository for SqlitePatientRepository {
 
             let mut stmt = conn.prepare(&sql).map_err(|e| RepositoryError::Database(e.to_string()))?;
             let param_refs: Vec<&dyn rusqlite::types::ToSql> = param_values.iter().map(|p| p.as_ref()).collect();
-            let rows = stmt.query_map(param_refs.as_slice(), |row| Self::row_to_patient(row))
+            let rows = stmt.query_map(param_refs.as_slice(), Self::row_to_patient)
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
 
             let mut patients = Vec::new();
@@ -409,7 +409,7 @@ impl PatientRepository for SqlitePatientRepository {
             let mut stmt = conn.prepare(
                 "SELECT * FROM patients WHERE (first_name LIKE ?1 OR last_name LIKE ?1 OR document_number LIKE ?1 OR email LIKE ?1) AND is_active = 1 ORDER BY last_name, first_name LIMIT ?2 OFFSET ?3"
             ).map_err(|e| RepositoryError::Database(e.to_string()))?;
-            let rows = stmt.query_map(params![pat, pagination.limit as i64, pagination.offset as i64], |row| Self::row_to_patient(row))
+            let rows = stmt.query_map(params![pat, pagination.limit as i64, pagination.offset as i64], Self::row_to_patient)
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
             let mut patients = Vec::new();
             for row in rows {

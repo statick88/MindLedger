@@ -105,9 +105,9 @@ export function injectCssVariables(
   }
 
   // Typography variables
-  root.style.setProperty('--font-family', typography.fontFamily);
-  root.style.setProperty('--heading-weight', typography.headingWeight);
-  root.style.setProperty('--body-weight', typography.bodyWeight);
+  root.style.setProperty('--font-family', typography.font_family);
+  root.style.setProperty('--heading-weight', typography.heading_weight);
+  root.style.setProperty('--body-weight', typography.body_weight);
 }
 
 // Re-export types for convenience

@@ -22,7 +22,7 @@ pub fn run() {
     // Set TENANT_CONFIG_PATH as a process env var so commands crate can read it at runtime.
     // build.rs sets this via cargo:rustc-env (compile-time only for mind-ledger crate),
     // but commands crate can't see cargo:rustc-env from another crate.
-    if let Ok(path) = std::env::var("TENANT_CONFIG_PATH") {
+    if std::env::var("TENANT_CONFIG_PATH").is_ok() {
         // Already set as process env (e.g. from bundle-tenant.py or manual export)
     } else if let Some(compile_time_path) = option_env!("TENANT_CONFIG_PATH") {
         std::env::set_var("TENANT_CONFIG_PATH", compile_time_path);
@@ -48,8 +48,8 @@ pub fn run() {
             })?;
             
             let tenant_id = tenant_config.tenant.id.clone();
-            let keyring_account = tenant_config.crypto.keyringAccount.clone();
-            let db_filename = tenant_config.crypto.dbFileName.clone();
+            let keyring_account = tenant_config.crypto.keyring_account.clone();
+            let db_filename = tenant_config.crypto.db_file_name.clone();
             
             // Derive tenant-specific data directory
             let base_data_dir = app.path().app_data_dir().map_err(|e| {

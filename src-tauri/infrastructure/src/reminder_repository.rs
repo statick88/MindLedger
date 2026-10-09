@@ -130,7 +130,7 @@ impl ReminderRepository for SqliteReminderRepository {
             let conn = pool.lock().map_err(|e| RepositoryError::Database(format!("Lock poisoned: {}", e)))?;
             let mut stmt = conn.prepare("SELECT * FROM reminders WHERE appointment_id = ?1 ORDER BY remind_at")
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
-            let rows = stmt.query_map(params![appt_str], |row| Self::row_to_reminder(row))
+            let rows = stmt.query_map(params![appt_str], Self::row_to_reminder)
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
             let mut reminders = Vec::new();
             for row in rows {
@@ -147,7 +147,7 @@ impl ReminderRepository for SqliteReminderRepository {
             let conn = pool.lock().map_err(|e| RepositoryError::Database(format!("Lock poisoned: {}", e)))?;
             let mut stmt = conn.prepare("SELECT * FROM reminders WHERE patient_id = ?1 ORDER BY remind_at")
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
-            let rows = stmt.query_map(params![patient_str], |row| Self::row_to_reminder(row))
+            let rows = stmt.query_map(params![patient_str], Self::row_to_reminder)
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
             let mut reminders = Vec::new();
             for row in rows {
@@ -199,7 +199,7 @@ impl ReminderRepository for SqliteReminderRepository {
             let mut stmt = conn.prepare(
                 "SELECT * FROM reminders WHERE sent_at IS NULL AND remind_at <= ?1 ORDER BY remind_at LIMIT 100"
             ).map_err(|e| RepositoryError::Database(e.to_string()))?;
-            let rows = stmt.query_map(params![now_str], |row| Self::row_to_reminder(row))
+            let rows = stmt.query_map(params![now_str], Self::row_to_reminder)
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
             let mut reminders = Vec::new();
             for row in rows {

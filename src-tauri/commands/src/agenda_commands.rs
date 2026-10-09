@@ -283,16 +283,16 @@ pub async fn listar_citas_agenda_impl(
     filter.patient_id = query.patient_id.map(|s| PatientId(Uuid::parse_str(&s).unwrap()));
     filter.therapist_id = query.therapist_id.map(|s| TherapistId(Uuid::parse_str(&s).unwrap()));
     
-    let pagination = Pagination::new(page, page_size);
+let pagination = Pagination::new(page, page_size);
     let total = repo.count(filter.clone()).await?;
     let appointments = repo.list(filter, pagination).await?;
-    
+
     Ok(PaginatedResponse {
         items: appointments.into_iter().map(Into::into).collect(),
         total,
         page,
         page_size,
-        total_pages: (total + page_size - 1) / page_size,
+        total_pages: total.div_ceil(page_size),
     })
 }
 
@@ -490,16 +490,16 @@ pub async fn obtener_citas_paciente_impl(
         ..Default::default()
     };
     
-    let pagination = Pagination::new(page, page_size);
+let pagination = Pagination::new(page, page_size);
     let total = repo.count(filter.clone()).await?;
     let appointments = repo.list(filter, pagination).await?;
-    
+
     Ok(PaginatedResponse {
         items: appointments.into_iter().map(Into::into).collect(),
         total,
         page,
         page_size,
-        total_pages: (total + page_size - 1) / page_size,
+        total_pages: total.div_ceil(page_size),
     })
 }
 

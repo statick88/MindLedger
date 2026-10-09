@@ -54,7 +54,7 @@ impl SqlCipherKeyManager {
             }
             // Keyring has no key yet — try to create one
             let key = Self::generate_hex_key();
-            match entry.set_password(&*key) {
+            match entry.set_password(&key) {
                 Ok(()) => return Ok(key),
                 Err(e) => {
                     warn!(

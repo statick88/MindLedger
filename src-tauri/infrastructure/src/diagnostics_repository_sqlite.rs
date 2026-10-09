@@ -139,7 +139,7 @@ impl soft_mindledger_domain::DiagnosticsRepository for SqliteDiagnosticsReposito
                  ORDER BY codigo LIMIT ?2"
             ).map_err(|e| RepositoryError::Database(e.to_string()))?;
 
-            let rows = stmt.query_map(params![pattern, limit], |row| Self::row_to_cie10(row))
+            let rows = stmt.query_map(params![pattern, limit], Self::row_to_cie10)
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
 
             let mut results = Vec::new();
@@ -163,7 +163,7 @@ impl soft_mindledger_domain::DiagnosticsRepository for SqliteDiagnosticsReposito
                  ORDER BY codigo LIMIT ?2"
             ).map_err(|e| RepositoryError::Database(e.to_string()))?;
 
-            let rows = stmt.query_map(params![pattern, limit], |row| Self::row_to_dsm5(row))
+            let rows = stmt.query_map(params![pattern, limit], Self::row_to_dsm5)
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
 
             let mut results = Vec::new();
@@ -254,7 +254,7 @@ impl soft_mindledger_domain::DiagnosticsRepository for SqliteDiagnosticsReposito
                  WHERE paciente_id = ?1 ORDER BY fecha DESC"
             ).map_err(|e| RepositoryError::Database(e.to_string()))?;
 
-            let rows = stmt.query_map(params![paciente_id_str], |row| Self::row_to_mapeo(row))
+            let rows = stmt.query_map(params![paciente_id_str], Self::row_to_mapeo)
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
 
             let mut results = Vec::new();

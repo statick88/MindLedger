@@ -209,7 +209,7 @@ impl AppointmentRepository for SqliteAppointmentRepository {
 
             let mut stmt = conn.prepare(&sql).map_err(|e| RepositoryError::Database(e.to_string()))?;
             let param_refs: Vec<&dyn rusqlite::types::ToSql> = param_values.iter().map(|p| p.as_ref()).collect();
-            let rows = stmt.query_map(param_refs.as_slice(), |row| Self::row_to_appointment(row))
+            let rows = stmt.query_map(param_refs.as_slice(), Self::row_to_appointment)
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
 
             let mut appointments = Vec::new();
@@ -354,7 +354,7 @@ impl AppointmentRepository for SqliteAppointmentRepository {
                  AND status != 'Realizada'
                  ORDER BY scheduled_date, scheduled_time"
             ).map_err(|e| RepositoryError::Database(e.to_string()))?;
-            let rows = stmt.query_map(params![therapist_str, end_str, start_str], |row| Self::row_to_appointment(row))
+            let rows = stmt.query_map(params![therapist_str, end_str, start_str], Self::row_to_appointment)
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
             let mut appointments = Vec::new();
             for row in rows {
@@ -383,7 +383,7 @@ impl AppointmentRepository for SqliteAppointmentRepository {
             let sql = format!("SELECT * FROM appointments {} ORDER BY scheduled_date DESC, scheduled_time DESC", where_clause);
             let mut stmt = conn.prepare(&sql).map_err(|e| RepositoryError::Database(e.to_string()))?;
             let param_refs: Vec<&dyn rusqlite::types::ToSql> = params.iter().map(|p| p.as_ref()).collect();
-            let rows = stmt.query_map(param_refs.as_slice(), |row| Self::row_to_appointment(row))
+            let rows = stmt.query_map(param_refs.as_slice(), Self::row_to_appointment)
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
 
             let mut appointments = Vec::new();
@@ -409,7 +409,7 @@ impl AppointmentRepository for SqliteAppointmentRepository {
                  AND status = 'Programada'
                  ORDER BY scheduled_date, scheduled_time"
             ).map_err(|e| RepositoryError::Database(e.to_string()))?;
-            let rows = stmt.query_map(params![now_str], |row| Self::row_to_appointment(row))
+            let rows = stmt.query_map(params![now_str], Self::row_to_appointment)
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
             let mut appointments = Vec::new();
             for row in rows {

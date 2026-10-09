@@ -140,7 +140,7 @@ impl Email {
     fn is_valid(email: &str) -> bool {
         email.contains('@')
             && email.split('@').count() == 2
-            && email.split('@').nth(1).map_or(false, |domain| {
+            && email.split('@').nth(1).is_some_and(|domain| {
                 domain.contains('.')
                     && domain.len() > 2
                     && !domain.starts_with('.')

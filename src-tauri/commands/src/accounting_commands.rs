@@ -249,7 +249,7 @@ pub async fn list_asientos_impl(pool: &DbPool, query: ListAsientosQuery) -> AppR
         total,
         page,
         page_size,
-        total_pages: (total + page_size - 1) / page_size,
+        total_pages: total.div_ceil(page_size),
     })
 }
 

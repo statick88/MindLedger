@@ -91,7 +91,7 @@ impl DateTimeRange {
         }
         let duration = end - start;
         let minutes = duration.num_minutes();
-        if minutes < 15 || minutes > 120 {
+        if !(15..=120).contains(&minutes) {
             return Err(DomainError::InvalidDuration);
         }
         Ok(Self { start, end })

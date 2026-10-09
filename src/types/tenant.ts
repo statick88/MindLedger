@@ -6,7 +6,7 @@
 export interface TenantConfig {
   tenant: TenantInfo;
   brand: BrandTokens;
-  brandDark: BrandTokens;
+  brand_dark: BrandTokens;
   typography: TypographyConfig;
   crypto: CryptoConfig;
   features: FeatureFlags;
@@ -14,47 +14,47 @@ export interface TenantConfig {
 
 export interface TenantInfo {
   id: string;
-  commercialName: string;
-  clinicalRole: string;
-  ownerName: string;
-  ownerTitle: string;
+  commercial_name: string;
+  clinical_role: string;
+  owner_name: string;
+  owner_title: string;
 }
 
 export interface BrandTokens {
   primary: string;
-  primaryForeground: string;
+  primary_foreground: string;
   secondary: string;
-  secondaryForeground: string;
+  secondary_foreground: string;
   accent: string;
-  accentForeground: string;
+  accent_foreground: string;
   background: string;
   foreground: string;
   muted: string;
-  mutedForeground: string;
+  muted_foreground: string;
   card: string;
-  cardForeground: string;
+  card_foreground: string;
   border: string;
   input: string;
   ring: string;
   destructive: string;
-  destructiveForeground: string;
+  destructive_foreground: string;
   [key: string]: string;
 }
 
 export interface TypographyConfig {
-  fontFamily: string;
-  headingWeight: string;
-  bodyWeight: string;
+  font_family: string;
+  heading_weight: string;
+  body_weight: string;
 }
 
 export interface CryptoConfig {
-  keyringService: string;
-  keyringAccount: string;
-  dbFileName: string;
+  keyring_service: string;
+  keyring_account: string;
+  db_file_name: string;
 }
 
 export interface FeatureFlags {
-  clinicalNotes: boolean;
+  clinical_notes: boolean;
   accounting: boolean;
   agenda: boolean;
   diagnostics: boolean;

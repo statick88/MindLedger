@@ -125,7 +125,7 @@ impl AccountingRepository for SqliteAccountingRepository {
 
             let mut stmt = conn.prepare(&sql).map_err(|e| RepositoryError::Database(e.to_string()))?;
             let param_refs: Vec<&dyn rusqlite::types::ToSql> = param_values.iter().map(|p| p.as_ref()).collect();
-            let rows = stmt.query_map(param_refs.as_slice(), |row| Self::row_to_asiento(row))
+            let rows = stmt.query_map(param_refs.as_slice(), Self::row_to_asiento)
                 .map_err(|e| RepositoryError::Database(e.to_string()))?;
 
             let mut asientos = Vec::new();

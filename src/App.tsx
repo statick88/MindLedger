@@ -31,13 +31,13 @@ function AppContent() {
   useEffect(() => {
     if (!tenantConfig) return;
 
-    const { brand, brandDark, typography, tenant } = tenantConfig;
+    const { brand, brand_dark, typography, tenant } = tenantConfig;
 
     // Inject all variables at once
-    injectCssVariables(document.documentElement, brand, brandDark, typography);
+    injectCssVariables(document.documentElement, brand, brand_dark, typography);
 
     // Window title
-    document.title = tenant.commercialName;
+    document.title = tenant.commercial_name;
   }, [tenantConfig]);
 
   if (isLoading) {

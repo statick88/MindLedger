@@ -34,7 +34,7 @@ pub fn validate_key_entropy(key: &str) -> Result<(), KeyEntropyError> {
     // Check for repeating pattern (e.g., "0123456789abcdef" repeated)
     // Find smallest repeating unit
     for pattern_len in 1..=key.len() / 2 {
-        if key.len() % pattern_len == 0 {
+        if key.len().is_multiple_of(pattern_len) {
             let pattern = &key[..pattern_len];
             let mut is_repeating = true;
             for chunk in key.as_bytes().chunks(pattern_len) {

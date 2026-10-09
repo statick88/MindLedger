@@ -13,8 +13,8 @@ fn main() {
         let env_content = fs::read_to_string(&env_path).unwrap_or_default();
         for line in env_content.lines() {
             let line = line.trim();
-            if line.starts_with("TENANT_CONFIG=") {
-                let value = line["TENANT_CONFIG=".len()..].trim();
+            if let Some(value) = line.strip_prefix("TENANT_CONFIG=") {
+                let value = value.trim();
                 // Remove surrounding quotes if present
                 let value = value.trim_matches('"').trim_matches('\'');
                 env::set_var("TENANT_CONFIG", value);
