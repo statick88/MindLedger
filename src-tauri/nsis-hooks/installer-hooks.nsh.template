@@ -1,0 +1,112 @@
+﻿; ============================================================================
+; MindLedger NSIS Installer Hooks
+; ============================================================================
+; PREINSTALL: Embed runtime DLLs (OpenSSL + WebView2) directly into installer
+;             using compile-time File commands with absolute paths.
+;             build.rs patches this file in-place before makensis runs, replacing
+;             the "!include dll-paths.nsh" directive with inline !define statements.
+; POSTINSTALL: Verify DLLs at $INSTDIR root.
+; ============================================================================
+
+!include "LogicLib.nsh"
+
+; Include auto-generated absolute paths to DLLs (written by build.rs)
+!include "dll-paths.nsh"
+
+
+!macro NSIS_HOOK_PREINSTALL
+  DetailPrint "MindLedger: Preparando instalacion..."
+
+  ; Embed runtime DLLs using compile-time File commands with ABSOLUTE paths.
+  ; build.rs patches this file to replace !include "dll-paths.nsh" above with
+  ; !define NSIS_DLL_CRYPTO, NSIS_DLL_SSL, NSIS_DLL_WEBVIEW2 using absolute paths.
+
+  ; === WebView2Loader.dll ===
+  !ifdef NSIS_DLL_WEBVIEW2
+    File "${NSIS_DLL_WEBVIEW2}"
+    DetailPrint "  Embebido: WebView2Loader.dll"
+  !endif
+
+  ; === OpenSSL: libcrypto ===
+  !ifdef NSIS_DLL_CRYPTO
+    File "${NSIS_DLL_CRYPTO}"
+    DetailPrint "  Embebido: libcrypto"
+  !endif
+
+  ; === OpenSSL: libssl ===
+  !ifdef NSIS_DLL_SSL
+    File "${NSIS_DLL_SSL}"
+    DetailPrint "  Embebido: libssl"
+  !endif
+
+  DetailPrint "MindLedger: Librerias de runtime embebidas en el instalador."
+!macroend
+
+!macro NSIS_HOOK_POSTINSTALL
+  DetailPrint "MindLedger: Verificando librerias de runtime..."
+
+  ; DLLs should have been extracted to $INSTDIR by our PREINSTALL File commands.
+  ; Verify each one:
+
+  IfFileExists "$INSTDIR\WebView2Loader.dll" 0 _v_warn_wv2
+    DetailPrint "  [OK] WebView2Loader.dll"
+    Goto _v_check_crypto
+  _v_warn_wv2:
+    DetailPrint "  [ADVERTENCIA] WebView2Loader.dll no encontrado"
+
+  _v_check_crypto:
+  IfFileExists "$INSTDIR\libcrypto-3-x64.dll" 0 _v_check_crypto_arm
+    DetailPrint "  [OK] libcrypto-3-x64.dll"
+    Goto _v_check_ssl
+  _v_check_crypto_arm:
+  IfFileExists "$INSTDIR\libcrypto-3-arm64.dll" 0 _v_warn_crypto
+    DetailPrint "  [OK] libcrypto-3-arm64.dll"
+    Goto _v_check_ssl
+  _v_warn_crypto:
+  DetailPrint "  [ERROR] libcrypto-3-*.dll NO encontrado - la aplicacion NO funcionara"
+
+  _v_check_ssl:
+  IfFileExists "$INSTDIR\libssl-3-x64.dll" 0 _v_check_ssl_arm
+    DetailPrint "  [OK] libssl-3-x64.dll"
+    Goto _v_summary
+  _v_check_ssl_arm:
+  IfFileExists "$INSTDIR\libssl-3-arm64.dll" 0 _v_warn_ssl
+    DetailPrint "  [OK] libssl-3-arm64.dll"
+    Goto _v_summary
+  _v_warn_ssl:
+  DetailPrint "  [ERROR] libssl-3-*.dll NO encontrado - la aplicacion NO funcionara"
+
+  _v_summary:
+  DetailPrint ""
+  DetailPrint "MindLedger: Verificacion completada."
+!macroend
+
+!macro NSIS_HOOK_UNINSTALL_PRE
+  DetailPrint "Desinstalando MindLedger..."
+!macroend
+
+!macro NSIS_HOOK_UNINSTALL_POST
+  DetailPrint "Limpiando librerias de runtime..."
+  IfFileExists "$INSTDIR\WebView2Loader.dll" 0 _u_wv2
+    Delete "$INSTDIR\WebView2Loader.dll"
+  _u_wv2:
+  FindFirst $R0 $R1 "$INSTDIR\libcrypto-3-*.dll"
+  StrCmp $R1 "" _u_crypto_dn
+  _u_crypto_lp:
+    Delete "$INSTDIR\$R1"
+    FindNext $R0 $R1
+    StrCmp $R1 "" _u_crypto_dn
+    Goto _u_crypto_lp
+  _u_crypto_dn:
+  FindClose $R0
+  FindFirst $R0 $R1 "$INSTDIR\libssl-3-*.dll"
+  StrCmp $R1 "" _u_ssl_dn
+  _u_ssl_lp:
+    Delete "$INSTDIR\$R1"
+    FindNext $R0 $R1
+    StrCmp $R1 "" _u_ssl_dn
+    Goto _u_ssl_lp
+  _u_ssl_dn:
+  FindClose $R0
+  DetailPrint "MindLedger desinstalado."
+!macroend

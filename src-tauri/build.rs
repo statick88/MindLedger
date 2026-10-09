@@ -71,16 +71,13 @@ fn main() {
             vec![]
         };
 
-        template_tauri_conf(tenant_id, commercial_name, &resources, Path::new(&out_dir));
-    }
+        let _nsis_patched = if cfg!(windows) {
+            generate_patched_nsis_hook(manifest_path)
+        } else {
+            false
+        };
 
-    // On Windows: patch the NSIS hook in-place with absolute DLL paths.
-    // tauri_build::build() only generates config — the actual NSIS compilation
-    // (makensis) happens AFTER build.rs returns, during the tauri CLI post-build step.
-    // So we must NOT restore the hook here; leave it patched for makensis to find.
-    // The hook is reset by `git checkout` before each clean build.
-    if cfg!(windows) {
-        patch_nsis_hook_in_place(manifest_path);
+        template_tauri_conf(tenant_id, commercial_name, &resources, Path::new(&out_dir));
     }
 
     tauri_build::build()
@@ -238,18 +235,26 @@ fn set_openssl_env_vars() {
     }
 }
 
-/// Patch the NSIS hook file in-place with absolute DLL paths before tauri_build runs.
+/// Generate a patched NSIS hook file in the source directory from template.
 ///
 /// The NSIS compiler (makensis) runs from a temp directory, so relative paths in
-/// `installer-hooks.nsh` don't resolve. This function replaces the
-/// `!include "dll-paths.nsh"` directive with inline `!define` statements containing
-/// absolute paths. Returns the original content for restoration after build.
-fn patch_nsis_hook_in_place(manifest_path: &Path) -> Option<String> {
+/// `installer-hooks.nsh` don't resolve. This function reads the source hook template,
+/// replaces the `!include "dll-paths.nsh"` directive with inline `!define` statements
+/// containing absolute paths, and writes the result to the source nsis-hooks/installer-hooks.nsh
+/// (which is gitignored). The source file is regenerated on every build.
+fn generate_patched_nsis_hook(manifest_path: &Path) -> bool {
     let resources_dir = manifest_path.join("resources/openssl");
     let webview_dir = manifest_path.join("resources/webview2");
-    let hook_path = manifest_path.join("nsis-hooks/installer-hooks.nsh");
+    let hook_template_path = manifest_path.join("nsis-hooks/installer-hooks.nsh.template");
+    let hook_output_path = manifest_path.join("nsis-hooks/installer-hooks.nsh");
 
-    let original = fs::read_to_string(&hook_path).ok()?;
+    let original = match fs::read_to_string(&hook_template_path) {
+        Ok(s) => s,
+        Err(e) => {
+            println!("cargo:warning=NSIS hook template not found at {}: {}", hook_template_path.display(), e);
+            return false;
+        }
+    };
 
     // Build the !define block with absolute paths
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
@@ -305,16 +310,16 @@ fn patch_nsis_hook_in_place(manifest_path: &Path) -> Option<String> {
         p
     } else {
         println!("cargo:warning=NSIS hook patch marker not found, skipping patch");
-        return None;
+        return false;
     };
 
     if patched != original {
-        fs::write(&hook_path, &patched).expect("Failed to patch nsis-hooks/installer-hooks.nsh");
-        println!("cargo:warning=Patched NSIS hook with absolute DLL paths");
-        Some(original)
+        fs::write(&hook_output_path, &patched).expect("Failed to write patched NSIS hook to source");
+        println!("cargo:warning=Generated patched NSIS hook at {}", hook_output_path.display());
+        true
     } else {
-        println!("cargo:warning=NSIS hook patch marker not found, skipping patch");
-        None
+        println!("cargo:warning=NSIS hook patch produced no changes, skipping");
+        false
     }
 }
 

@@ -19,6 +19,7 @@
 !define NSIS_DLL_WEBVIEW2 "C:\Users\statick\Desktop\MindLedger\src-tauri\resources/webview2\WebView2Loader.dll"
 
 
+
 !macro NSIS_HOOK_PREINSTALL
   DetailPrint "MindLedger: Preparando instalacion..."
 
@@ -68,7 +69,7 @@
     DetailPrint "  [OK] libcrypto-3-arm64.dll"
     Goto _v_check_ssl
   _v_warn_crypto:
-    DetailPrint "  [ERROR] libcrypto-3-*.dll NO encontrado - la aplicacion NO funcionara"
+  DetailPrint "  [ERROR] libcrypto-3-*.dll NO encontrado - la aplicacion NO funcionara"
 
   _v_check_ssl:
   IfFileExists "$INSTDIR\libssl-3-x64.dll" 0 _v_check_ssl_arm
@@ -79,7 +80,7 @@
     DetailPrint "  [OK] libssl-3-arm64.dll"
     Goto _v_summary
   _v_warn_ssl:
-    DetailPrint "  [ERROR] libssl-3-*.dll NO encontrado - la aplicacion NO funcionara"
+  DetailPrint "  [ERROR] libssl-3-*.dll NO encontrado - la aplicacion NO funcionara"
 
   _v_summary:
   DetailPrint ""
