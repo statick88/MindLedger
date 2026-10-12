@@ -77,7 +77,9 @@ fn main() {
             false
         };
 
-        template_tauri_conf(tenant_id, commercial_name, &resources, Path::new(&out_dir));
+        let target = env::var("CARGO_CFG_TARGET").unwrap_or_default();
+
+        template_tauri_conf(tenant_id, commercial_name, &resources, Path::new(&out_dir), &target);
     }
 
     tauri_build::build()
@@ -367,7 +369,7 @@ fn bundle_webview2_loader(manifest_path: &Path) -> Vec<String> {
     vec![]
 }
 
-fn template_tauri_conf(tenant_id: &str, commercial_name: &str, extra_resources: &[String], out_dir: &Path) {
+fn template_tauri_conf(tenant_id: &str, commercial_name: &str, extra_resources: &[String], out_dir: &Path, target: &str) {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let tauri_conf_path = Path::new(&manifest_dir).join("tauri.conf.json");
     let content = fs::read_to_string(&tauri_conf_path).expect("Failed to read tauri.conf.json");
@@ -380,9 +382,29 @@ fn template_tauri_conf(tenant_id: &str, commercial_name: &str, extra_resources: 
     conf["productName"] = serde_json::Value::String("MindLedger".to_string());
     conf["app"]["windows"][0]["title"] = serde_json::Value::String(commercial_name.to_string());
 
+    // Filter resources by target platform:
+    // - Windows x64: include OpenSSL x64 DLLs + WebView2Loader
+    // - Windows arm64: include OpenSSL arm64 DLLs + WebView2Loader  
+    // - Linux: no Windows DLLs
+    let is_windows = target.contains("windows");
+    let is_arm64 = target.contains("aarch64");
+    
+    let filtered_resources: Vec<String> = extra_resources.iter().filter(|r| {
+        if !is_windows {
+            // On Linux, exclude all Windows DLLs
+            !r.contains("openssl") && !r.contains("webview2")
+        } else if is_arm64 {
+            // On Windows ARM64, exclude x64 OpenSSL DLLs
+            !r.contains("libcrypto-3-x64.dll") && !r.contains("libssl-3-x64.dll")
+        } else {
+            // Windows x64: include all
+            true
+        }
+    }).cloned().collect();
+
     // Always set resources from scratch (avoids duplicate accumulation across builds)
     conf["bundle"]["resources"] = serde_json::Value::Array(
-        extra_resources.iter().map(|r| serde_json::Value::String(r.clone())).collect()
+        filtered_resources.iter().map(|r| serde_json::Value::String(r.clone())).collect()
     );
     
     // Write to OUT_DIR (build artifact) — tauri_build::build() reads from here
